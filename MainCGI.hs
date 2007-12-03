@@ -1,4 +1,4 @@
-import Hurt
+import Mosg
 import Input_XHtml
 
 import Control.Monad.Trans
@@ -65,7 +65,7 @@ outputBody :: HTML a => a -> CGI CGIResult
 outputBody = outputHtml . mkPage
 
 mkPage :: HTML a => a -> Html
-mkPage b = [thetitle << "HURT"] +++ body << ([h1 << "HURT"] +++ b)
+mkPage b = [thetitle << "MOSG"] +++ body << b
 
 
 --

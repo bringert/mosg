@@ -3,9 +3,9 @@ GF_PATH = $(HOME)/Projects/GF/src
 
 GHCFLAGS = -i$(GF_PATH)  
 
-.PHONY: hurt.cgi run ghci Union.gfcc GSyntax.hs clean distclean
+.PHONY: mosg.cgi run ghci Union.gfcc GSyntax.hs clean distclean
 
-hurt.cgi:
+mosg.cgi:
 	ghc $(GHCFLAGS) --make -o $@ MainCGI.hs
 
 run:
@@ -19,7 +19,7 @@ Union.gfcc GSyntax.hs:
 
 clean:
 	-rm -f *.o *.hi grammar/*.gfc grammar/*.gfr grammar/*.gfo
-	-rm -f hurt.cgi
+	-rm -f mosg.cgi
 
 distclean: clean
 	-rm -f Restrict.gfcc GSyntax.hs

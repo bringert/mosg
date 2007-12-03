@@ -1,4 +1,4 @@
-module Hurt (Theory, Output(..), Input(..), Quest(..), Grammar, 
+module Mosg (Theory, Output(..), Input(..), Quest(..), Grammar, 
              loadGrammar, handleText) where
 
 import GSyntax

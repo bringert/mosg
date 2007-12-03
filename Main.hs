@@ -1,6 +1,6 @@
 module Main where
 
-import Hurt
+import Mosg
 
 import System.Console.Readline
 
