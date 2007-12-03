@@ -15,7 +15,7 @@ ghci:
 	ghci $(GHCFLAGS) Main.hs
 
 Union.gfcc GSyntax.hs:
-	gfc --make -haskell grammar/UnionEng.gf grammar/UnionGer.gf
+	gfc --make -haskell grammar/UnionEng.gf grammar/UnionSwe.gf
 
 clean:
 	-rm -f *.o *.hi grammar/*.gfc grammar/*.gfr grammar/*.gfo

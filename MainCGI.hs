@@ -14,6 +14,7 @@ cgiMain =
        mit <- getInput "input_text"
        thi <- getMultiInput "theory"
        let th = map read thi
+       setHeader "Content-type" "text/html; charset=UTF-8"
        case mit of
          Nothing -> outputBody $ inputPage th
          Just it -> do (output,th') <- liftIO $ handleText gr th it
