@@ -1,7 +1,5 @@
 
-GF_PATH = $(GF_LIB_PATH)/../src
-
-GHCFLAGS = -i$(GF_PATH)  
+GHCFLAGS = -package gf-embed -package folkung
 
 .PHONY: mosg.cgi run ghci Union.gfcc GSyntax.hs clean distclean
 
