@@ -3,10 +3,12 @@ import Input_XHtml
 
 import Control.Monad.Trans
 import Network.CGI
+import System.IO
 import Text.XHtml
 
 main :: IO ()
-main = runCGI (handleErrors cgiMain)
+main = do hSetBuffering stderr LineBuffering
+          runCGI (handleErrors cgiMain)
 
 cgiMain :: CGI CGIResult
 cgiMain = 
