@@ -1,5 +1,5 @@
 
-GF_PATH = $(HOME)/Projects/GF/src
+GF_PATH = $(GF_LIB_PATH)/../src
 
 GHCFLAGS = -i$(GF_PATH)  
 
