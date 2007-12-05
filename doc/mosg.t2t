@@ -1,3 +1,11 @@
+MOSG: Multilingual Online Semantics for GF
+Björn Bringert
+
+
+%!Target: html
+%!Encoding: utf-8
+
+
 == Excluded resource grammar constructs ==
 
 - Tense
@@ -12,6 +20,7 @@
 - this, that, these
 - Personal and possesive pronouns
 
+
 == Problematic resource grammar constructs ==
 
 - Plurals, e.g. "there are men in the room". Will probably use universial quantification,
@@ -19,18 +28,22 @@
 - Predeterminers
 - MassDet
 
+
 == Unimplemented resource grammar constructs ==
 
 - Comparative and superlative forms of adjectives. Introduce more_<adj> predicates?
 - Cardinals.
 - Ordinals.
 
+
 == Underspecification ==
 
 - Negation scope
+
 
 == Problems in the resource grammar ==
 
 - "the man whose dog John beats"
 - "itself/himself/herself"
 - "everybody who sleeps" (no NP + RS rule)
+
