@@ -6,6 +6,58 @@ Björn Bringert
 %!Encoding: utf-8
 
 
+= Overview =
+
+- System similar to Helpful Curt by Blackburn and Bos.
+  - Accepts facts.
+  - Filters out uninformative and inconsistent interpretations.
+  - Answers Yes/No and WH-questions.
+- GF for parsing.
+- Multilingual.
+- Web-based interface.
+- Written in Haskell.
+
+
+= Syntax =
+
+- Uses a subset of the GF resource grammar library as the
+  grammar.
+- Multilingual, should work with any language for which there 
+  is a resource grammar: 
+  Danish, English, Finnish, French, German, Italian, 
+  Norwegian, Russian, Spanish, Swedish
+
+
+= Semantics =
+
+- Statically typed.
+- Uses Haskell's lambda expressions directly.
+- Uses higher-order abstract syntax for first-order logic.
+
+
+= Quantifier scope =
+
+- Uses a statically typed implementation of Keller storage.
+
+
+= FOL tools usage =
+
+- Uses Paradox and Equinox for checking fact equivalence,
+  informativity and consistency, and for answering YES/No questions.
+- Uses Otter to answer Yes/No questions.
+  - Done with "answer predicates" (not yet supported by Equinox), 
+    unlike Curt which queries a generated model.
+  - This lets us get exhaustive answers, for example with disjunction
+    in the theory.
+
+
+= User interface =
+
+- Several user interfaces: Web-based, command-line, IRC
+
+
+= Limitations =
+
 == Excluded resource grammar constructs ==
 
 - Tense
@@ -16,34 +68,38 @@ Björn Bringert
 - Adjective-complement verbs.
 - Sentence-complement verbs.
 - Verb phrase-complement verbs.
-- few, many, much
-- this, that, these
+- Generalized quantifiers: few, many, much
+- Demonstratives: this, that, these
 - Personal and possesive pronouns
 
 
 == Problematic resource grammar constructs ==
 
-- Plurals, e.g. "there are men in the room". Will probably use universial quantification,
-  which doesn't always work.
-- Predeterminers
-- MassDet
+- Plurals, e.g. "men are tall", 
+  "there are men in the room", "John sees men".  
+- Mass nouns have the same problems
+- Predeterminers: all, only
 
 
 == Unimplemented resource grammar constructs ==
 
-- Comparative and superlative forms of adjectives. Introduce more_<adj> predicates?
-- Cardinals.
+- Comparative and superlative forms of adjectives. 
+  Introduce more_<adj> predicates?
+- Cardinals. "two men sleep" should translate to 
+  "exist X. man(X) & exist Y. man(Y) & X != Y & (forall Z. man(Z) => Z == X | Z == Y) & sleep(X) & sleep(Y)"
 - Ordinals.
 
 
 == Underspecification ==
 
-- Negation scope
+- Scope restrictions.
+- Negation scope.
 
 
 == Problems in the resource grammar ==
 
-- "the man whose dog John beats"
-- "itself/himself/herself"
-- "everybody who sleeps" (no NP + RS rule)
+- No possesive relative pronoun: "the man whose dog John beats"
+- English only has "itself", no "himself" and "herself"
+- Cannot combine an NP with a relative sentence, e.g. 
+  "everybody who sleeps". Relatives only combine with CN.
 
