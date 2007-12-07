@@ -17,6 +17,7 @@ lin
   gfi_PN = mkPN "gfi" ;
 
   pc6802_N = mkN "pc-6802" ;
+  itelxz_N = mkN "itel-xz" ;
   itelzx_N = mkN "itel-zx" ;
   itelzy_N = mkN "itel-zy" ;
 

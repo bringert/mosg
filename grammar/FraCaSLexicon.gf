@@ -17,6 +17,7 @@ fun
   gfi_PN : PN ;
 
   pc6802_N : N ;
+  itelxz_N : N ;
   itelzx_N : N ;
   itelzy_N : N ;
 
