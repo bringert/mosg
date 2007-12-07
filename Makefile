@@ -1,7 +1,9 @@
 
 GHCFLAGS = -package gf-embed -package folkung
 
-.PHONY: mosg.cgi run ghci Union.gfcc GSyntax.hs clean distclean
+INSTALL_DIR = $(HOME)/public_html/mosg
+
+.PHONY: mosg.cgi mosg run ghci Union.gfcc GSyntax.hs install clean distclean
 
 mosg.cgi:
 	ghc $(GHCFLAGS) --make -o $@ MainCGI.hs
