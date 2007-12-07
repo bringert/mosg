@@ -50,7 +50,7 @@ tryInput p = try (evaluate (length (show p) `seq` p))
 
 -- | Keep only interpretations that do not throw exceptions.
 filterComplete :: Show a => [a] -> IO [a]
-filterComplete = fmap concat . mapM (\i -> tryInput i >>= either (\e -> putStrLn (show e) >> return []) (return . (:[]))) 
+filterComplete = fmap concat . mapM (\i -> tryInput i >>= either (\e -> {- putStrLn (show e) >> -} return []) (return . (:[]))) 
 
 readInputMaybe :: String -> Maybe Input
 readInputMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
@@ -72,7 +72,7 @@ handleText gr th i =
                           handleInputs th [input]
          Nothing    -> do let ps = parseUtt gr i
                           debug $ "Parse results: " ++ show (length ps)
-                          debug $ unlines $ map show ps
+                          --debug $ unlines $ map show ps
                           if null ps 
                             then return NoParse
                             else handleUtts th ps

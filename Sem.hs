@@ -182,6 +182,7 @@ class Applicative i => Inter i where
     iCN (GUseN n) = iN n
     iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni (\u -> u y) x)) <*> iN2 n2
     iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
+    iCN cn = unhandled "iCN" cn
 
     iDet :: GDet -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     -- FIXME: does this mean more than one?
