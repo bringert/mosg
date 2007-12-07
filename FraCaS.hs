@@ -1,4 +1,4 @@
-module FraCaS where
+module FraCaS (Problem(..), Sentence, Answer(..), readFraCaS) where
 
 import Data.Char
 import Data.Maybe
@@ -10,12 +10,6 @@ import Text.XML.HaXml.Xml2Haskell
 
 import qualified FraCaSProblemsDTD as DTD
 
-
-type Sentence = String
-
-data Answer = Yes | No | Unknown | Undef
-              deriving (Show)
-
 data Problem = Problem {
                         problemId :: Int,
                         problemPremises :: [Sentence],
@@ -24,12 +18,16 @@ data Problem = Problem {
                        }
     deriving (Show)
 
-type FraCaS = [Problem]
+type Sentence = String
 
-readFraCaS :: FilePath -> IO FraCaS
+data Answer = Yes | No | Unknown | Undef
+              deriving (Show)
+
+
+readFraCaS :: FilePath -> IO [Problem]
 readFraCaS = fmap toFraCaS . fReadXmlUnEscaped 
 
-toFraCaS :: DTD.Fracas_problems -> FraCaS
+toFraCaS :: DTD.Fracas_problems -> [Problem]
 toFraCaS (DTD.Fracas_problems (NonEmpty ps)) = catMaybes [toProblem p | DTD.Fracas_problems_Problem p <- ps]
 
 toProblem :: DTD.Problem -> Maybe Problem

@@ -1,4 +1,4 @@
-module Mosg (Theory, Output(..), Input(..), Quest(..), Grammar, 
+module Mosg (Theory, Output(..), Result(..), Input(..), Quest(..), Grammar, 
              loadGrammar, handleText) where
 
 import GSyntax
@@ -64,8 +64,7 @@ readPropMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
 
 handleText :: Grammar -> Theory -> String -> IO Output
 handleText gr th i = 
-    do debug "-------------------------------------"
-       debug "Input:"
+    do debug "Input:"
        debug $ show i
        case readInputMaybe i `mplus` fmap Statement (readPropMaybe i) of
          Just input -> do debug $ "Formula input: "
