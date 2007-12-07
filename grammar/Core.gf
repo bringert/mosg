@@ -2,6 +2,7 @@
 abstract Core = 
   Grammar - 
    [
+{-
 -- Noun
     SentCN, PossPron,
 -- Verb
@@ -28,6 +29,7 @@ abstract Core =
 -- Idion
     ImpersCl, GenericCl,
     CleftAdv, ProgrVP, ImpPl1,
+-}
 -- Phrase
     UttImpSg, UttImpPl, UttImpPol,
     UttIP, UttIAdv, UttNP, UttAdv, UttVP
