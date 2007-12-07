@@ -45,11 +45,11 @@ loadGrammar = file2grammar "Union.gfcc"
 parseUtt :: Grammar -> String -> [GUtt]
 parseUtt gr = map fg . concat . parseAll gr "Utt"
 
-tryInput :: Input -> IO (Either Exception Input)
+tryInput :: Show a => a -> IO (Either Exception a)
 tryInput p = try (evaluate (length (show p) `seq` p))
 
 -- | Keep only interpretations that do not throw exceptions.
-filterComplete :: [Input] -> IO [Input]
+filterComplete :: Show a => [a] -> IO [a]
 filterComplete = fmap concat . mapM (\i -> tryInput i >>= either (\e -> putStrLn (show e) >> return []) (return . (:[]))) 
 
 readInputMaybe :: String -> Maybe Input
@@ -77,10 +77,13 @@ handleText gr th i =
                             then return NoParse
                             else handleUtts th ps
 
+interpretUtts :: [GUtt] -> IO [Input]
+interpretUtts = 
+    liftM concat . filterComplete . map (retrieveInput . iUtt)
+
 handleUtts :: Theory -> [GUtt] -> IO Output
 handleUtts th ps =
-   do let is = concatMap (retrieveInput . iUtt) ps
-      is' <- filterComplete is
+   do is' <- interpretUtts ps
       debug $ "Interpretations: " ++ show (length is')
       debug $ unlines $ map show is'
       let is'' = nub is'
