@@ -29,6 +29,16 @@ data Output = AcceptedStatement Prop
             | WhAnswer (Exp -> Prop) [[String]]
             | CountAnswer (Exp -> Prop) Int
 
+instance Show Output where
+    show (AcceptedStatement f) = "Accepted " ++ show f
+    show NoParse = "Unable to parse input."
+    show (NoInterpretation us) = "Unable to interpret input."
+    show (NoConsistent ps) = "No consistent interpretation found."
+    show (NoInformative ps) = "No informative interpretation found."
+    show (Ambiguous is) = "The input is ambiguous."
+    show (YNQAnswer q r) = "The answer to " ++ show q ++ " is " ++ show r
+    show (WhAnswer q ss) = show (WhQuest q) ++ " = " ++ show ss
+
 loadGrammar :: IO Grammar
 loadGrammar = file2grammar "Union.gfcc"
 
