@@ -52,7 +52,7 @@ readPropMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
                          [x] -> Just x
                          _   -> Nothing
 
-handleText :: Grammar -> Theory -> String -> IO (Output,Theory)
+handleText :: Grammar -> Theory -> String -> IO Output
 handleText gr th i = 
     do debug "-------------------------------------"
        debug "Input:"
@@ -65,10 +65,10 @@ handleText gr th i =
                           debug $ "Parse results: " ++ show (length ps)
                           debug $ unlines $ map show ps
                           if null ps 
-                            then return (NoParse, th)
+                            then return NoParse
                             else handleUtts th ps
 
-handleUtts :: Theory -> [GUtt] -> IO (Output,Theory)
+handleUtts :: Theory -> [GUtt] -> IO Output
 handleUtts th ps =
    do let is = concatMap (retrieveInput . iUtt) ps
       is' <- filterComplete is
@@ -77,10 +77,10 @@ handleUtts th ps =
       let is'' = nub is'
       debug $ "Syntactically different interpretations: " ++ show (length is'')
       debug $ unlines $ map show is''
-      if null is'' then return (NoInterpretation ps, th) 
+      if null is'' then return (NoInterpretation ps) 
                    else handleInputs th is''
 
-handleInputs :: Theory -> [Input] -> IO (Output,Theory)
+handleInputs :: Theory -> [Input] -> IO Output
 handleInputs th is =
     do let ss = [p | Statement p <- is] 
            qs = [q | Question q <- is]
@@ -89,23 +89,22 @@ handleInputs th is =
        sc <- filterM (liftM (==Yes) . isConsistent th) ss
        debug $ "Consistent statements: " ++ show (length sc)
        if null sc && null qs 
-         then return (NoConsistent ss, th)
+         then return (NoConsistent ss)
          else do si <- filterM (liftM (==Yes) . isInformative th) sc
                  debug $ "Consistent and informative statements: " ++ show (length si)
                  if null si && null qs 
-                   then return (NoInformative sc, th)
+                   then return (NoInformative sc)
                    else do sd <- nubEquivalent th si
                            let is' = map Statement sd ++ map Question qs
                            debug $ "Distinct consistent and informative interpretations: "  ++ show (length is')
                            debug $ unlines $ map show is'
                            case is' of
                              [x] -> useInput th x
-                             _   -> return (Ambiguous is', th)
+                             _   -> return (Ambiguous is')
 
-useInput :: Theory -> Input -> IO (Output,Theory)
-useInput th (Statement s) = return (AcceptedStatement s, th ++ [s])
-useInput th (Question q)  = do output <- answerQuestion th q
-                               return (output, th)
+useInput :: Theory -> Input -> IO Output
+useInput th (Statement s) = return (AcceptedStatement s)
+useInput th (Question q)  = answerQuestion th q
 
 answerQuestion :: Theory -> Quest -> IO Output
 answerQuestion th (YNQuest q) = do answer <- isTrue th q

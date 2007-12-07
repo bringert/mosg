@@ -19,8 +19,11 @@ cgiMain =
        setHeader "Content-type" "text/html; charset=UTF-8"
        case mit of
          Nothing -> outputBody $ inputPage th
-         Just it -> do (output,th') <- liftIO $ handleText gr th it
-                       outputBody $ answerPage th' it output
+         Just it -> do out <- liftIO $ handleText gr th it
+                       let th' = case out of
+                                   AcceptedStatement p -> th ++ [p]
+                                   _ -> th
+                       outputBody $ answerPage th' it out
 
 inputPage :: Theory -> Html
 inputPage th = inputForm th Nothing
