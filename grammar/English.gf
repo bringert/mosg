@@ -62,7 +62,7 @@ lin
       a = RNoAg
       } ;
 
-    nobody_NP = regNP "nobody" Sg ;
+    nobody_NP = variants { regNP "nobody" Sg; regNP "noone" Sg; regNP ["no one"] Sg };
 
     no_Det = mkDeterminer Sg "no" ;
 
