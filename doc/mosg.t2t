@@ -16,6 +16,7 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
 - Multilingual.
 - Web-based interface.
 - Written in Haskell.
+- Answers wh-questions in a new way.
 
 
 = Syntax =
