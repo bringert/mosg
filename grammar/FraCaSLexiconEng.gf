@@ -2,6 +2,7 @@ concrete FraCaSLexiconEng of FraCaSLexicon = CatEng ** open ParadigmsEng in {
 lin
   italian_A = mkA "italian" ;
 
+  italian_N = mkN "italian" ;
   payrise_N = mkN "payrise" ;
 
   smith_PN = mkPN "smith" ;
@@ -18,13 +19,14 @@ lin
   birmingham_PN = mkPN "birmingham" ;
   florence_PN = mkPN "florence" ;
   katmandu_PN = mkPN "katmandu" ;
+  portugal_PN = mkPN "portugal" ;
 
   apcom_PN = mkPN "apcom" ;
   itel_PN = mkPN "itel";
   gfi_PN = mkPN "gfi" ;
   mtalk_PN = mkPN "mtalk" ;
 
-  pc6802_N = mkN "pc-6802" ;
+  pc6082_N = mkN "pc-6082" ;
   itelxz_N = mkN "itel-xz" ;
   itelzx_N = mkN "itel-zx" ;
   itelzy_N = mkN "itel-zy" ;

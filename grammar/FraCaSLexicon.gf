@@ -2,6 +2,7 @@ abstract FraCaSLexicon = Cat ** {
 fun
   italian_A : A ;
 
+  italian_N : N ;
   payrise_N : N ;
 
   smith_PN : PN ;
@@ -18,13 +19,14 @@ fun
   birmingham_PN : PN ;
   florence_PN : PN ;
   katmandu_PN : PN ;
+  portugal_PN : PN ;
 
   apcom_PN : PN ;
   itel_PN : PN ;
   gfi_PN : PN ;
   mtalk_PN : PN ;
 
-  pc6802_N : N ;
+  pc6082_N : N ;
   itelxz_N : N ;
   itelzx_N : N ;
   itelzy_N : N ;
