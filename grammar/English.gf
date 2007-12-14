@@ -33,9 +33,10 @@ concrete English of EnglishAbs =
 -}
 -- Phrase
     UttImpSg, UttImpPl, UttImpPol,
-    UttIP, UttIAdv, UttNP, UttAdv, UttVP
+    UttIP, UttIAdv, UttNP, UttAdv, UttVP,
 -- Text
 
+    everybody_NP, somebody_NP
 ],
 
   ExtraEng [Tense, Ant, Cl, RCl, QCl, S, RS, QS,
@@ -65,5 +66,8 @@ lin
     nobody_NP = variants { regNP "nobody" Sg; regNP "noone" Sg; regNP ["no one"] Sg };
 
     no_Det = mkDeterminer Sg "no" ;
+
+    everybody_NP = variants { regNP "everybody" Sg; regNP "everyone" Sg } ;
+    somebody_NP = variants { regNP "somebody" Sg; regNP "someone" Sg } ;
 
 }
