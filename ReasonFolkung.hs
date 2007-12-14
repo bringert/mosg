@@ -86,9 +86,7 @@ propToForm = runVars . f
 --
 
 folkungFlags :: Flags
--- FIXME: folkung does double free when there is a timeout
---folkungFlags = initFlags { time = Just 5 }
-folkungFlags = initFlags
+folkungFlags = initFlags { time = Just 5 }
 
 toProblem :: Theory -> Prop -> F.Problem
 toProblem th p = [F.Input F.Fact (show n) (propToForm a) | (a,n) <- zip th [0..]]
