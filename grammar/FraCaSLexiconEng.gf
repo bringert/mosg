@@ -10,7 +10,7 @@ lin
   helen_PN = mkPN "helen" ;
   anderson_PN = mkPN "anderson" ;
 
-  berlin_PN = mkPN "" ;
+  berlin_PN = mkPN "berlin" ;
 
   apcom_PN = mkPN "apcom" ;
   itel_PN = mkPN "itel";
