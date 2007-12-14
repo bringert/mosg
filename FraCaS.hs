@@ -75,6 +75,11 @@ fReadXmlUnEscaped file =
 --
 
 dumpFraCaS :: IO ()
-dumpFraCaS = do ps <- readFraCaS "fracas.xml"
+dumpFraCaS = do ps <- readFraCaS "fracas/fracas.xml"
                 mapM_ (putStrLn . dumpProblem) ps
   where dumpProblem p = unlines $ [show (problemId p)] ++ problemPremises p ++ [problemQuestion p]
+
+listUtterances :: IO [String]
+listUtterances = do ps <- readFraCaS "fracas/fracas.xml"
+                    return $ concatMap getUtts ps
+  where getUtts p = problemPremises p ++ [problemQuestion p]
