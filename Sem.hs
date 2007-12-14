@@ -42,10 +42,11 @@ class Applicative i => Inter i where
     iUtt (GUttQS qs) = QuestionI (iQS qs)
 
     iQS :: GQS -> QuestI i
-    iQS (GUseQCl GTPres GASimul GPPos qcl) = iQCl qcl
-    iQS (GUseQCl GTPres GASimul GPNeg qcl) = negQuestI (iQCl qcl)
+    -- FIXME: ignores tense and anteriority
+    iQS (GUseQCl _ _ GPPos qcl) = iQCl qcl
+    iQS (GUseQCl _ _ GPNeg qcl) = negQuestI (iQCl qcl)
     -- english only
-    iQS (GUncNegQCl GTPres GASimul qcl) = negQuestI (iQCl qcl)
+    iQS (GUncNegQCl _ _ qcl) = negQuestI (iQCl qcl)
 
     iQCl :: GQCl -> QuestI i
     iQCl (GQuestCl cl)          = YNQuestI (iCl cl)
@@ -70,21 +71,24 @@ class Applicative i => Inter i where
     iS :: GS -> i Prop
     iS (GConjS conj ss) = pure foldr1 <*> iConj conj <*> iListS ss
     iS (GDConjS dconj ss) = pure foldr1 <*> iDConj dconj <*> iListS ss
-    iS (GUseCl GTPres GASimul GPPos cl) = iCl cl
-    iS (GUseCl GTPres GASimul GPNeg cl) = fmap neg (iCl cl)
+    -- FIXME: ignores tense and anteriority
+    iS (GUseCl _ _ GPPos cl) = iCl cl
+    iS (GUseCl _ _ GPNeg cl) = fmap neg (iCl cl)
     -- a bit odd: uses a special iAdv version
     iS (GAdvS adv s) = iAdv_S adv <*> iS s
     -- english only
-    iS (GUncNegCl GTPres GASimul cl) = fmap neg (iCl cl)
+    -- FIXME: ignores tense and anteriority
+    iS (GUncNegCl _ _ cl) = fmap neg (iCl cl)
 
     iListS :: GListS -> i [Prop]
     iListS (GListS ss) = traverse iS ss
 
     iRS :: GRS -> i (Exp -> Prop)
-    iRS (GUseRCl GTPres GASimul GPPos rcl) = iRCl rcl
-    iRS (GUseRCl GTPres GASimul GPNeg rcl) = pure (\i x -> neg (i x)) <*> iRCl rcl
+    -- FIXME: ignores tense and anteriority
+    iRS (GUseRCl _ _ GPPos rcl) = iRCl rcl
+    iRS (GUseRCl _ _ GPNeg rcl) = pure (\i x -> neg (i x)) <*> iRCl rcl
     -- english only
-    iRS (GUncNegRCl GTPres GASimul rcl) = pure (\i x -> neg (i x)) <*> iRCl rcl
+    iRS (GUncNegRCl _ _ rcl) = pure (\i x -> neg (i x)) <*> iRCl rcl
 
     iRCl :: GRCl -> i (Exp -> Prop)
     -- WEIRD: such that a woman sleeps
@@ -197,7 +201,7 @@ class Applicative i => Inter i where
 
     iQuantPl :: GQuantPl -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     -- FIXME: wrong, should be universal as subject, existential as object
-    --iQuantPl (GPlQuant quant) = iQuant quant
+    iQuantPl (GPlQuant quant) = iQuant quant
     iQuantPl quantPl = unhandled "iQuantPl" quantPl
 
     iQuantSg :: GQuantSg -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
