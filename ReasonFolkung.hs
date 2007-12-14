@@ -86,7 +86,7 @@ propToForm = runVars . f
 --
 
 folkungFlags :: Flags
-folkungFlags = initFlags { time = Just 5 }
+folkungFlags = initFlags { time = Just 1 }
 
 toProblem :: Theory -> Prop -> F.Problem
 toProblem th p = [F.Input F.Fact (show n) (propToForm a) | (a,n) <- zip th [0..]]
