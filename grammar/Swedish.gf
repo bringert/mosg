@@ -3,6 +3,7 @@ concrete Swedish of SwedishAbs =
 
   GrammarSwe - 
    [
+{-
 -- Noun
     SentCN, PossPron,
 -- Verb
@@ -29,6 +30,7 @@ concrete Swedish of SwedishAbs =
 -- Idion
     ImpersCl, GenericCl,
     CleftAdv, ProgrVP, ImpPl1,
+-}
 -- Phrase
     UttImpSg, UttImpPl, UttImpPol,
     UttIP, UttIAdv, UttNP, UttAdv, UttVP

@@ -15,7 +15,7 @@ mosg-fracas:
 	ghc $(GHCFLAGS) --make -o $@ MainFraCaS.hs
 
 Union.gfcc GSyntax.hs:
-	gfc --make -haskell grammar/UnionEng.gf # grammar/UnionSwe.gf
+	gfc --make -haskell grammar/UnionEng.gf grammar/UnionSwe.gf
 
 install:
 	mkdir -p $(INSTALL_DIR)
