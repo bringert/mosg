@@ -72,7 +72,7 @@ handleText gr th i =
                           handleInputs th [input]
          Nothing    -> do let ps = parseUtt gr i
                           debug $ "Parse results: " ++ show (length ps)
-                          --debug $ unlines $ map show ps
+                          debug $ unlines $ map show ps
                           if null ps 
                             then return NoParse
                             else handleUtts th ps
