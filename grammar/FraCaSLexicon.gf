@@ -10,7 +10,7 @@ fun
 
   -- nationality adjectives
   italian_A : A ;
-  portugese_A : A ;
+  portuguese_A : A ;
 
   accountant_N : N ;
   auditor_N : N ;
@@ -75,6 +75,8 @@ fun
   icm_PN : PN ;
   mfi_PN : PN ;
   r95103_PN : PN ;
+  cia_PN : PN ;
+  bt_PN : PN ;
 
   -- model names 
   pc6082_N : N ;

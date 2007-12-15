@@ -9,7 +9,7 @@ lin
   unemployed_A = mkA "unemployed" ;
 
   italian_A = mkA "italian" ;
-  portugese_A = mkA "portugese" ;
+  portuguese_A = mkA "portuguese" ;
 
   accountant_N = mkN "accountant" ;
   auditor_N = mkN "auditor" ;
@@ -69,7 +69,9 @@ lin
   mfi_PN = mkPN "mfi" ;
   mtalk_PN = mkPN "mtalk" ;
   icm_PN = mkPN "icm" ;
-  r95103_PN = mkPN "R-95-103" ;
+  r95103_PN = mkPN "r-95-103" ;
+  cia_PN = mkPN "cia" ;
+  bt_PN = mkPN "bt" ;
 
   pc6082_N = mkN "pc-6082" ;
   itelxz_N = mkN "itel-xz" ;
