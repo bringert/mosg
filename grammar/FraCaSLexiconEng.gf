@@ -34,7 +34,7 @@ lin
   performance_N = mkN "performance" ;
   proposal_N = mkN "proposal" ;
   species_N = mkN "species" ;
-  stockmarket_N = mkN "stockmarket" ;
+  stockmarket_N = mkN "stock-market" ;
   trader_N = mkN "trader" ;
   workstation_N = mkN "workstation" ;
 
