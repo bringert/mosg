@@ -27,4 +27,4 @@ clean:
 	-rm -f mosg.cgi mosg mosg-fracas
 
 distclean: clean
-	-rm -f Restrict.gfcc GSyntax.hs
+	-rm -f Union.gfcc GSyntax.hs
