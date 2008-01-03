@@ -1,2 +1,2 @@
 --# -path=.:present:prelude
-abstract Union = EnglishAbs, SwedishAbs, NorwegianAbs {-, GermanAbs -} ** {} 
+abstract Union = EnglishAbs {- , SwedishAbs, NorwegianAbs, GermanAbs -} ** {} 
