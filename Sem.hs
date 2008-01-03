@@ -190,8 +190,9 @@ class Applicative i => Inter i where
 
     iDet :: GDet -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     -- FIXME: does this mean more than one?
-    iDet (GDetPl quantPl GNoNum GNoOrd) = iQuantPl quantPl
-    iDet (GDetSg quantSg GNoOrd) = iQuantSg quantSg
+    -- FIXME: wrong, indef pl should be universal as subject, existential as object
+    iDet (GDetPl quant GNoNum GNoOrd) = iQuant quant
+    iDet (GDetSg quant GNoOrd) = iQuant quant
     iDet Gevery_Det = pure (\u v -> forAll (\x -> u x ==> v x))
     iDet Gno_Det = pure (\u v -> neg (thereIs (\x -> u x &&& v x)))
     -- FIXME: does this mean more than one?
@@ -199,16 +200,8 @@ class Applicative i => Inter i where
     iDet GsomeSg_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
     iDet det = unhandled "iDet" det
 
-    iQuantPl :: GQuantPl -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-    -- FIXME: wrong, should be universal as subject, existential as object
-    iQuantPl (GPlQuant quant) = iQuant quant
-    iQuantPl quantPl = unhandled "iQuantPl" quantPl
-
-    iQuantSg :: GQuantSg -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-    iQuantSg (GSgQuant quant) = iQuant quant
-    -- FIXME: is this correct?
-    iQuantSg Gone_Quant = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y &&& v y ==> y === x)))
-    iQuantSg quantSg = unhandled "iQuantSg" quantSg
+    -- FIXME: handle this with numerals
+--    iQuantSg Gone_Quant = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y &&& v y ==> y === x)))
 
     iQuant :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     iQuant GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y ==> y === x)))
