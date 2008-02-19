@@ -16,4 +16,6 @@ abstract EnglishAbs =
 
 fun who_RP : RP ;
 
+fun neither_Det : Det ;
+
 }
