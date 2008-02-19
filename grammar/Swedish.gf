@@ -1,4 +1,3 @@
---# -path=.:present:prelude
 concrete Swedish of SwedishAbs = 
 
   GrammarSwe - 

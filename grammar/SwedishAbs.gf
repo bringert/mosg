@@ -1,4 +1,3 @@
---# -path=.:present:prelude
 abstract SwedishAbs = 
   Core,
 

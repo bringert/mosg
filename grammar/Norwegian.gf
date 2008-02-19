@@ -1,4 +1,3 @@
---# -path=.:present:prelude
 concrete Norwegian of NorwegianAbs = 
 
   GrammarNor - 

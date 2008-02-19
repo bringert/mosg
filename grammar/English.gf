@@ -1,4 +1,3 @@
---# -path=.:present:prelude
 concrete English of EnglishAbs = 
 
   GrammarEng - 

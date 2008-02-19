@@ -1,4 +1,4 @@
---# -path=.:present:prelude
+--# -path=.:alltenses:prelude
 concrete UnionEng of Union = English ** {
 
 }

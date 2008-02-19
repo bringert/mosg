@@ -1,4 +1,3 @@
---# -path=.:present:prelude
 concrete German of GermanAbs = 
 
   GrammarGer - 
