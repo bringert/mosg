@@ -76,4 +76,18 @@ lin
     several_Det = mkDeterminer Pl "several" ;
     at8least_Predet = ss ["at least"] ;
 
+    -- FIXME: many strange forms
+    should_VV = {
+      s = table {
+	VVF VInf => "should" ;
+	VVF VPres => "should" ;
+	VVF VPPart => "should" ;
+	VVF VPresPart => "should" ;
+	VVF VPast => "should" ;
+	VVPastNeg => "shouldn't" ;
+	VVPresNeg => "shouldn't"
+	} ;
+      isAux = True
+    } ;
+
 }
