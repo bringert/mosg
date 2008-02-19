@@ -18,4 +18,8 @@ fun who_RP : RP ;
 
 fun neither_Det : Det ;
 
+fun several_Det : Det ;
+
+fun at8least_Predet : Predet ;
+
 }

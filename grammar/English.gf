@@ -51,7 +51,7 @@ concrete English of EnglishAbs =
   BigLexEng,
   FraCaSLexiconEng
 
-** open ResEng, MorphoEng in {
+** open ResEng, MorphoEng, Prelude in {
 
 lin
     who_RP = {
@@ -73,5 +73,7 @@ lin
     somebody_NP = variants { regNP "somebody" Sg; regNP "someone" Sg } ;
 
     every_Det = variants { mkDeterminer Sg "every"; mkDeterminer Sg "each" };
+    several_Det = mkDeterminer Pl "several" ;
+    at8least_Predet = ss ["at least"] ;
 
 }
