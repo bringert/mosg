@@ -45,4 +45,12 @@ fun nobody_NP : NP ;
 
 fun no_Det : Det ;
 
+fun both_Det : Det ;
+
+fun exactly_AdN : AdN ;
+
+fun at8most_AdN : AdN ;
+
+fun at8least_AdN : AdN ;
+
 }

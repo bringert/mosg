@@ -67,14 +67,18 @@ lin
 
     nobody_NP = variants { regNP "nobody" Sg; regNP "noone" Sg; regNP ["no one"] Sg };
 
-    no_Det = mkDeterminer Sg "no" ;
+    no_Det = variants { mkDeterminer Sg "no"; mkDeterminer Pl "no" } ;
+
+    both_Det = mkDeterminer Pl "both";
 
     everybody_NP = variants { regNP "everybody" Sg; regNP "everyone" Sg } ;
     somebody_NP = variants { regNP "somebody" Sg; regNP "someone" Sg } ;
 
     every_Det = variants { mkDeterminer Sg "every"; mkDeterminer Sg "each" };
     several_Det = mkDeterminer Pl "several" ;
-    at8least_Predet = ss ["at least"] ;
+    exactly_AdN = ss "exactly" ;
+    at8least_AdN = ss ["at least"] ;
+    at8most_AdN = ss ["at least"] ;
 
     -- FIXME: many strange forms
     should_VV = {

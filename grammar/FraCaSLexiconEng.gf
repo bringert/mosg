@@ -1,4 +1,4 @@
-concrete FraCaSLexiconEng of FraCaSLexicon = CatEng ** open ParadigmsEng in {
+concrete FraCaSLexiconEng of FraCaSLexicon = CatEng ** open Prelude, StructuralEng, IrregEng, ParadigmsEng in {
 lin
   broke_A = mkA "broke" ;
   fourlegged_A = mkA "four-legged" ;
@@ -7,6 +7,9 @@ lin
   national_A = mkA "national" ;
   successful_A = mkA "successful" ;
   unemployed_A = mkA "unemployed" ;
+  interesting_A = mkA "interesting" ;
+
+  asleep_A = mkA "asleep" ;
 
   italian_A = mkA "italian" ;
   portuguese_A = mkA "portuguese" ;
@@ -80,8 +83,19 @@ lin
   mips_N = mkN "mips" ;
 
   graduate_V = mkV "graduate" ;
+  live_V = mkV "live" ;
+  travel_V = mkV "travel" ;
 
   chair_V2 = mkV2 (mkV "chair") ;
   dupe_V2 = mkV2 (mkV "dupe") ;
+  know_V2 = mkV2 know_V ;
+  run_V2 = mkV2 run_V ;
+
+  contribute_V3to = dirV3 (mkV "contribute") to_Prep ;
+
+  start_VV = mkVV (mkV "start");
+
+  really_AdA = ss "really" ;
+
 
 }

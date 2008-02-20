@@ -7,6 +7,10 @@ fun
   national_A : A ;
   successful_A : A ;
   unemployed_A : A ;
+  interesting_A : A ;
+
+  -- FIXME: a bit weird
+  asleep_A : A ;
 
   -- nationality adjectives
   italian_A : A ;
@@ -87,9 +91,23 @@ fun
   -- units of measurement
   mips_N : N ;
 
+
+  --verbs
   graduate_V : V ;
+  live_V : V ;
+  travel_V : V ;
 
   chair_V2 : V2 ;
   dupe_V2 : V2 ;
+  know_V2 : V2 ;
+  run_V2 : V2 ;
+
+  contribute_V3to : V3 ;
+
+  start_VV : VV ;
+
+  -- adverbs
+
+  really_AdA : AdA ;
 
 }
