@@ -40,6 +40,7 @@ class Applicative i => Inter i where
     iUtt :: GUtt -> InputI i
     iUtt (GUttS s) = StatementI (iS s)
     iUtt (GUttQS qs) = QuestionI (iQS qs)
+    iUtt utt = unhandled "iUtt" utt
 
     iQS :: GQS -> QuestI i
     -- FIXME: ignores tense and anteriority
@@ -53,6 +54,7 @@ class Applicative i => Inter i where
     iQCl (GQuestSlash ip slash) = let (i,q) = iIP ip in q (i <*> iSlash slash)
     iQCl (GQuestVP ip vp)       = let (i,q) = iIP ip in q (i <*> iVP vp)
     iQCl (GExistIP ip)          = let (i,q) = iIP ip in q (i <*> pure (\x -> true))
+    iQCl qcl = unhandled "iQcl" qcl
 
     iIP :: GIP -> (i ((Exp -> Prop) -> (Exp -> Prop)), 
                    i (Exp -> Prop) -> QuestI i)
@@ -112,6 +114,7 @@ class Applicative i => Inter i where
     -- (which) a woman kills
     iSlash (GSlashV2 np v2) = pure (\ni vi x -> ni (vi (\u -> u x)))
                               <*> iNP np <*> iV2 v2
+    iSlash slash = unhandled "iSlash" slash
 
     iConj :: GConj -> i (Prop -> Prop -> Prop)
     iConj Gand_Conj = pure (&&&)
@@ -126,6 +129,7 @@ class Applicative i => Inter i where
     iCl (GPredVP np vp) = iNP np <*> iVP vp
     iCl (GCleftNP np rs) = iNP np <*> iRS rs
     iCl (GExistNP np) = iNP np <*> pure (\x -> true)
+    iCl cl = unhandled "iCl" cl
 
     iVP :: GVP -> i (Exp -> Prop)
     -- sleeps with a woman
@@ -206,6 +210,7 @@ class Applicative i => Inter i where
     iQuant :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     iQuant GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y ==> y === x)))
     iQuant GIndefArt = pure (\u v -> thereIs (\x -> u x &&& v x))
+    iQuant quant = unhandled "iQuant" quant
 
     iAP :: GAP -> i (Exp -> Prop)
     iAP (GComplA2 a2 np) = iA2 a2 <*> iNP np
@@ -289,4 +294,5 @@ symbol :: Show a => a -> String
 symbol = map toLower . takeWhile (/='_') . tail . head . words . show 
 
 unhandled :: Show a => String -> a -> b
-unhandled f x = error $ "Missing case in " ++ f ++ ": " ++ show x
+--unhandled f x = error $ "Missing case in " ++ f ++ ": " ++ show x
+unhandled f x = error $ "Missing case in " ++ f ++ ": " ++ head (words (show x))
