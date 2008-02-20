@@ -103,4 +103,33 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
 - English only has "itself", no "himself" and "herself"
 - Cannot combine an NP with a relative sentence, e.g. 
   "everybody who sleeps". Relatives only combine with CN.
+- Reciprocal "john and mary met"
+- Bare infinitive: "john saw mary sleep"
+- Number as NP: "john won in 1992"
+- "john gambling is beautiful"
+- Genitive: "the king's wife sleeps"
+- PN modifying a N: "nobel prize"
+- N modifying N: "committee member"
+- Time expressions:
+  every week/month/year
+  at a quarter past five
+  in two years
+  in two hours
+  
 
+== Missing from the lexicon ==
+
+never
+twice
+together
+out
+any
+anyone
+anybody
+already
+another
+a few
+neither_Det
+at most
+used to
+exactly (two etc.)
