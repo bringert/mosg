@@ -50,7 +50,7 @@ tryInput p = try (evaluate (length (show p) `seq` p))
 
 -- | Keep only interpretations that do not throw exceptions.
 filterComplete :: Show a => [a] -> IO [a]
-filterComplete = fmap concat . mapM (\i -> tryInput i >>= either (\e -> {- putStrLn (show e) >> -} return []) (return . (:[]))) 
+filterComplete = fmap concat . mapM (\i -> tryInput i >>= either (\e -> putStrLn (show e) >> return []) (return . (:[]))) 
 
 readInputMaybe :: String -> Maybe Input
 readInputMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
@@ -64,15 +64,14 @@ readPropMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
 
 handleText :: Grammar -> Theory -> String -> IO Output
 handleText gr th i = 
-    do debug "Input:"
-       debug $ show i
+    do debug $ "Input: " ++ show i
        case readInputMaybe i `mplus` fmap Statement (readPropMaybe i) of
          Just input -> do debug $ "Formula input: "
                           debug $ show input
                           handleInputs th [input]
          Nothing    -> do let ps = parseUtt gr i
                           debug $ "Parse results: " ++ show (length ps)
-                          debug $ unlines $ map (showTree . gf) ps
+                          --debug $ unlines $ map (showTree . gf) ps
                           if null ps 
                             then return NoParse
                             else handleUtts th ps
@@ -83,14 +82,17 @@ interpretUtts =
 
 handleUtts :: Theory -> [GUtt] -> IO Output
 handleUtts th ps =
-   do is' <- interpretUtts ps
-      debug $ "Interpretations: " ++ show (length is')
-      debug $ unlines $ map show is'
-      let is'' = nub is'
-      debug $ "Syntactically different interpretations: " ++ show (length is'')
-      debug $ unlines $ map show is''
-      if null is'' then return (NoInterpretation ps) 
-                   else handleInputs th is''
+   do is <- interpretUtts ps
+      debug $ "Interpretations: " ++ show (length is)
+      if null is 
+        then return (NoInterpretation ps)
+        else do debug $ unlines $ map show is
+                let is' = nub is
+                debug $ "Syntactically different interpretations: " ++ show (length is')
+                if null is' 
+                  then return (NoInterpretation ps) 
+                  else do debug $ unlines $ map show is'
+                          handleInputs th is'
 
 handleInputs :: Theory -> [Input] -> IO Output
 handleInputs th is =

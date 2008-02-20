@@ -82,7 +82,7 @@ callTool tool input =
        system $ tool ++ " --time 5 input.p > output.p"
        output <- readFile "output.p"
        let answer = getAnswer output
-       hPutStrLn stderr $ tool ++ " said: " ++ show answer
+--       hPutStrLn stderr $ tool ++ " said: " ++ show answer
        return answer
 
 getAnswer :: String -> Answer

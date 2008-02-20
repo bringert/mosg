@@ -16,9 +16,11 @@ data Status = QuestionParseFailed
             | OtherError
   deriving Show
 
+putRule = putStrLn "----------------------------------------------------------------------"
+
 testProblem :: Grammar -> Problem -> IO Status
 testProblem gr p = 
-    do putStrLn "-------------------------------------"
+    do putRule
        putStrLn $ "FraCaS problem " ++ show (problemId p)
        m <- addPremises gr [] (zip [1..] (problemPremises p))
        case m of 
@@ -76,6 +78,7 @@ isAmbigous _ = False
 testProblems :: Grammar -> [Problem] -> IO ()
 testProblems gr ps = 
     do st <- mapM (testProblem gr) ps
+       putRule
        printf "%d correct answers\n" $ length [ () | FoundAnswer r a <- st, isCorrect r a]
        printf "%d incorrect answers\n" $ length [ () | FoundAnswer r a <- st, not (isCorrect r a)]
        printf "%d parse errors\n" $ length (filter isParseError st)

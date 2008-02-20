@@ -95,7 +95,7 @@ toProblem th p = [F.Input F.Fact (show n) (propToForm a) | (a,n) <- zip th [0..]
 prove :: Theory -> Prop -> IO Result
 prove t p = 
     do answer <- Exception.try $ Equinox.solve folkungFlags (toProblem t p)
-       hPutStrLn stderr $ "Equinox said: " ++ show answer
+--       hPutStrLn stderr $ "Equinox said: " ++ show answer
        return $ case answer of
                   Right F.Theorem -> Yes
                   _         -> DontKnow
@@ -103,7 +103,7 @@ prove t p =
 counterSatisfy :: Theory -> Prop -> IO Result
 counterSatisfy t p = 
     do answer <- Exception.try $ Paradox.solve folkungFlags (toProblem t p)
-       hPutStrLn stderr $ "Paradox said: " ++ show answer
+--       hPutStrLn stderr $ "Paradox said: " ++ show answer
        return $ case answer of
                   Right F.CounterSatisfiable -> Yes
                   Right F.Theorem            -> No
