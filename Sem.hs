@@ -146,6 +146,8 @@ class Applicative i => Inter i where
     iVP (GUseComp comp) = iComp comp
     -- sleeps
     iVP (GUseV v) = iV v
+    -- is sleeping
+    iVP (GProgrVP vp) = iVP vp
     iVP vp = unhandled "iVP" vp
 
     iComp :: GComp -> i (Exp -> Prop)
