@@ -96,6 +96,8 @@ lin
 
   start_VV = mkVV (mkV "start");
 
+  see_VS = mkVS see_V ;
+
   really_AdA = ss "really" ;
 
 

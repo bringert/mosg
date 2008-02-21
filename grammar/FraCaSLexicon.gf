@@ -107,6 +107,8 @@ fun
 
   start_VV : VV ;
 
+  see_VS : VS ;
+
   -- adverbs
 
   really_AdA : AdA ;
