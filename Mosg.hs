@@ -42,8 +42,19 @@ instance Show Output where
 loadGrammar :: IO Grammar
 loadGrammar = file2grammar "Union.gfcc"
 
+
+preprocess :: String -> String
+preprocess = unwords . unfoldr split
+  where
+    split :: String -> Maybe (String,String)
+    split "" = Nothing
+    split (c:cs) | isSpace c = split cs
+                 | isPunctuation c = Just ([c], cs)
+                 | otherwise = let (w,cs') = break isBreak cs in Just (c:w,cs')
+        where isBreak x = isSpace x || (isPunctuation x && x `notElem` "-'")
+
 parseUtt :: Grammar -> String -> [GUtt]
-parseUtt gr = map fg . concat . parseAll gr "Utt"
+parseUtt gr = map fg . concat . parseAll gr "Utt" . preprocess
 
 tryInput :: Show a => a -> IO (Either Exception a)
 tryInput p = try (evaluate (length (show p) `seq` p))
