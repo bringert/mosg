@@ -90,6 +90,7 @@ lin
   dupe_V2 = mkV2 (mkV "dupe") ;
   know_V2 = mkV2 know_V ;
   run_V2 = mkV2 run_V ;
+  attend_V2 = mkV2 (mkV "attend") ;
 
   contribute_V3to = dirV3 (mkV "contribute") to_Prep ;
 

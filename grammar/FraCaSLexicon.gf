@@ -101,6 +101,7 @@ fun
   dupe_V2 : V2 ;
   know_V2 : V2 ;
   run_V2 : V2 ;
+  attend_V2 : V2 ;
 
   contribute_V3to : V3 ;
 
