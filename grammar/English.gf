@@ -67,9 +67,13 @@ lin
 
     nobody_NP = variants { regNP "nobody" Sg; regNP "noone" Sg; regNP ["no one"] Sg };
 
+    anybody_NP = variants { regNP "anybody" Sg; regNP "anyone" Sg };
+
     no_Det = variants { mkDeterminer Sg "no"; mkDeterminer Pl "no" } ;
 
     both_Det = mkDeterminer Pl "both";
+
+    any_Predet = ss "any" ;
 
     everybody_NP = variants { regNP "everybody" Sg; regNP "everyone" Sg } ;
     somebody_NP = variants { regNP "somebody" Sg; regNP "someone" Sg } ;
