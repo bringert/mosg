@@ -1,3 +1,4 @@
+--# -path=.:alltenses:prelude
 concrete English of EnglishAbs = 
 
   GrammarEng - 
@@ -97,5 +98,7 @@ lin
 	} ;
       isAux = True
     } ;
+
+    BareInfVS vs np vp = insertObj (\\_ => np.s!Acc ++ infVP True vp np.a) (predV vs) ;
 
 }

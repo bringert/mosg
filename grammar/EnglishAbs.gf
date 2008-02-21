@@ -22,4 +22,6 @@ fun several_Det : Det ;
 
 fun should_VV : VV ;
 
+fun BareInfVS : VS -> NP -> VP -> VP ;
+
 }
