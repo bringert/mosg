@@ -3,7 +3,7 @@ GHCFLAGS = -package gf-embed -package folkung
 
 INSTALL_DIR = $(HOME)/public_html/mosg
 
-.PHONY: mosg.cgi mosg mosg-fracas Union.gfcc GSyntax.hs install clean distclean
+.PHONY: mosg.cgi mosg mosg-fracas test Union.gfcc GSyntax.hs install clean distclean
 
 mosg.cgi:
 	ghc $(GHCFLAGS) --make -o $@ MainCGI.hs
@@ -13,6 +13,9 @@ mosg:
 
 mosg-fracas:
 	ghc $(GHCFLAGS) --make -o $@ MainFraCaS.hs
+
+test:
+	ghc $(GHCFLAGS) -i../embedded-gf/src --make -o $@ test.hs
 
 Union.gfcc GSyntax.hs:
 	gfc --make -haskell grammar/UnionEng.gf # grammar/UnionSwe.gf grammar/UnionNor.gf grammar/UnionGer.gf
