@@ -104,26 +104,16 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
 - Cannot combine an NP with a relative sentence, e.g. 
   "everybody who sleeps". Relatives only combine with CN.
 - Reciprocal "john and mary met"
-- Bare infinitive: "john saw mary sleep"
-- Number as NP: "john won in 1992"
 - "john gambling is beautiful"
-- Genitive: "the king's wife sleeps"
 - PN modifying a N: "nobel prize"
-- N modifying N: "committee member"
+- Subjunctive for QS: "if john sleeps, does mary sleep"
 - Time expressions:
   every week/month/year
   at a quarter past five
   in two years
   in two hours
-  
 
 == Missing from the lexicon ==
 
-never
-twice
-together
 out
-already
-another
-a few
 used to

@@ -19,7 +19,11 @@ fun no_Det : Det ;
 
 fun both_Det : Det ;
 
+fun a8few_Det : Det ;
+
 fun any_Predet : Predet ;
+
+fun another_Predet : Predet ;
 
 fun exactly_AdN : AdN ;
 

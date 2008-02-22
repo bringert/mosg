@@ -96,6 +96,7 @@ fun
   graduate_V : V ;
   live_V : V ;
   travel_V : V ;
+  lead_V : V ;
 
   chair_V2 : V2 ;
   dupe_V2 : V2 ;

@@ -1,7 +1,6 @@
 abstract EnglishAbs = 
   Core,
-  ExtraEngAbs [Tense, Ant, Cl, RCl, QCl, S, RS, QS,
-               UncNegCl, UncNegQCl, UncNegRCl],
+  ExtraEngAbs,
 
 --  Lexicon
 
@@ -23,5 +22,7 @@ fun several_Det : Det ;
 fun should_VV : VV ;
 
 fun BareInfVS : VS -> NP -> VP -> VP ;
+
+fun VerbCN : V -> CN -> CN ; -- running man
 
 }

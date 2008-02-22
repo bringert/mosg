@@ -8,13 +8,12 @@ concrete English of EnglishAbs =
     UttIP, UttIAdv, UttNP, UttAdv, UttVP,
 -- overridden
     everybody_NP, somebody_NP,
-    every_Det
+    every_Det, only_Predet
 ],
 
   TimeEng,
 
-  ExtraEng [Tense, Ant, Cl, RCl, QCl, S, RS, QS,
-               UncNegCl, UncNegQCl, UncNegRCl],
+  ExtraEng,
 
 --  LexiconEng
 
@@ -47,13 +46,18 @@ lin
 
     both_Det = mkDeterminer Pl "both";
 
+    a8few_Det = mkDeterminer Pl ["a few"];
+
     any_Predet = ss "any" ;
+
+    another_Predet = ss "another" ;
 
     everybody_NP = variants { regNP "everybody" Sg; regNP "everyone" Sg } ;
     somebody_NP = variants { regNP "somebody" Sg; regNP "someone" Sg } ;
 
     every_Det = variants { mkDeterminer Sg "every"; mkDeterminer Sg "each" };
     several_Det = mkDeterminer Pl "several" ;
+    only_Predet = variants { ss "only"; ss "just" };
     exactly_AdN = ss "exactly" ;
     at8least_AdN = ss ["at least"] ;
     at8most_AdN = ss ["at least"] ;
@@ -73,5 +77,7 @@ lin
     } ;
 
     BareInfVS vs np vp = insertObj (\\_ => np.s!Acc ++ infVP True vp np.a) (predV vs) ;
+
+    VerbCN v cn = {s = \\n,c => v.s ! VPresPart ++ cn.s ! n ! c };
 
 }

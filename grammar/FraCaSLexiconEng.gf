@@ -85,6 +85,7 @@ lin
   graduate_V = mkV "graduate" ;
   live_V = mkV "live" ;
   travel_V = mkV "travel" ;
+  lead_V = IrregEng.lead_V ;
 
   chair_V2 = mkV2 (mkV "chair") ;
   dupe_V2 = mkV2 (mkV "dupe") ;
