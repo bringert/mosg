@@ -1,6 +1,6 @@
 abstract EnglishAbs = 
   Core,
-  ExtraEngAbs,
+  ExtraEngAbs - [VPI, ListVPI, BaseVPI, ConsVPI, MkVPI, ConjVPI, ComplVPIVV],
 
 --  Lexicon
 

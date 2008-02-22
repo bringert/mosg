@@ -13,7 +13,7 @@ concrete English of EnglishAbs =
 
   TimeEng,
 
-  ExtraEng,
+  ExtraEng - [VPI, ListVPI, BaseVPI, ConsVPI, MkVPI, ConjVPI, ComplVPIVV],
 
 --  LexiconEng
 
