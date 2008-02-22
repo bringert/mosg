@@ -50,6 +50,7 @@ preprocess = unwords . unfoldr split
     split "" = Nothing
     split (c:cs) | isSpace c = split cs
                  | isPunctuation c = Just ([c], cs)
+                 | isDigit c && not (null cs) && isDigit (head cs) = Just ([c], cs)
                  | otherwise = let (w,cs') = break isBreak cs in Just (c:w,cs')
         where isBreak x = isSpace x || (isPunctuation x && x `notElem` "-'")
 
