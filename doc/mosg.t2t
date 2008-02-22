@@ -117,3 +117,10 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
 
 out
 used to
+
+== Other problems ==
+
+Uppser/lower case. Currently we make the whole input lower case
+because we can't handle the sentence initial upper case letter.
+This causes problems with words that are upper-case in the grammar,
+e.g. I, Monday, etc.
