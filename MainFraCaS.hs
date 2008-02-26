@@ -3,6 +3,7 @@ import FraCaS
 
 import Control.Exception
 import Control.Monad
+import System.Environment
 import Text.Printf
 
 
@@ -28,7 +29,8 @@ testProblem gr p =
          Right th ->
              do out <- handleText gr th (problemQuestion p)
                 case out of
-                  YNQAnswer _ r -> do putStrLn $ "Answer: " ++ show r
+                  YNQAnswer _ r -> do putStrLn $ "Answer: " ++ show r 
+                                                   ++ " (correct answer: " ++ show (problemAnswer p) ++ ")"
                                       return $ FoundAnswer r (problemAnswer p)
                   NoParse -> return QuestionParseFailed
                   NoInterpretation _ -> return QuestionInterpretationFailed
@@ -87,6 +89,9 @@ testProblems gr ps =
        printf "%d other errors\n" $ length [ () | OtherError <- st]
 
 main :: IO ()
-main = do gr <- loadGrammar
-          problems <- readFraCaS "fracas/fracas.xml"
+main = do args <- getArgs
+          let keepProblem p | null args = True
+                            | otherwise = problemId p `elem` map read args
+          gr <- loadGrammar
+          problems <- liftM (filter keepProblem) $ readFraCaS "fracas/fracas.xml"
           testProblems gr problems

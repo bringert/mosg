@@ -83,7 +83,7 @@ handleText gr th i =
                           handleInputs th [input]
          Nothing    -> do let ps = parseUtt gr i
                           debug $ "Parse results: " ++ show (length ps)
-                          --debug $ unlines $ map (showTree . gf) ps
+                          debug $ unlines $ map (showTree . gf) ps
                           if null ps 
                             then return NoParse
                             else handleUtts th ps
@@ -98,12 +98,12 @@ handleUtts th ps =
       debug $ "Interpretations: " ++ show (length is)
       if null is 
         then return (NoInterpretation ps)
-        else do debug $ unlines $ map show is
+        else do -- debug $ unlines $ map show is
                 let is' = nub is
                 debug $ "Syntactically different interpretations: " ++ show (length is')
                 if null is' 
                   then return (NoInterpretation ps) 
-                  else do debug $ unlines $ map show is'
+                  else do -- debug $ unlines $ map show is'
                           handleInputs th is'
 
 handleInputs :: Theory -> [Input] -> IO Output
