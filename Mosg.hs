@@ -81,7 +81,7 @@ handleText gr th i =
          Just input -> do debug $ "Formula input: "
                           debug $ show input
                           handleInputs th [input]
-         Nothing    -> do let ps = parseUtt gr i
+         Nothing    -> do ps <- filterComplete $ parseUtt gr i
                           debug $ "Parse results: " ++ show (length ps)
                           debug $ unlines $ map (showTree . gf) ps
                           if null ps 
