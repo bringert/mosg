@@ -193,13 +193,17 @@ class Applicative i => Inter i where
     iCN (GUseN n) = iN n
     iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni (\u -> u y) x)) <*> iN2 n2
     iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
+    -- FIXME: this produces some odd predicates, 
+    -- e.g. "labour mp" -> "labour(X) & mp(X)",
+    -- but the person is not the party
+    iCN (GCompoundCN cn1 cn2) = pure (\ci1 ci2 x -> ci1 x &&& ci2 x) <*> iCN cn1 <*> iCN cn2
     iCN cn = unhandled "iCN" cn
 
     iDet :: GDet -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     -- FIXME: does this mean more than one?
     -- FIXME: wrong, indef pl should be universal as subject, existential as object
-    iDet (GDetPl quant GNoNum GNoOrd) = iQuant quant
-    iDet (GDetSg quant GNoOrd) = iQuant quant
+    iDet (GDetPl quant GNoNum ord) = pure (\qi oi u v -> qi (oi u) v) <*> iQuant quant <*> iOrd ord
+    iDet (GDetSg quant ord) = pure (\qi oi u v -> qi (oi u) v) <*> iQuant quant <*> iOrd ord
     iDet Gevery_Det = pure (\u v -> forAll (\x -> u x ==> v x))
     iDet Gno_Det = pure (\u v -> neg (thereIs (\x -> u x &&& v x)))
     -- FIXME: does this mean more than one?
@@ -207,12 +211,20 @@ class Applicative i => Inter i where
     iDet GsomeSg_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
     iDet det = unhandled "iDet" det
 
+    iOrd :: GOrd -> i ((Exp -> Prop) -> (Exp -> Prop))
+    iOrd GNoOrd = pure id
+    iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
+    iOrd ord = unhandled "iOrd" ord
+
     -- FIXME: handle this with numerals
 --    iQuantSg Gone_Quant = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y &&& v y ==> y === x)))
 
     iQuant :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+    -- FIXME: wrong for plurals, "the dogs" == "all dogs & exist dogs"
     iQuant GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y ==> y === x)))
     iQuant GIndefArt = pure (\u v -> thereIs (\x -> u x &&& v x))
+    -- FIXME: this should be like definite
+    iQuant (GGenNP np) = pure (\ni u v -> thereIs (\x -> u x &&& ni (\y -> of_Pred y x) &&& v x)) <*> iNP np
     iQuant quant = unhandled "iQuant" quant
 
     iAP :: GAP -> i (Exp -> Prop)
@@ -220,6 +232,7 @@ class Applicative i => Inter i where
     iAP (GConjAP conj aps)   = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iConj conj   <*> iListAP aps
     iAP (GDConjAP dconj aps) = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iDConj dconj <*> iListAP aps
     iAP (GPositA a) = iA a
+    iAP (GComparA a np) = iA_comparative a <*> iNP np
     iAP (GReflA2 a2) = pure (\ia x -> ia (\u -> u x) x) <*> iA2 a2
     iAP ap = unhandled "iAP" ap
 
@@ -274,6 +287,10 @@ class Applicative i => Inter i where
     iA (GUseA2 a2) = pure (\i x -> thereIs (\y -> i (\v -> v y) x)) <*> iA2 a2
     iA a = pure (\x -> Pred (symbol a) [x])
 
+    iA_comparative :: GA -> i (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+    iA_comparative a@(GUseA2 _) = unhandled "iA_comparative" a
+    iA_comparative a = pure (\o x -> o (\y -> Pred (comparativeSymbol a) [x,y]))
+
     iA2 :: GA2 -> i (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
     iA2 a2 = pure (\o x -> o (\y -> Pred (symbol a2) [x,y]))
 
@@ -288,6 +305,16 @@ class Applicative i => Inter i where
 
     iPrep :: GPrep -> i (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
     iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
+
+--
+-- * Special predicates
+--
+
+of_Pred :: Exp -> Exp -> Prop
+of_Pred x y = Pred "special_of" [x,y]
+
+comparativeSymbol :: GA -> String
+comparativeSymbol = ("more_" ++) . symbol
 
 --
 -- * Utilities
