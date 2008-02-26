@@ -99,6 +99,7 @@ class Applicative i => Inter i where
     iRCl (GRelSlash rp slash) = iRP rp <*> iSlash slash
     -- that sleeps
     iRCl (GRelVP rp vp) = iRP rp <*> iVP vp
+    iRCl rcl = unhandled "iRCl" rcl
 
     iRP :: GRP -> i ((Exp -> Prop) -> (Exp -> Prop))
     -- a woman of which
