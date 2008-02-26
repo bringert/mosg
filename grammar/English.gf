@@ -6,6 +6,8 @@ concrete English of EnglishAbs =
 -- Phrase
     UttImpSg, UttImpPl, UttImpPol,
     UttIP, UttIAdv, UttNP, UttAdv, UttVP,
+-- Structural
+    part_Prep, possess_Prep,
 -- overridden
     everybody_NP, somebody_NP,
     every_Det, only_Predet

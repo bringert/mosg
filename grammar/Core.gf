@@ -3,7 +3,9 @@ abstract Core =
    [
 -- Phrase
     UttImpSg, UttImpPl, UttImpPol,
-    UttIP, UttIAdv, UttNP, UttAdv, UttVP
+    UttIP, UttIAdv, UttNP, UttAdv, UttVP,
+-- Structural
+    part_Prep, possess_Prep
    ],
    Time
 
