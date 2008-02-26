@@ -94,6 +94,7 @@ fun
 
 
   --verbs
+  beat_V : V ;
   graduate_V : V ;
   live_V : V ;
   travel_V : V ;

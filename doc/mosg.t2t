@@ -105,7 +105,7 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
   "everybody who sleeps". Relatives only combine with CN.
 - Reciprocal "john and mary met"
 - "john gambling is beautiful"
-- PN modifying a N: "nobel prize"
+- PN modifying a N: "nobel prize", "itel computer"
 - AP modifying PN: "southern europe"
 - Subjunctive for QS: "if john sleeps, does mary sleep"
 - Time expressions:
@@ -114,6 +114,8 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
   in two years
   in two hours
 - Can't say "at least a few"
+- Can't say "more orders than itel", more ... than NP is not a determiner,
+  nor "more orders than itel won".
 
 == Missing from the lexicon ==
 

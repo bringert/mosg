@@ -83,6 +83,7 @@ lin
   itelzy_N = mkN "itel-zy" ;
   mips_N = mkN "mips" ;
 
+  beat_V = mkV "beat" ;
   graduate_V = mkV "graduate" ;
   live_V = mkV "live" ;
   travel_V = mkV "travel" ;
