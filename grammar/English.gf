@@ -60,7 +60,7 @@ lin
     only_Predet = variants { ss "only"; ss "just" };
     exactly_AdN = ss "exactly" ;
     at8least_AdN = ss ["at least"] ;
-    at8most_AdN = ss ["at least"] ;
+    at8most_AdN = ss ["at most"] ;
 
     -- FIXME: many strange forms
     should_VV = {

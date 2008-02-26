@@ -8,6 +8,7 @@ fun
   successful_A : A ;
   unemployed_A : A ;
   interesting_A : A ;
+  noted_A : A ;
 
   -- FIXME: a bit weird
   asleep_A : A ;
@@ -31,8 +32,8 @@ fun
   laptop_N : N ;
   lecturer_N : N ;
   lobby_N : N ;
-  -- FIXME: plural
-  memoir_N : N ;
+  meeting_N : N ;
+  memoir_N : N ;   -- FIXME: plural
   mortgage_N : N ;
   mp_N : N ;
   payrise_N : N ;
@@ -103,6 +104,7 @@ fun
   know_V2 : V2 ;
   run_V2 : V2 ;
   attend_V2 : V2 ;
+  remove_V2 : V2 ;
 
   contribute_V3to : V3 ;
 

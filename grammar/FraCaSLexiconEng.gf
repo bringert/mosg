@@ -8,6 +8,7 @@ lin
   successful_A = mkA "successful" ;
   unemployed_A = mkA "unemployed" ;
   interesting_A = mkA "interesting" ;
+  noted_A = mkA "noted" ;
 
   asleep_A = mkA "asleep" ;
 
@@ -29,8 +30,8 @@ lin
   laptop_N = mkN "laptop" ;
   lecturer_N = mkN "lecturer" ;
   lobby_N = mkN "lobby" ;
-  -- FIXME: plural
-  memoir_N = mkN "memoir" ;
+  meeting_N = mkN "meeting" ;
+  memoir_N = mkN "memoir" ;  -- FIXME: plural only
   mortgage_N = mkN "mortgage" ;
   mp_N = mkN "mp" ;
   payrise_N = mkN "payrise" ;
@@ -92,6 +93,7 @@ lin
   know_V2 = mkV2 know_V ;
   run_V2 = mkV2 run_V ;
   attend_V2 = mkV2 (mkV "attend") ;
+  remove_V2 = mkV2 (mkV "remove") ;
 
   contribute_V3to = dirV3 (mkV "contribute") to_Prep ;
 
