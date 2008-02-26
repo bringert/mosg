@@ -20,7 +20,7 @@ loop pgf =
                  let tokens = lexer line
                      res = parseAllLang pgf inputCat tokens
                      ls =  [l ++ ": " ++ showTree t | (l,ts) <- res, t <- ts]
-                 when (not (null ls)) $ putStrLn (show (length ls) ++ ": " ++ line)
+                 putStrLn (show (length ls) ++ ": " ++ line)
                  loop pgf
 
 diag :: PGF -> [Token] -> IO ()
