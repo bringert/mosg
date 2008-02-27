@@ -13,7 +13,7 @@ data Status = QuestionParseFailed
             | PremiseInterpretationFailed Int
             | AmbiguousQuestion
             | AmbiguousPremise Int
-            | FoundAnswer Result Answer
+            | FoundAnswer Result
             | OtherError
   deriving Show
 
@@ -31,7 +31,7 @@ testProblem gr p =
                 case out of
                   YNQAnswer _ r -> do putStrLn $ "Answer: " ++ show r 
                                                    ++ " (correct answer: " ++ show (problemAnswer p) ++ ")"
-                                      return $ FoundAnswer r (problemAnswer p)
+                                      return $ FoundAnswer r
                   NoParse -> return QuestionParseFailed
                   NoInterpretation _ -> return QuestionInterpretationFailed
                   Ambiguous _ -> return AmbiguousQuestion
@@ -72,21 +72,24 @@ isInterpretationError QuestionInterpretationFailed = True
 isInterpretationError (PremiseInterpretationFailed _) = True
 isInterpretationError _ = False
 
-isAmbigous :: Status -> Bool
-isAmbigous AmbiguousQuestion = True
-isAmbigous (AmbiguousPremise _) = True
-isAmbigous _ = False
+isAmbiguous :: Status -> Bool
+isAmbiguous AmbiguousQuestion = True
+isAmbiguous (AmbiguousPremise _) = True
+isAmbiguous _ = False
 
 testProblems :: Grammar -> [Problem] -> IO ()
 testProblems gr ps = 
-    do st <- mapM (testProblem gr) ps
+    do rs <- liftM (zip ps) (mapM (testProblem gr) ps)
        putRule
-       printf "%d correct answers\n" $ length [ () | FoundAnswer r a <- st, isCorrect r a]
-       printf "%d incorrect answers\n" $ length [ () | FoundAnswer r a <- st, not (isCorrect r a)]
-       printf "%d parse errors\n" $ length (filter isParseError st)
-       printf "%d interpretation errors\n" $ length (filter isInterpretationError st)
-       printf "%d ambiguous\n" $ length (filter isAmbigous st)
-       printf "%d other errors\n" $ length [ () | OtherError <- st]
+       report "correct answers" [ p | (p,FoundAnswer r) <- rs, isCorrect r (problemAnswer p)]
+       report "incorrect answers" [ p | (p,FoundAnswer r) <- rs, not (isCorrect r (problemAnswer p))]
+       report "parse errors" [ p | (p,st) <- rs, isParseError st]
+       report "interpretation errors" [ p | (p,st) <- rs, isInterpretationError st]
+       report "ambiguous" [ p | (p,st) <- rs, isAmbiguous st]
+       report "other errors" [ p | (p,OtherError) <- rs]
+
+report :: String -> [Problem] -> IO ()
+report s ps = printf "%d %s: %s\n" (length ps) s (show (map problemId ps))
 
 main :: IO ()
 main = do args <- getArgs

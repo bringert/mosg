@@ -83,7 +83,7 @@ handleText gr th i =
                           handleInputs th [input]
          Nothing    -> do ps <- filterComplete $ parseUtt gr i
                           debug $ "Parse results: " ++ show (length ps)
-                          debug $ unlines $ map (showTree . gf) ps
+                          -- debug $ unlines $ map (showTree . gf) ps
                           if null ps 
                             then return NoParse
                             else handleUtts th ps
