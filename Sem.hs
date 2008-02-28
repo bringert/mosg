@@ -202,8 +202,8 @@ class Applicative i => Inter i where
     iDet :: GDet -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     -- FIXME: does this mean more than one?
     -- FIXME: wrong, indef pl should be universal as subject, existential as object
-    iDet (GDetPl quant GNoNum ord) = pure (\qi oi u v -> qi (oi u) v) <*> iQuant quant <*> iOrd ord
-    iDet (GDetSg quant ord) = pure (\qi oi u v -> qi (oi u) v) <*> iQuant quant <*> iOrd ord
+    iDet (GDetPl quant num ord) = pure (\qi ni oi u v -> ni (qi (oi u) v) (oi u) v) <*> iQuant_Pl quant <*> iNum num <*> iOrd ord
+    iDet (GDetSg quant ord) = pure (.) <*> iQuant_Sg quant <*> iOrd ord
     iDet Gevery_Det = pure (\u v -> forAll (\x -> u x ==> v x))
     iDet Gno_Det = pure (\u v -> neg (thereIs (\x -> u x &&& v x)))
     -- FIXME: does this mean more than one?
@@ -211,21 +211,41 @@ class Applicative i => Inter i where
     iDet GsomeSg_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
     iDet det = unhandled "iDet" det
 
+    iNum :: GNum -> i ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+    -- FIXME: wrong, indef pl without num should be universal as subject, existential as object
+    iNum GNoNum = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> q (\p -> p x &&& p y))))
+    iNum (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
+    iNum (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
+--    iNum (GAdNum adn num) = iAdN adn <*> iNum num
+    iNum num = unhandled "iNum" num
+
+    -- FIXME: they should be unique
+    iInt :: Int -> i ((((Exp -> Prop) -> Prop) -> Prop) -> Prop)
+    iInt 0 = pure (\q -> q (\p -> true))
+    iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> q (\p -> p x &&& r p) &&& r (\y -> x =/= y)))) <*> iInt (n-1)
+
+--    iAdN :: GAdN -> i ...
+--    iAdN Gexactly_AdN = 
+--    iAdN Gat8most_AdN = 
+--    iAdN Gat8least_AdN = 
+
+    iQuant_Pl :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
+    iQuant_Pl GDefArt = pure (\u v n -> n (\x -> u x &&& v x) &&& neg (thereIs (\y -> u y &&& n (\z -> y =/= z))))
+    iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
+--    iQuant_Pl (GGenNP np) = pure (\ni u v n -> n (\x -> u x &&& ni (\y -> of_Pred y x) &&& v x) &&& neg (thereIs (\y -> u y &&& ni (\y -> of_Pred y x) &&& n (\z -> y =/= z)))) <*> iNP np
+    iQuant_Pl quant = unhandled "iQuant_Pl" quant
+
+    iQuant_Sg :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+    iQuant_Sg GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y ==> y === x)))
+    iQuant_Sg GIndefArt = pure (\u v -> thereIs (\x -> u x &&& v x))
+    -- FIXME: Should this really allow more than one? Now "john's dog runs" allows john to have several dogs.
+    iQuant_Sg (GGenNP np) = pure (\ni u v -> thereIs (\x -> u x &&& v x &&& ni (\y -> of_Pred y x))) <*> iNP np
+    iQuant_Sg quant = unhandled "iQuant_Sg" quant
+
     iOrd :: GOrd -> i ((Exp -> Prop) -> (Exp -> Prop))
     iOrd GNoOrd = pure id
     iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
     iOrd ord = unhandled "iOrd" ord
-
-    -- FIXME: handle this with numerals
---    iQuantSg Gone_Quant = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y &&& v y ==> y === x)))
-
-    iQuant :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-    -- FIXME: wrong for plurals, "the dogs" == "all dogs & exist dogs"
-    iQuant GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y ==> y === x)))
-    iQuant GIndefArt = pure (\u v -> thereIs (\x -> u x &&& v x))
-    -- FIXME: this should be like definite
-    iQuant (GGenNP np) = pure (\ni u v -> thereIs (\x -> u x &&& ni (\y -> of_Pred y x) &&& v x)) <*> iNP np
-    iQuant quant = unhandled "iQuant" quant
 
     iAP :: GAP -> i (Exp -> Prop)
     iAP (GComplA2 a2 np) = iA2 a2 <*> iNP np
@@ -305,6 +325,63 @@ class Applicative i => Inter i where
 
     iPrep :: GPrep -> i (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
     iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
+
+--
+-- * Numbers
+--
+
+iDigits :: GDigits -> Int
+iDigits = f 0
+    where f n (GIDig d) = 10 * n + iDig d
+          f n (GIIDig d ds) = f (10 * n + iDig d) ds
+
+iDig :: GDig -> Int
+iDig GD_0 = 0
+iDig GD_1 = 1
+iDig GD_2 = 2
+iDig GD_3 = 3
+iDig GD_4 = 4
+iDig GD_5 = 5
+iDig GD_6 = 6
+iDig GD_7 = 7
+iDig GD_8 = 8
+iDig GD_9 = 9
+
+iNumeral :: GNumeral -> Int
+iNumeral (Gnum m) = iSub1000000 m
+
+iSub1000000 :: GSub1000000 -> Int
+iSub1000000 (Gpot2as3 m)    = iSub1000 m
+iSub1000000 (Gpot3 m)       = iSub1000 m * 1000
+iSub1000000 (Gpot3plus m n) = iSub1000 m * 1000 + iSub1000 n
+
+iSub1000 :: GSub1000 -> Int
+iSub1000 (Gpot1as2 m)    = iSub100 m
+iSub1000 (Gpot2 m)       = iSub10 m * 100
+iSub1000 (Gpot2plus m n) = iSub10 m * 100 + iSub100 n
+
+iSub100 :: GSub100 -> Int
+iSub100 Gpot110         = 10
+iSub100 Gpot111         = 11
+iSub100 (Gpot1to19 d)   = 10 + iDigit d
+iSub100 (Gpot0as1 m)    = iSub10 m
+iSub100 (Gpot1 d)       = iDigit d * 10
+iSub100 (Gpot1plus d n) = iDigit d * 10 + iSub10 n
+
+iSub10 :: GSub10 -> Int
+iSub10 Gpot01 = 1
+iSub10 (Gpot0 d) = iDigit d
+
+iDigit :: GDigit -> Int
+iDigit Gn2 = 2
+iDigit Gn3 = 3
+iDigit Gn4 = 4
+iDigit Gn5 = 5
+iDigit Gn6 = 6
+iDigit Gn7 = 7
+iDigit Gn8 = 8
+iDigit Gn9 = 9
+
 
 --
 -- * Special predicates

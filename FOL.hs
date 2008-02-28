@@ -3,7 +3,7 @@ module FOL (
             -- * Types
             Theory, Prop(..),Exp(..),
             -- * Construction API
-            (&&&),(|||),(==>),(<=>),neg,(===), forAll, thereIs, true, false,
+            (&&&), (|||), ands, ors, (==>), (<=>), neg, (===), (=/=), forAll, thereIs, true, false,
             -- * Pretty-printing internals
             Vars, runVars, getUnique,
             pprProp,
@@ -50,10 +50,16 @@ type Var = String
 infixr 1 ==>
 infixr 2 |||
 infixr 3 &&&
-infix  4 ===
+infix  4 ===, =/=
 
 (&&&) :: Prop -> Prop -> Prop
 p &&& q = simplify $ And [p,q]
+
+ands :: [Prop] -> Prop
+ands = simplify . And
+
+ors :: [Prop] -> Prop
+ors = simplify . Or
 
 (|||) :: Prop -> Prop -> Prop
 p ||| q = simplify $ Or [p,q]
@@ -69,6 +75,9 @@ neg p = simplify $ Not p
 
 (===) :: Exp -> Exp -> Prop
 (===) = Equal
+
+(=/=) :: Exp -> Exp -> Prop
+x =/= y = neg (x === y)
 
 forAll :: (Exp -> Prop) -> Prop
 forAll f = simplify $ All f
