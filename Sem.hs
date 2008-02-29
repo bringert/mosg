@@ -213,7 +213,7 @@ class Applicative i => Inter i where
 
     iNum :: GNum -> i ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
     -- FIXME: wrong, indef pl without num should be universal as subject, existential as object
-    iNum GNoNum = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> q (\p -> p x &&& p y))))
+    iNum GNoNum = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
     iNum (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
     iNum (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
 --    iNum (GAdNum adn num) = iAdN adn <*> iNum num
@@ -222,7 +222,7 @@ class Applicative i => Inter i where
     -- FIXME: they should be unique
     iInt :: Int -> i ((((Exp -> Prop) -> Prop) -> Prop) -> Prop)
     iInt 0 = pure (\q -> q (\p -> true))
-    iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> q (\p -> p x &&& r p) &&& r (\y -> x =/= y)))) <*> iInt (n-1)
+    iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
 
 --    iAdN :: GAdN -> i ...
 --    iAdN Gexactly_AdN = 
@@ -236,7 +236,7 @@ class Applicative i => Inter i where
     iQuant_Pl quant = unhandled "iQuant_Pl" quant
 
     iQuant_Sg :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-    iQuant_Sg GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& forAll (\y -> u y ==> y === x)))
+    iQuant_Sg GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& neg (thereIs (\y -> u y &&& y =/= x))))
     iQuant_Sg GIndefArt = pure (\u v -> thereIs (\x -> u x &&& v x))
     -- FIXME: Should this really allow more than one? Now "john's dog runs" allows john to have several dogs.
     iQuant_Sg (GGenNP np) = pure (\ni u v -> thereIs (\x -> u x &&& v x &&& ni (\y -> of_Pred y x))) <*> iNP np
