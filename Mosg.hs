@@ -1,5 +1,5 @@
 module Mosg (Theory, Output(..), Result(..), Input(..), Quest(..), Grammar, 
-             loadGrammar, handleText) where
+             loadGrammar, grammarModificationTime, handleText) where
 
 import GSyntax
 import FOL
@@ -15,7 +15,9 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Prelude hiding (catch)
+import System.Directory
 import System.IO
+import System.Time
 
 type Grammar = MultiGrammar
 
@@ -39,9 +41,14 @@ instance Show Output where
     show (YNQAnswer q r) = "The answer to " ++ show q ++ " is " ++ show r
     show (WhAnswer q ss) = show (WhQuest q) ++ " = " ++ show ss
 
-loadGrammar :: IO Grammar
-loadGrammar = file2grammar "Union.gfcc"
+grammarFile :: FilePath
+grammarFile = "Union.gfcc"
 
+loadGrammar :: IO Grammar
+loadGrammar = file2grammar grammarFile
+
+grammarModificationTime :: IO ClockTime
+grammarModificationTime = getModificationTime grammarFile
 
 preprocess :: String -> String
 preprocess = unwords . unfoldr split
