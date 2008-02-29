@@ -3,10 +3,13 @@ GHCFLAGS = -package gf-embed -package folkung
 
 INSTALL_DIR = $(HOME)/public_html/mosg
 
-.PHONY: mosg.cgi mosg mosg-fracas test Union.gfcc GSyntax.hs install clean distclean
+.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas test Union.gfcc GSyntax.hs install clean distclean
 
 mosg.cgi:
 	ghc $(GHCFLAGS) --make -o $@ MainCGI.hs
+
+mosg.fcgi:
+	ghc $(GHCFLAGS) --make -o $@ MainFastCGI.hs
 
 mosg:
 	ghc $(GHCFLAGS) --make -o $@ Main.hs
@@ -27,7 +30,7 @@ install:
 
 clean:
 	-rm -f *.o *.hi grammar/*.gfc grammar/*.gfr grammar/*.gfo
-	-rm -f mosg.cgi mosg mosg-fracas
+	-rm -f mosg.cgi mosg.fcgi mosg mosg-fracas
 
 distclean: clean
 	-rm -f Union.gfcc GSyntax.hs
