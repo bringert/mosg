@@ -103,15 +103,12 @@ handleTrees :: Theory -> [GText] -> IO Output
 handleTrees th ps =
    do is <- interpretTexts ps
       debug $ "Interpretations: " ++ show (length is)
-      if null is 
-        then return (NoInterpretation ps)
-        else do -- debug $ unlines $ map show is
-                let is' = nub is
-                debug $ "Syntactically different interpretations: " ++ show (length is')
-                if null is' 
-                  then return (NoInterpretation ps) 
-                  else do -- debug $ unlines $ map show is'
-                          handleInputs th is'
+      let is' = nub is
+      debug $ "Syntactically different interpretations: " ++ show (length is')
+      -- debug $ unlines $ map show is'
+      if null is' 
+        then return $ NoInterpretation ps
+        else handleInputs th is'
 
 handleInputs :: Theory -> [Input] -> IO Output
 handleInputs th is =
@@ -119,33 +116,45 @@ handleInputs th is =
            qs = [q | Question q <- is]
        debug $ "Statement interpretations: " ++ show (length ss)
        debug $ "Question interpretations: " ++ show (length qs)
-       sc <- filterM (liftM (==Yes) . isConsistent th) ss
+       case (ss,qs) of
+         (_:_,_:_) -> return (Ambiguous is)
+         (_  , []) -> handleStatements th ss
+         ([] ,_  ) -> handleQuestions th qs
+
+handleStatements :: Theory -> [Prop] -> IO Output
+handleStatements th ss = 
+    do sc <- filterM (liftM (==Yes) . isConsistent th) ss
        debug $ "Consistent statements: " ++ show (length sc)
-       if null sc && null qs 
+       if null sc
          then return (NoConsistent ss)
          else do si <- filterM (liftM (==Yes) . isInformative th) sc
                  debug $ "Consistent and informative statements: " ++ show (length si)
-                 if null si && null qs 
+                 if null si
                    then return (NoInformative sc)
                    else do sd <- nubEquivalent th si
-                           let is' = map Statement sd ++ map Question qs
-                           debug $ "Distinct consistent and informative interpretations: "  ++ show (length is')
-                           debug $ unlines $ map show is'
-                           case is' of
-                             [x] -> useInput th x
-                             _   -> return (Ambiguous is')
+                           debug $ "Distinct consistent and informative statements: "  ++ show (length sd)
+                           debug $ unlines $ map show sd
+                           return (AcceptedStatement (ambiguousStatement sd))
 
-useInput :: Theory -> Input -> IO Output
-useInput th (Statement s) = return (AcceptedStatement s)
-useInput th (Question q)  = answerQuestion th q
+handleQuestions :: Theory -> [Quest] -> IO Output
+handleQuestions th qs = 
+    do let ynq = [p | YNQuest p <- qs]
+           whq = [p | WhQuest p <- qs]
+           cnt = [p | CountQuest p <- qs]
+       case (ynq,whq,cnt) of
+         (_,[],[])   -> do let q = ambiguousQuestion ynq
+                           answer <- isTrue th q
+                           return (YNQAnswer q answer)
+         ([],[q],[]) -> do answer <- answerWhQuest th q
+                           return (WhAnswer q answer)
+         ([],[],[q]) -> do answer <- answerWhQuest th q
+                           return (CountAnswer q (length (nub answer)))
 
-answerQuestion :: Theory -> Quest -> IO Output
-answerQuestion th (YNQuest q) = do answer <- isTrue th q
-                                   return (YNQAnswer q answer)
-answerQuestion th (WhQuest q) = do answer <- answerWhQuest th q
-                                   return (WhAnswer q answer)
-answerQuestion th (CountQuest q) = do answer <- answerWhQuest th q
-                                      return (CountAnswer q (length (nub answer)))
+ambiguousStatement :: [Prop] -> Prop
+ambiguousStatement = ors
+
+ambiguousQuestion :: [Prop] -> Prop
+ambiguousQuestion = ands
 
 nubEquivalent :: Theory -> [Prop] -> IO [Prop]
 nubEquivalent th = nubByM (\p q -> liftM (==Yes) $ areEquivalent th p q)

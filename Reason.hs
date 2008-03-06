@@ -37,7 +37,6 @@ data Answer
 data Result = Yes | No | DontKnow
   deriving (Show, Eq, Ord)
 
-
 isTrue :: Theory -> Prop -> IO Result
 isTrue t p = 
     do x <- prove t p
