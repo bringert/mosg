@@ -233,6 +233,8 @@ class Applicative i => Inter i where
     iQuant_Pl GDefArt = pure (\u v n -> n (\x -> u x &&& v x) &&& neg (thereIs (\y -> u y &&& n (\z -> y =/= z))))
     iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
 --    iQuant_Pl (GGenNP np) = pure (\ni u v n -> n (\x -> u x &&& ni (\y -> of_Pred y x) &&& v x) &&& neg (thereIs (\y -> u y &&& ni (\y -> of_Pred y x) &&& n (\z -> y =/= z)))) <*> iNP np
+    -- FIXME: universal as subject, existential in object position?
+    iQuant_Pl GMassDet = pure (\u v n -> n (\x -> u x &&& v x))
     iQuant_Pl quant = unhandled "iQuant_Pl" quant
 
     iQuant_Sg :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
@@ -240,6 +242,8 @@ class Applicative i => Inter i where
     iQuant_Sg GIndefArt = pure (\u v -> thereIs (\x -> u x &&& v x))
     -- FIXME: Should this really allow more than one? Now "john's dog runs" allows john to have several dogs.
     iQuant_Sg (GGenNP np) = pure (\ni u v -> thereIs (\x -> u x &&& v x &&& ni (\y -> of_Pred y x))) <*> iNP np
+    -- FIXME: universal as subject, existential in object position?
+    iQuant_Sg GMassDet = pure (\u v -> forAll (\x -> u x &&& v x))
     iQuant_Sg quant = unhandled "iQuant_Sg" quant
 
     iOrd :: GOrd -> i ((Exp -> Prop) -> (Exp -> Prop))
