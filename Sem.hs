@@ -322,6 +322,7 @@ class Applicative i => Inter i where
     iV v = pure (\x -> Pred (symbol v) [x])
 
     iV2 :: GV2 -> i (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+    iV2 (GUseVS vs) = pure (\u x -> u (\y -> Pred (symbol vs) [x,y]))
     iV2 v2 = pure (\u x -> u (\y -> Pred (symbol v2) [x,y]))
 
     iV3 :: GV3 -> i (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
