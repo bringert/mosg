@@ -134,7 +134,8 @@ handleStatements th ss =
                    else do -- sd <- nubEquivalent th si
                            -- debug $ "Distinct consistent and informative statements: "  ++ show (length sd)
                            debug $ unlines $ map show si
-                           return (AcceptedStatement (ambiguousStatement si))
+                           st <- ambiguousStatement si
+                           return (AcceptedStatement st)
 
 handleQuestions :: Theory -> [Quest] -> IO Output
 handleQuestions th qs = 
@@ -143,7 +144,7 @@ handleQuestions th qs =
            whq = [p | WhQuest p <- qs]
            cnt = [p | CountQuest p <- qs]
        case (ynq,whq,cnt) of
-         (_,[],[])   -> do let q = ambiguousQuestion ynq
+         (_,[],[])   -> do q <- ambiguousQuestion ynq
                            answer <- isTrue th q
                            return (YNQAnswer q answer)
          ([],[q],[]) -> do answer <- answerWhQuest th q
@@ -151,11 +152,17 @@ handleQuestions th qs =
          ([],[],[q]) -> do answer <- answerWhQuest th q
                            return (CountAnswer q (length (nub answer)))
 
-ambiguousStatement :: [Prop] -> Prop
-ambiguousStatement = ors
+ambiguousStatement :: [Prop] -> IO Prop
+ambiguousStatement [p] = return p
+ambiguousStatement ps = 
+    do debug $ "Ambiguous statement, using disjunction."
+       return $ ors ps
 
-ambiguousQuestion :: [Prop] -> Prop
-ambiguousQuestion = ands
+ambiguousQuestion :: [Prop] -> IO Prop
+ambiguousQuestion [p] = return p
+ambiguousQuestion ps =     
+    do debug $ "Ambiguous question, using conjunction."
+       return $ ands ps
 
 nubEquivalent :: Theory -> [Prop] -> IO [Prop]
 nubEquivalent th = nubByM (\p q -> liftM (==Yes) $ areEquivalent th p q)
