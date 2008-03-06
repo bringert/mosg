@@ -57,13 +57,6 @@ addPremise gr th (pid, s) =
          Ambiguous _ -> return $ Left $ AmbiguousPremise pid
          _ -> return $ Left $ OtherError
 
-
-isCorrect :: Result -> Answer -> Bool
-isCorrect Mosg.Yes FraCaS.Yes = True
-isCorrect Mosg.No  FraCaS.No  = True
-isCorrect DontKnow Unknown = True
-isCorrect _ _  = False
-
 isParseError :: Status -> Bool
 isParseError QuestionParseFailed = True
 isParseError (PremiseParseFailed _) = True
