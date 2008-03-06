@@ -1,19 +1,26 @@
 import Mosg
 import MosgCGI
+import FastCGIUtils
 
 import Data.IORef
 import System.IO
 import System.Time
-import Network.FastCGI
 
-type GrammarRef = IORef (Maybe (ClockTime, Grammar))
+import Network.CGI
+
 
 main :: IO ()
-main = do r <- newGrammarRef
-          runFastCGI (handleErrors (fcgiMain r))
+main = do initFastCGI
+          r <- newGrammarRef
+          loopFastCGI (fcgiMain r)
 
 fcgiMain :: IORef (Maybe (ClockTime, Grammar)) -> CGI CGIResult
 fcgiMain r = getGrammar r >>= cgiMain
+
+
+-- Reload grammar when modified
+
+type GrammarRef = IORef (Maybe (ClockTime, Grammar))
 
 newGrammarRef :: MonadIO m => m GrammarRef
 newGrammarRef = liftIO $ newIORef Nothing
