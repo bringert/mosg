@@ -5,7 +5,9 @@ abstract Core =
     UttImpSg, UttImpPl, UttImpPol,
     UttIP, UttIAdv, UttNP, UttAdv, UttVP,
 -- Structural
-    part_Prep, possess_Prep
+    part_Prep, possess_Prep,
+-- Verb
+    UseVS
    ],
    Time
 

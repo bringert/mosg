@@ -8,6 +8,8 @@ concrete English of EnglishAbs =
     UttIP, UttIAdv, UttNP, UttAdv, UttVP,
 -- Structural
     part_Prep, possess_Prep,
+-- Verb
+    UseVS,
 -- overridden
     everybody_NP, somebody_NP,
     every_Det, only_Predet
