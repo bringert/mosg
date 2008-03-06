@@ -11,6 +11,7 @@ data Status = QuestionParseFailed
             | QuestionInterpretationFailed
             | PremiseParseFailed Int
             | PremiseInterpretationFailed Int
+            | PremiseInconsistent Int
             | AmbiguousQuestion
             | AmbiguousPremise Int
             | FoundAnswer Result
@@ -52,6 +53,7 @@ addPremise gr th (pid, s) =
          NoInformative _ -> return $ Right th
          NoParse -> return $ Left $ PremiseParseFailed pid
          NoInterpretation _ -> return $ Left $ PremiseInterpretationFailed pid
+         NoConsistent _ -> return $ Left $ PremiseInconsistent pid
          Ambiguous _ -> return $ Left $ AmbiguousPremise pid
          _ -> return $ Left $ OtherError
 
@@ -89,6 +91,7 @@ testProblems gr ps =
        report "Incorrect Unknown" [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p /= FraCaS.Unknown]
        report "parse errors" [ p | (p,st) <- rs, isParseError st]
        report "interpretation errors" [ p | (p,st) <- rs, isInterpretationError st]
+       report "inconsistent premises" [ p | (p,PremiseInconsistent _) <- rs]
        report "ambiguous" [ p | (p,st) <- rs, isAmbiguous st]
        report "other errors" [ p | (p,OtherError) <- rs]
 
