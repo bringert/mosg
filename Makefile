@@ -5,11 +5,11 @@ INSTALL_DIR = $(HOME)/public_html/mosg
 
 .PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas test Union.gfcc GSyntax.hs install clean distclean
 
-mosg.cgi:
-	ghc $(GHCFLAGS) --make -o $@ MainCGI.hs
-
 mosg.fcgi:
 	ghc $(GHCFLAGS) --make -o $@ MainFastCGI.hs
+
+mosg.cgi:
+	ghc $(GHCFLAGS) --make -o $@ MainCGI.hs
 
 mosg:
 	ghc $(GHCFLAGS) --make -o $@ Main.hs
