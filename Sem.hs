@@ -37,6 +37,18 @@ class Applicative i => Inter i where
 -- Syntactic
 --
 
+    iText :: GText -> InputI i
+    iText (GTNoPunct phr)        = iPhr phr
+    iText (GTExclMark  phr text) = twoStatements (iPhr phr) (iText text)
+    iText (GTFullStop  phr text) = twoStatements (iPhr phr) (iText text)
+    iText (GTQuestMark phr GTEmpty) = toQuestion (iPhr phr)
+    iText GTEmpty = StatementI (pure true)
+    iText text = unhandled "iText" text
+
+    iPhr :: GPhr -> InputI i
+    iPhr (GPhrUtt GNoPConj utt GNoVoc) = iUtt utt 
+    iPhr phr = unhandled "iPhr" phr
+
     iUtt :: GUtt -> InputI i
     iUtt (GUttS s) = StatementI (iS s)
     iUtt (GUttQS qs) = QuestionI (iQS qs)
@@ -388,6 +400,17 @@ iDigit Gn7 = 7
 iDigit Gn8 = 8
 iDigit Gn9 = 9
 
+--
+-- * Merging, fixing inputs
+--
+
+twoStatements :: Inter i => InputI i -> InputI i -> InputI i
+twoStatements (StatementI istm1) (StatementI istm2) = StatementI (pure (&&&) <*> istm1 <*> istm2)
+twoStatements s1 s2 = error "statement + question in input"
+
+toQuestion :: InputI i -> InputI i
+toQuestion (StatementI istm) = QuestionI (YNQuestI istm)
+toQuestion (QuestionI iq)    = QuestionI iq
 
 --
 -- * Special predicates

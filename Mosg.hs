@@ -23,7 +23,7 @@ type Grammar = MultiGrammar
 
 data Output = AcceptedStatement Prop
             | NoParse
-            | NoInterpretation [GUtt]
+            | NoInterpretation [GText]
             | NoConsistent [Prop]
             | NoInformative [Prop]
             | Ambiguous [Input]
@@ -61,15 +61,15 @@ preprocess = unwords . unfoldr split
                  | otherwise = let (w,cs') = break isBreak cs in Just (c:w,cs')
         where isBreak x = isSpace x || (isPunctuation x && x `notElem` "-'")
 
-parseUtt :: Grammar -> String -> [GUtt]
-parseUtt gr = map fg . concat . parseAll gr "Utt" . preprocess
+parseText :: Grammar -> String -> [GText]
+parseText gr = map fg . concat . parseAll gr "Text" . preprocess
 
 tryInput :: Show a => a -> IO (Either Exception a)
 tryInput p = try (evaluate (length (show p) `seq` p))
 
 -- | Keep only interpretations that do not throw exceptions.
 filterComplete :: Show a => [a] -> IO [a]
-filterComplete = fmap concat . mapM (\i -> tryInput i >>= either (\e -> putStrLn (show e) >> return []) (return . (:[]))) 
+filterComplete = fmap concat . mapM (\i -> tryInput i >>= either (\e -> hPutStrLn stderr (show e) >> return []) (return . (:[]))) 
 
 readInputMaybe :: String -> Maybe Input
 readInputMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
@@ -88,20 +88,20 @@ handleText gr th i =
          Just input -> do debug $ "Formula input: "
                           debug $ show input
                           handleInputs th [input]
-         Nothing    -> do ps <- filterComplete $ parseUtt gr i
+         Nothing    -> do ps <- filterComplete $ parseText gr i
                           debug $ "Parse results: " ++ show (length ps)
                           -- debug $ unlines $ map (showTree . gf) ps
                           if null ps 
                             then return NoParse
-                            else handleUtts th ps
+                            else handleTrees th ps
 
-interpretUtts :: [GUtt] -> IO [Input]
-interpretUtts = 
-    liftM concat . filterComplete . map (retrieveInput . iUtt)
+interpretTexts :: [GText] -> IO [Input]
+interpretTexts = 
+    liftM concat . filterComplete . map (retrieveInput . iText)
 
-handleUtts :: Theory -> [GUtt] -> IO Output
-handleUtts th ps =
-   do is <- interpretUtts ps
+handleTrees :: Theory -> [GText] -> IO Output
+handleTrees th ps =
+   do is <- interpretTexts ps
       debug $ "Interpretations: " ++ show (length is)
       if null is 
         then return (NoInterpretation ps)
