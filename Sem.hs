@@ -209,6 +209,7 @@ class Applicative i => Inter i where
     -- FIXME: does this mean more than one?
     iDet GsomePl_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
     iDet GsomeSg_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
+    iDet Gneither_Det = pure (\u v -> thereIs (\x -> thereIs (\y -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& neg (thereIs (\z -> u z &&& z =/= x &&& z =/= y)))))
     iDet det = unhandled "iDet" det
 
     iNum :: GNum -> i ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
