@@ -11,7 +11,9 @@ abstract Core =
 
 ** {
 
-flags startcat = Utt;
+flags startcat = Text;
+
+fun TNoPunct : Phr -> Text ;
 
 fun nobody_NP : NP ;
 

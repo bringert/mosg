@@ -28,6 +28,8 @@ concrete English of EnglishAbs =
 
 ** open ResEng, MorphoEng, Prelude in {
 
+lin TNoPunct phr = { s = phr.s } ;
+
 lin
     who_RP = {
       s = table {
