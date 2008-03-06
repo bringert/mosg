@@ -21,7 +21,7 @@ data Problem = Problem {
 type Sentence = String
 
 data Answer = Yes | No | Unknown | Undef
-              deriving (Show)
+              deriving (Show,Eq)
 
 
 readFraCaS :: FilePath -> IO [Problem]

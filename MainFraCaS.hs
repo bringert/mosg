@@ -81,8 +81,12 @@ testProblems :: Grammar -> [Problem] -> IO ()
 testProblems gr ps = 
     do rs <- liftM (zip ps) (mapM (testProblem gr) ps)
        putRule
-       report "correct answers" [ p | (p,FoundAnswer r) <- rs, isCorrect r (problemAnswer p)]
-       report "incorrect answers" [ p | (p,FoundAnswer r) <- rs, not (isCorrect r (problemAnswer p))]
+       report "Correct Yes"       [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p == FraCaS.Yes]
+       report "Correct No"        [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p == FraCaS.No]
+       report "Correct Unknown"   [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p == FraCaS.Unknown]
+       report "Incorrect Yes"     [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p /= FraCaS.Yes]
+       report "Incorrect No"      [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p /= FraCaS.No]
+       report "Incorrect Unknown" [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p /= FraCaS.Unknown]
        report "parse errors" [ p | (p,st) <- rs, isParseError st]
        report "interpretation errors" [ p | (p,st) <- rs, isInterpretationError st]
        report "ambiguous" [ p | (p,st) <- rs, isAmbiguous st]
