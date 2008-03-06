@@ -50,11 +50,11 @@ toAnswer DTD.Problem_fracas_answer_unknown = Unknown
 toAnswer DTD.Problem_fracas_answer_undef = Undef
 
 cleanString :: String -> String
-cleanString = removePunctAndCase . reverse . dropWhile isSpace . reverse . dropWhile isSpace
+cleanString = removeCase . reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
--- FIXME: the grammar should allow punctuation and proper case
-removePunctAndCase :: String -> String
-removePunctAndCase = map toLower . reverse . dropWhile isPunctuation . reverse 
+-- FIXME: the grammar should allow proper case
+removeCase :: String -> String
+removeCase = map toLower
 
 --
 -- * Utilities
