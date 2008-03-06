@@ -84,9 +84,11 @@ lin
 
     VerbCN v cn = {s = \\n,c => v.s ! VPresPart ++ cn.s ! n ! c };
 
+{-
     NumOfNP num np = {
       s = \\c => num.s ++ "of" ++ np.s ! c ; 
       a = agrP3 num.n
       } ;
+-}
 
 }

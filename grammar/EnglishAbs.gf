@@ -25,6 +25,7 @@ fun BareInfVS : VS -> NP -> VP -> VP ;
 
 fun VerbCN : V -> CN -> CN ; -- running man
 
-fun NumOfNP : Num -> NP -> NP ; -- ten of the dogs
+-- FIXME: problematic with NoNum
+--fun NumOfNP : Num -> NP -> NP ; -- ten of the dogs
 
 }
