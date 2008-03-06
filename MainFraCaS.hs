@@ -72,24 +72,32 @@ isAmbiguous AmbiguousQuestion = True
 isAmbiguous (AmbiguousPremise _) = True
 isAmbiguous _ = False
 
+isFoundAnswer :: Status -> Bool
+isFoundAnswer (FoundAnswer _) = True
+isFoundAnswer _ = False
+
 testProblems :: Grammar -> [Problem] -> IO ()
 testProblems gr ps = 
     do rs <- liftM (zip ps) (mapM (testProblem gr) ps)
        putRule
-       report "Correct Yes"       [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p == FraCaS.Yes]
-       report "Correct No"        [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p == FraCaS.No]
-       report "Correct Unknown"   [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p == FraCaS.Unknown]
-       report "Incorrect Yes"     [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p /= FraCaS.Yes]
-       report "Incorrect No"      [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p /= FraCaS.No]
-       report "Incorrect Unknown" [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p /= FraCaS.Unknown]
+       report "correct yes"       [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p == FraCaS.Yes]
+       report "correct no"        [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p == FraCaS.No]
+       report "correct unknown"   [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p == FraCaS.Unknown]
+       report "incorrect yes"     [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p /= FraCaS.Yes]
+       report "incorrect no"      [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p /= FraCaS.No]
+       report "incorrect unknown" [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p /= FraCaS.Unknown]
+       report "failed"            [ p | (p,st) <- rs, not (isFoundAnswer st)]
+       putRule
        report "parse errors" [ p | (p,st) <- rs, isParseError st]
        report "interpretation errors" [ p | (p,st) <- rs, isInterpretationError st]
        report "inconsistent premises" [ p | (p,PremiseInconsistent _) <- rs]
        report "ambiguous" [ p | (p,st) <- rs, isAmbiguous st]
        report "other errors" [ p | (p,OtherError) <- rs]
-
-report :: String -> [Problem] -> IO ()
-report s ps = printf "%d %s: %s\n" (length ps) s (show (map problemId ps))
+    where
+      report :: String -> [Problem] -> IO ()
+      report s xs = printf "%3d (%5.1f%%) %s: %s\n" (length xs) (percentage (length xs)) s (show (map problemId xs))
+      percentage :: Int -> Double
+      percentage x = 100 * fromIntegral x / fromIntegral (length ps)
 
 main :: IO ()
 main = do args <- getArgs
