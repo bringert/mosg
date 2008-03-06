@@ -131,10 +131,10 @@ handleStatements th ss =
                  debug $ "Consistent and informative statements: " ++ show (length si)
                  if null si
                    then return (NoInformative sc)
-                   else do sd <- nubEquivalent th si
-                           debug $ "Distinct consistent and informative statements: "  ++ show (length sd)
-                           debug $ unlines $ map show sd
-                           return (AcceptedStatement (ambiguousStatement sd))
+                   else do -- sd <- nubEquivalent th si
+                           -- debug $ "Distinct consistent and informative statements: "  ++ show (length sd)
+                           -- debug $ unlines $ map show sd
+                           return (AcceptedStatement (ambiguousStatement si))
 
 handleQuestions :: Theory -> [Quest] -> IO Output
 handleQuestions th qs = 
