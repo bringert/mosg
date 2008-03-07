@@ -18,14 +18,14 @@ import qualified Data.Set as Set
 import System.IO
 
 
-data Result = Yes | No | DontKnow
+data Answer = Yes | No | DontKnow
   deriving (Show, Eq, Ord)
 
 --
 -- * API
 --
 
-isTrue :: Theory -> Prop -> IO Result
+isTrue :: Theory -> Prop -> IO Answer
 isTrue t p = 
     do x <- prove t p
        case x of
@@ -35,13 +35,13 @@ isTrue t p =
                       Yes -> return No
                       _   -> return DontKnow
 
-isConsistent :: Theory -> Prop -> IO Result
+isConsistent :: Theory -> Prop -> IO Answer
 isConsistent th p = counterSatisfy th (neg p)
 
-isInformative :: Theory -> Prop -> IO Result
+isInformative :: Theory -> Prop -> IO Answer
 isInformative th p = counterSatisfy th p
 
-areEquivalent :: Theory -> Prop -> Prop -> IO Result
+areEquivalent :: Theory -> Prop -> Prop -> IO Answer
 areEquivalent th p q = isTrue th (p <=> q)
 
 --
@@ -92,7 +92,7 @@ toProblem :: Theory -> Prop -> F.Problem
 toProblem th p = [F.Input F.Fact (show n) (propToForm a) | (a,n) <- zip th [0..]]
                  ++ [F.Input F.Conjecture "input" (propToForm p)]
 
-prove :: Theory -> Prop -> IO Result
+prove :: Theory -> Prop -> IO Answer
 prove t p = 
     do answer <- Exception.try $ Equinox.solve folkungFlags (toProblem t p)
 --       hPutStrLn stderr $ "Equinox said: " ++ show answer
@@ -100,7 +100,7 @@ prove t p =
                   Right F.Theorem -> Yes
                   _         -> DontKnow
 
-counterSatisfy :: Theory -> Prop -> IO Result
+counterSatisfy :: Theory -> Prop -> IO Answer
 counterSatisfy t p = 
     do answer <- Exception.try $ Paradox.solve folkungFlags (toProblem t p)
 --       hPutStrLn stderr $ "Paradox said: " ++ show answer

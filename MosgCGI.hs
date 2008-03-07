@@ -25,7 +25,7 @@ cgiMain gr =
 inputPage :: Theory -> Html
 inputPage th = inputForm th Nothing
 
-answerPage :: Theory -> String -> Results -> Html
+answerPage :: Theory -> String -> Result -> Html
 answerPage th q res = toHtml
   [answerSection q res,
    inputForm th alts]
@@ -33,7 +33,7 @@ answerPage th q res = toHtml
                  Ambiguous -> Just (resDifferentInterpretations res)
                  _         -> Nothing
 
-answerSection :: String -> Results -> Html
+answerSection :: String -> Result -> Html
 answerSection q res = toHtml
   [h2 << "Answer",
    p << ("You said: " +++ quote << q),

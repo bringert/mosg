@@ -1,4 +1,4 @@
-module Mosg (Theory, Results(..), Output(..), Result(..), Input(..), Quest(..), Grammar, 
+module Mosg (Theory, Result(..), Output(..), Answer(..), Input(..), Quest(..), Grammar, 
              loadGrammar, grammarModificationTime, handleText) where
 
 import GSyntax
@@ -21,7 +21,7 @@ import System.Time
 
 type Grammar = MultiGrammar
 
-data Results = Results {
+data Result = Result {
       resInputText :: String,
       resTrees :: Either Input [GText],
       resInterpretations :: [[Input]],
@@ -40,9 +40,10 @@ data Output = NoParse
             | NoInformative
             | Ambiguous
             | AcceptedStatement Prop
-            | YNQAnswer Result
+            | YNQAnswer Answer
             | WhAnswer [[String]]
             | CountAnswer Int
+  deriving Eq
 
 instance Show Output where
     show (AcceptedStatement _) = "Accepted statement."
@@ -108,7 +109,7 @@ interpretTrees :: Either Input [GText] -> IO [[Input]]
 interpretTrees (Left i) = return [[i]]
 interpretTrees (Right ts) = filterComplete $ map (retrieveInput . iText) ts
 
-handleText :: Grammar -> Theory -> String -> IO Results
+handleText :: Grammar -> Theory -> String -> IO Result
 handleText gr th i = 
     do debug $ "Input: " ++ show i
        trees <- parseInput gr i
@@ -144,7 +145,7 @@ handleText gr th i =
                  | null informative -> return NoInformative
                  | otherwise        -> liftM AcceptedStatement (ambiguousStatement informative)
              QuestionType  -> answerQuestion th qs
-       return $ Results {
+       return $ Result {
                     resInputText = i,
                     resTrees = trees,
                     resInterpretations = is,
