@@ -20,8 +20,14 @@ data Quest = YNQuest Prop
 instance Eq Input where
     x == y = show x == show y
 
+instance Ord Input where
+    compare x y = compare (show x) (show y)
+
 instance Eq Quest where
     x == y = show x == show y
+
+instance Ord Quest where
+    compare x y = compare (show x) (show y)
 
 --
 -- * Storage interface

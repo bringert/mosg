@@ -155,6 +155,9 @@ vars = tail $ concat $ iterate f [""]
 instance Eq Prop where
     p == q = show p == show q
 
+instance Ord Prop where
+    compare p q = compare (show p) (show q)
+
 --
 -- * Pretty-printing with TPTP syntax
 --

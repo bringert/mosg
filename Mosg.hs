@@ -115,7 +115,7 @@ handleText gr th i =
        trees <- parseInput gr i
        is <- interpretTrees trees
        debug $ "Interpretations: " ++ show (sum (map length is))
-       let is' = nub (concat is)
+       let is' = sortNub (concat is)
        debug $ "Syntactically different interpretations: " ++ show (length is')
        -- debug $ unlines $ map show is'
        let ss = [p | Statement p <- is']
@@ -200,3 +200,6 @@ debug = hPutStrLn stderr
 nubByM :: Monad m => (a -> a -> m Bool) -> [a] -> m [a]
 nubByM _ []     = return []
 nubByM f (x:xs) = liftM (x:) $ filterM (liftM not . f x) xs >>= nubByM f
+
+sortNub :: Ord a => [a] -> [a]
+sortNub = map head . group . sort
