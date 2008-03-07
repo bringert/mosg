@@ -16,7 +16,7 @@ putRule = putStrLn "------------------------------------------------------------
 testProblem :: Grammar -> Problem -> IO ProblemResult
 testProblem gr p = 
     do putRule
-       putStrLn $ "FraCaS problem " ++ show (problemId p)
+       putStrLn $ "FraCaS problem " ++ problemId p
        (prs,th) <- addPremises [] (problemPremises p)
        qr <- handleText gr th (problemQuestion p)
        return $ ProblemResult { 
@@ -38,18 +38,6 @@ testProblem gr p =
                        AcceptedStatement p -> th ++ [p]
                        _                   -> th
            return (res, th')
-
-getAnswer :: ProblemResult -> Maybe Mosg.Answer
-getAnswer r | any premiseFailed (premiseResults r) = Nothing
-            | otherwise = case resOutput (questionResult r) of
-                            YNQAnswer a -> Just a
-                            _           -> Nothing
-
-premiseFailed :: Result -> Bool
-premiseFailed res = case resOutput res of
-                      AcceptedStatement _ -> False
-                      NoInformative       -> False
-                      _                   -> True
 
 isUnknown :: Problem.Answer -> Bool
 isUnknown Problem.Unknown = True
@@ -98,7 +86,7 @@ testProblems gr ps =
       filterAnswers rs f g = [ problem r | r <- rs, maybe False f (getAnswer r), g (problemAnswer (problem r))]
 
       report :: Int -> String -> [Problem] -> IO ()
-      report t s xs = printf "%5.1f%% (%3d / %3d) %s: %s\n" (percentage (length xs) t) (length xs) t s (show (map (problemId) xs))
+      report t s xs = printf "%5.1f%% (%3d / %3d) %s: %s\n" (percentage (length xs) t) (length xs) t s (unwords (map (problemId) xs))
 
       proportion :: String -> [Problem] -> [Problem] -> IO ()
       proportion s xs ys = printf "%5.1f%% (%3d / %3d) %s\n" (percentage (length xs) (length ys)) (length xs) (length ys) s
@@ -110,7 +98,7 @@ testProblems gr ps =
 main :: IO ()
 main = do args <- getArgs
           let keepProblem p | null args = True
-                            | otherwise = problemId p `elem` map read args
+                            | otherwise = dropWhile (=='0') (problemId p) `elem` args
           gr <- loadGrammar
           problems <- liftM (filter keepProblem) $ readFraCaS "fracas/fracas.xml"
           testProblems gr problems

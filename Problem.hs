@@ -1,12 +1,12 @@
 module Problem where
 
-import Mosg (Result(..))
+import Mosg (Result(..), Output(..), Answer(..))
 
 data Problem = Problem {
-                        problemId :: Int,
+                        problemId :: String,
                         problemPremises :: [Sentence],
                         problemQuestion :: Sentence,
-                        problemAnswer :: Answer
+                        problemAnswer :: Problem.Answer
                        }
     deriving (Show)
 
@@ -20,3 +20,16 @@ data ProblemResult = ProblemResult {
       premiseResults :: [Result],
       questionResult :: Result
     }
+
+
+getAnswer :: ProblemResult -> Maybe Mosg.Answer
+getAnswer r | any premiseFailed (premiseResults r) = Nothing
+            | otherwise = case resOutput (questionResult r) of
+                            YNQAnswer a -> Just a
+                            _           -> Nothing
+
+premiseFailed :: Result -> Bool
+premiseFailed res = case resOutput res of
+                      AcceptedStatement _ -> False
+                      NoInformative       -> False
+                      _                   -> True

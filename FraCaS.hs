@@ -24,7 +24,7 @@ toProblem (DTD.Problem (DTD.Problem_Attrs { DTD.problemId = ids,
                        (NonEmpty ps) (Just (DTD.Q q)) _ _ _ _) 
     | not (null (cleanString q)) = 
     Just $ Problem { 
-                    problemId = read ids,
+                    problemId = ids,
                     problemPremises = [cleanString p | DTD.P _ p <- ps ],
                     problemQuestion = cleanString q,
                     problemAnswer = toAnswer a
