@@ -1,4 +1,4 @@
-module FraCaS (Problem(..), Sentence, Answer(..), readFraCaS) where
+module FraCaS (readFraCaS) where
 
 import Data.Char
 import Data.Maybe
@@ -9,19 +9,7 @@ import Text.XML.HaXml.Types
 import Text.XML.HaXml.Xml2Haskell
 
 import qualified FraCaSProblemsDTD as DTD
-
-data Problem = Problem {
-                        problemId :: Int,
-                        problemPremises :: [Sentence],
-                        problemQuestion :: Sentence,
-                        problemAnswer :: Answer
-                       }
-    deriving (Show)
-
-type Sentence = String
-
-data Answer = Yes | No | Unknown | Undef
-              deriving (Show,Eq)
+import Problem
 
 
 readFraCaS :: FilePath -> IO [Problem]

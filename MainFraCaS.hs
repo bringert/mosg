@@ -1,5 +1,6 @@
 import Mosg
 import FraCaS
+import Problem
 
 import Control.Exception
 import Control.Monad
@@ -11,11 +12,6 @@ import Text.Printf
 
 putRule = putStrLn "----------------------------------------------------------------------"
 
-data ProblemResult = ProblemResult {
-      problem :: Problem,
-      premiseResults :: [Result],
-      questionResult :: Result
-    }
 
 testProblem :: Grammar -> Problem -> IO ProblemResult
 testProblem gr p = 
@@ -55,25 +51,25 @@ premiseFailed res = case resOutput res of
                       NoInformative       -> False
                       _                   -> True
 
-isUnknown :: FraCaS.Answer -> Bool
-isUnknown FraCaS.Unknown = True
-isUnknown FraCaS.Undef = True
+isUnknown :: Problem.Answer -> Bool
+isUnknown Problem.Unknown = True
+isUnknown Problem.Undef = True
 isUnknown _ = False
 
 testProblems :: Grammar -> [Problem] -> IO ()
 testProblems gr ps = 
     do rs <- mapM (testProblem gr) ps
-       let goldYes          = [ p | p <- ps, problemAnswer p == FraCaS.Yes ]
+       let goldYes          = [ p | p <- ps, problemAnswer p == Problem.Yes ]
            goldUnknown      = [ p | p <- ps, isUnknown (problemAnswer p) ]
-           goldNo           = [ p | p <- ps, problemAnswer p == FraCaS.No  ]
+           goldNo           = [ p | p <- ps, problemAnswer p == Problem.No  ]
            answered         = [ problem r | r <- rs, isJust (getAnswer r)]
            failed           = [ problem r | r <- rs, isNothing (getAnswer r)]
-           correctYes       = filterAnswers rs (== Mosg.Yes)      (== FraCaS.Yes)
+           correctYes       = filterAnswers rs (== Mosg.Yes)      (== Problem.Yes)
            correctUnknown   = filterAnswers rs (== Mosg.DontKnow) isUnknown
-           correctNo        = filterAnswers rs (== Mosg.No)       (== FraCaS.No)
-           incorrectYes     = filterAnswers rs (== Mosg.Yes)      (/= FraCaS.Yes)
+           correctNo        = filterAnswers rs (== Mosg.No)       (== Problem.No)
+           incorrectYes     = filterAnswers rs (== Mosg.Yes)      (/= Problem.Yes)
            incorrectUnknown = filterAnswers rs (== Mosg.DontKnow) (not . isUnknown)
-           incorrectNo      = filterAnswers rs (== Mosg.No)       (/= FraCaS.No)
+           incorrectNo      = filterAnswers rs (== Mosg.No)       (/= Problem.No)
            report' = report (length ps) 
        putRule
        report' "answered"          answered
