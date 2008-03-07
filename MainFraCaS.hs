@@ -76,28 +76,52 @@ isFoundAnswer :: Status -> Bool
 isFoundAnswer (FoundAnswer _) = True
 isFoundAnswer _ = False
 
+isUnknown :: Answer -> Bool
+isUnknown FraCaS.Unknown = True
+isUnknown FraCaS.Undef = True
+isUnknown _ = False
+
 testProblems :: Grammar -> [Problem] -> IO ()
 testProblems gr ps = 
     do rs <- liftM (zip ps) (mapM (testProblem gr) ps)
+       let goldYes          = [ p | p <- ps, problemAnswer p == FraCaS.Yes ]
+           goldUnknown      = [ p | p <- ps, isUnknown (problemAnswer p) ]
+           goldNo           = [ p | p <- ps, problemAnswer p == FraCaS.No  ]
+           correctYes       = [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p == FraCaS.Yes]
+           correctUnknown   = [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, isUnknown (problemAnswer p)]
+           correctNo        = [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p == FraCaS.No ]
+           incorrectYes     = [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p /= FraCaS.Yes]
+           incorrectUnknown = [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, not (isUnknown (problemAnswer p))]
+           incorrectNo      = [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p /= FraCaS.No]
+           failed           = [ p | (p,st) <- rs, not (isFoundAnswer st)]
        putRule
-       report "correct yes"       [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p == FraCaS.Yes]
-       report "correct no"        [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p == FraCaS.No]
-       report "correct unknown"   [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p == FraCaS.Unknown]
-       report "incorrect yes"     [ p | (p,FoundAnswer Mosg.Yes)      <- rs, problemAnswer p /= FraCaS.Yes]
-       report "incorrect no"      [ p | (p,FoundAnswer Mosg.No)       <- rs, problemAnswer p /= FraCaS.No]
-       report "incorrect unknown" [ p | (p,FoundAnswer Mosg.DontKnow) <- rs, problemAnswer p /= FraCaS.Unknown]
-       report "failed"            [ p | (p,st) <- rs, not (isFoundAnswer st)]
+       report "correct yes"       correctYes
+       report "correct no"        correctNo
+       report "correct unknown"   correctUnknown
+       report "incorrect yes"     incorrectYes
+       report "incorrect no"      incorrectNo
+       report "incorrect unknown" incorrectUnknown
+       report "failed"            failed
        putRule
-       report "parse errors" [ p | (p,st) <- rs, isParseError st]
-       report "interpretation errors" [ p | (p,st) <- rs, isInterpretationError st]
-       report "inconsistent premises" [ p | (p,PremiseInconsistent _) <- rs]
-       report "ambiguous" [ p | (p,st) <- rs, isAmbiguous st]
-       report "other errors" [ p | (p,OtherError) <- rs]
+       report "parse errors"            [ p | (p,st) <- rs, isParseError st]
+       report "interpretation errors"   [ p | (p,st) <- rs, isInterpretationError st]
+       report "inconsistent premises"   [ p | (p,PremiseInconsistent _) <- rs]
+       report "ambiguous"               [ p | (p,st) <- rs, isAmbiguous st]
+       report "other errors"            [ p | (p,OtherError) <- rs]
+       putRule
+       proportion "precision (yes)" correctYes (correctYes ++ incorrectYes)
+       proportion "precision (no)" correctNo (correctNo ++ incorrectNo)
+       proportion "recall (yes)" correctYes goldYes
+       proportion "recall (no)"  correctNo goldNo
     where
       report :: String -> [Problem] -> IO ()
-      report s xs = printf "%3d (%5.1f%%) %s: %s\n" (length xs) (percentage (length xs)) s (show (map problemId xs))
-      percentage :: Int -> Double
-      percentage x = 100 * fromIntegral x / fromIntegral (length ps)
+      report s xs = printf "%3d (%5.1f%%) %s: %s\n" (length xs) (percentage (length xs) (length ps)) s (show (map problemId xs))
+
+      proportion :: String -> [Problem] -> [Problem] -> IO ()
+      proportion s xs ys = printf "%5.1f%% (%3d/%3d) %s\n" (percentage (length xs) (length ys)) (length xs) (length ys) s
+
+      percentage :: Int -> Int -> Double
+      percentage x t = 100 * fromIntegral x / fromIntegral t
 
 main :: IO ()
 main = do args <- getArgs
