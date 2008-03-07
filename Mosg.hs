@@ -1,4 +1,4 @@
-module Mosg (Theory, Output(..), Result(..), Input(..), Quest(..), Grammar, 
+module Mosg (Theory, Results(..), Output(..), Result(..), Input(..), Quest(..), Grammar, 
              loadGrammar, grammarModificationTime, handleText) where
 
 import GSyntax
@@ -21,25 +21,39 @@ import System.Time
 
 type Grammar = MultiGrammar
 
-data Output = AcceptedStatement Prop
-            | NoParse
-            | NoInterpretation [GText]
-            | NoConsistent [Prop]
-            | NoInformative [Prop]
-            | Ambiguous [Input]
-            | YNQAnswer Prop Result
-            | WhAnswer (Exp -> Prop) [[String]]
-            | CountAnswer (Exp -> Prop) Int
+data Results = Results {
+      resInputText :: String,
+      resTrees :: Either Input [GText],
+      resInterpretations :: [[Input]],
+      resDifferentInterpretations :: [Input],
+      resInputType :: InputType,
+      resConsistent :: [Prop],
+      resConsistentInformative :: [Prop],
+      resOutput :: Output
+    }
+
+data InputType = StatementType | QuestionType | AmbiguousType
+
+data Output = NoParse
+            | NoInterpretation
+            | NoConsistent
+            | NoInformative
+            | Ambiguous
+            | AcceptedStatement Prop
+            | YNQAnswer Result
+            | WhAnswer [[String]]
+            | CountAnswer Int
 
 instance Show Output where
-    show (AcceptedStatement f) = "Accepted " ++ show f
+    show (AcceptedStatement _) = "Accepted statement."
     show NoParse = "Unable to parse input."
-    show (NoInterpretation us) = "Unable to interpret input."
-    show (NoConsistent ps) = "No consistent interpretation found."
-    show (NoInformative ps) = "No informative interpretation found."
-    show (Ambiguous is) = "The input is ambiguous."
-    show (YNQAnswer q r) = "The answer to " ++ show q ++ " is " ++ show r
-    show (WhAnswer q ss) = show (WhQuest q) ++ " = " ++ show ss
+    show NoInterpretation = "Unable to interpret input."
+    show NoConsistent = "No consistent interpretation found."
+    show NoInformative = "No informative interpretation found."
+    show Ambiguous = "The input is ambiguous."
+    show (YNQAnswer r) = "The answer is: " ++ show r
+    show (WhAnswer ss) = "The answer is: " ++ show ss
+    show (CountAnswer n) = "The answer is: " ++ show n
 
 grammarFile :: FilePath
 grammarFile = "Union.gfcc"
@@ -81,64 +95,68 @@ readPropMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
                          [x] -> Just x
                          _   -> Nothing
 
-handleText :: Grammar -> Theory -> String -> IO Output
+parseInput :: Grammar -> String -> IO (Either Input [GText])
+parseInput gr i = 
+    case readInputMaybe i `mplus` fmap Statement (readPropMaybe i) of
+      Just input -> do debug $ "Formula input: " ++ show input
+                       return $ Left input
+      Nothing    -> do ps <- filterComplete $ parseText gr i
+                       debug $ "Parse results: " ++ show (length ps)
+                       return $ Right ps
+
+interpretTrees :: Either Input [GText] -> IO [[Input]]
+interpretTrees (Left i) = return [[i]]
+interpretTrees (Right ts) = filterComplete $ map (retrieveInput . iText) ts
+
+handleText :: Grammar -> Theory -> String -> IO Results
 handleText gr th i = 
     do debug $ "Input: " ++ show i
-       case readInputMaybe i `mplus` fmap Statement (readPropMaybe i) of
-         Just input -> do debug $ "Formula input: "
-                          debug $ show input
-                          handleInputs th [input]
-         Nothing    -> do ps <- filterComplete $ parseText gr i
-                          debug $ "Parse results: " ++ show (length ps)
-                          -- debug $ unlines $ map (showTree . gf) ps
-                          if null ps 
-                            then return NoParse
-                            else handleTrees th ps
-
-interpretTexts :: [GText] -> IO [Input]
-interpretTexts = 
-    liftM concat . filterComplete . map (retrieveInput . iText)
-
-handleTrees :: Theory -> [GText] -> IO Output
-handleTrees th ps =
-   do is <- interpretTexts ps
-      debug $ "Interpretations: " ++ show (length is)
-      let is' = nub is
-      debug $ "Syntactically different interpretations: " ++ show (length is')
-      -- debug $ unlines $ map show is'
-      if null is' 
-        then return $ NoInterpretation ps
-        else handleInputs th is'
-
-handleInputs :: Theory -> [Input] -> IO Output
-handleInputs th is =
-    do let ss = [p | Statement p <- is] 
-           qs = [q | Question q <- is]
+       trees <- parseInput gr i
+       is <- interpretTrees trees
+       debug $ "Interpretations: " ++ show (sum (map length is))
+       let is' = nub (concat is)
+       debug $ "Syntactically different interpretations: " ++ show (length is')
+       -- debug $ unlines $ map show is'
+       let ss = [p | Statement p <- is']
+           qs = [q | Question q  <- is']
        debug $ "Statement interpretations: " ++ show (length ss)
        debug $ "Question interpretations: " ++ show (length qs)
-       case (ss,qs) of
-         (_:_,_:_) -> return (Ambiguous is)
-         (_  , []) -> handleStatements th ss
-         ([] ,_  ) -> handleQuestions th qs
+       let typ = case (ss,qs) of
+                   (_:_,_:_) -> AmbiguousType
+                   (_  , []) -> StatementType
+                   ([] ,_  ) -> QuestionType
+       (consistent, informative) <- 
+           case typ of
+             StatementType -> do sc <- filterM (liftM (==Yes) . isConsistent th) ss
+                                 debug $ "Consistent statements: " ++ show (length sc)
+                                 si <- filterM (liftM (==Yes) . isInformative th) sc
+                                 debug $ "Consistent and informative statements: " ++ show (length si)
+                                 debug $ unlines $ map show si
+                                 return (sc,si)
+             _             -> return ([],[])
+       output <- 
+           case typ of
+             _ | either (const False) null trees -> return NoParse
+               | null is' -> return NoInterpretation
+             AmbiguousType -> return Ambiguous
+             StatementType 
+                 | null consistent  -> return NoConsistent
+                 | null informative -> return NoInformative
+                 | otherwise        -> liftM AcceptedStatement (ambiguousStatement informative)
+             QuestionType  -> answerQuestion th qs
+       return $ Results {
+                    resInputText = i,
+                    resTrees = trees,
+                    resInterpretations = is,
+                    resDifferentInterpretations = is',
+                    resInputType = typ,
+                    resConsistent = consistent,
+                    resConsistentInformative = informative,
+                    resOutput = output
+                  }
 
-handleStatements :: Theory -> [Prop] -> IO Output
-handleStatements th ss = 
-    do sc <- filterM (liftM (==Yes) . isConsistent th) ss
-       debug $ "Consistent statements: " ++ show (length sc)
-       if null sc
-         then return (NoConsistent ss)
-         else do si <- filterM (liftM (==Yes) . isInformative th) sc
-                 debug $ "Consistent and informative statements: " ++ show (length si)
-                 if null si
-                   then return (NoInformative sc)
-                   else do -- sd <- nubEquivalent th si
-                           -- debug $ "Distinct consistent and informative statements: "  ++ show (length sd)
-                           debug $ unlines $ map show si
-                           st <- ambiguousStatement si
-                           return (AcceptedStatement st)
-
-handleQuestions :: Theory -> [Quest] -> IO Output
-handleQuestions th qs = 
+answerQuestion :: Theory -> [Quest] -> IO Output
+answerQuestion th qs = 
     do debug $ unlines $ map show qs
        let ynq = [p | YNQuest p <- qs]
            whq = [p | WhQuest p <- qs]
@@ -146,11 +164,11 @@ handleQuestions th qs =
        case (ynq,whq,cnt) of
          (_,[],[])   -> do q <- ambiguousQuestion ynq
                            answer <- isTrue th q
-                           return (YNQAnswer q answer)
+                           return (YNQAnswer answer)
          ([],[q],[]) -> do answer <- answerWhQuest th q
-                           return (WhAnswer q answer)
+                           return (WhAnswer answer)
          ([],[],[q]) -> do answer <- answerWhQuest th q
-                           return (CountAnswer q (length (nub answer)))
+                           return (CountAnswer (length (nub answer)))
 
 ambiguousStatement :: [Prop] -> IO Prop
 ambiguousStatement [p] = return p

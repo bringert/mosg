@@ -28,14 +28,14 @@ testProblem gr p =
        case m of 
          Left st -> return st
          Right th ->
-             do out <- handleText gr th (problemQuestion p)
-                case out of
-                  YNQAnswer _ r -> do putStrLn $ "Answer: " ++ show r 
-                                                   ++ " (correct answer: " ++ show (problemAnswer p) ++ ")"
-                                      return $ FoundAnswer r
+             do res <- handleText gr th (problemQuestion p)
+                case resOutput res of
+                  YNQAnswer r -> do putStrLn $ "Answer: " ++ show r 
+                                                 ++ " (correct answer: " ++ show (problemAnswer p) ++ ")"
+                                    return $ FoundAnswer r
                   NoParse -> return QuestionParseFailed
-                  NoInterpretation _ -> return QuestionInterpretationFailed
-                  Ambiguous _ -> return AmbiguousQuestion
+                  NoInterpretation -> return QuestionInterpretationFailed
+                  Ambiguous -> return AmbiguousQuestion
                   _ -> return OtherError
 
 addPremises :: Grammar -> Theory -> [(Int,String)] -> IO (Either Status Theory)
@@ -47,14 +47,14 @@ addPremises gr th (p:ps) = do r <- addPremise gr th p
 
 addPremise :: Grammar -> Theory -> (Int, String) -> IO (Either Status Theory)
 addPremise gr th (pid, s) = 
-    do out <- handleText gr th s
-       case out of
+    do res <- handleText gr th s
+       case resOutput res of
          AcceptedStatement p -> return $ Right $ th ++ [p]
-         NoInformative _ -> return $ Right th
+         NoInformative -> return $ Right th
          NoParse -> return $ Left $ PremiseParseFailed pid
-         NoInterpretation _ -> return $ Left $ PremiseInterpretationFailed pid
-         NoConsistent _ -> return $ Left $ PremiseInconsistent pid
-         Ambiguous _ -> return $ Left $ AmbiguousPremise pid
+         NoInterpretation -> return $ Left $ PremiseInterpretationFailed pid
+         NoConsistent -> return $ Left $ PremiseInconsistent pid
+         Ambiguous -> return $ Left $ AmbiguousPremise pid
          _ -> return $ Left $ OtherError
 
 isParseError :: Status -> Bool

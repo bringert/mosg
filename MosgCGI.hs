@@ -16,38 +16,28 @@ cgiMain gr =
        setHeader "Content-type" "text/html; charset=UTF-8"
        case mit of
          Nothing -> outputBody $ inputPage th
-         Just it -> do out <- liftIO $ handleText gr th it
-                       let th' = case out of
+         Just it -> do res <- liftIO $ handleText gr th it
+                       let th' = case resOutput res of
                                    AcceptedStatement p -> th ++ [p]
                                    _ -> th
-                       outputBody $ answerPage th' it out
+                       outputBody $ answerPage th' it res
 
 inputPage :: Theory -> Html
 inputPage th = inputForm th Nothing
 
-answerPage :: Theory -> String -> Output -> Html
-answerPage th q out = toHtml
-  [answerSection q out,
+answerPage :: Theory -> String -> Results -> Html
+answerPage th q res = toHtml
+  [answerSection q res,
    inputForm th alts]
-  where alts = case out of
-                 Ambiguous is -> Just is
-                 _            -> Nothing
+  where alts = case resOutput res of
+                 Ambiguous -> Just (resDifferentInterpretations res)
+                 _         -> Nothing
 
-answerSection :: String -> Output -> Html
-answerSection q output = toHtml
+answerSection :: String -> Results -> Html
+answerSection q res = toHtml
   [h2 << "Answer",
    p << ("You said: " +++ quote << q),
-   answer output]
-  where 
-    answer (AcceptedStatement f) = p << ("Accepted " +++ f)
-    answer NoParse = p << "Unable to parse input."
-    answer (NoInterpretation us) = p << "Unable to interpret input."
-    answer (NoConsistent ps) = p << "No consistent interpretation found."
-    answer (NoInformative ps) = p << "No informative interpretation found."
-    answer (Ambiguous is) = p << "The input is ambiguous."
-    answer (YNQAnswer q r) = p << ("The answer to " +++ q +++ " is " +++ strong << result r)
-    answer (WhAnswer q ss) = p << toHtml (WhQuest q) +++ " = " +++ show ss
-    result = toHtml . show
+   p << show (resOutput res)]
 
 inputForm :: Theory -> Maybe [Input] -> Html
 inputForm th mis = form ! [method "post"] << fs
