@@ -12,6 +12,7 @@ import Text.Printf
 putRule = putStrLn "----------------------------------------------------------------------"
 
 data ProblemResult = ProblemResult {
+      problem :: Problem,
       premiseResults :: [Result],
       questionResult :: Result
     }
@@ -23,6 +24,7 @@ testProblem gr p =
        (prs,th) <- addPremises [] (problemPremises p)
        qr <- handleText gr th (problemQuestion p)
        return $ ProblemResult { 
+                    problem = p,
                     premiseResults = prs,
                     questionResult = qr
                   }
@@ -60,12 +62,12 @@ isUnknown _ = False
 
 testProblems :: Grammar -> [Problem] -> IO ()
 testProblems gr ps = 
-    do rs <- liftM (zip ps) $ mapM (testProblem gr) ps
+    do rs <- mapM (testProblem gr) ps
        let goldYes          = [ p | p <- ps, problemAnswer p == FraCaS.Yes ]
            goldUnknown      = [ p | p <- ps, isUnknown (problemAnswer p) ]
            goldNo           = [ p | p <- ps, problemAnswer p == FraCaS.No  ]
-           answered         = [ p | (p,r) <- rs, isJust (getAnswer r)]
-           failed           = [ p | (p,r) <- rs, isNothing (getAnswer r)]
+           answered         = [ problem r | r <- rs, isJust (getAnswer r)]
+           failed           = [ problem r | r <- rs, isNothing (getAnswer r)]
            correctYes       = filterAnswers rs (== Mosg.Yes)      (== FraCaS.Yes)
            correctUnknown   = filterAnswers rs (== Mosg.DontKnow) isUnknown
            correctNo        = filterAnswers rs (== Mosg.No)       (== FraCaS.No)
@@ -84,7 +86,7 @@ testProblems gr ps =
        report' "incorrect no"      incorrectNo
        report' "incorrect unknown" incorrectUnknown
 
-       let xs = [(p,res) | (p,r) <- rs, res <- premiseResults r ++ [questionResult r]]
+       let xs = [(problem r,res) | r <- rs, res <- premiseResults r ++ [questionResult r]]
            reportError = report (length xs)
        putRule
        reportError "parse errors"            [ p | (p,r) <- xs, resOutput r == NoParse]
@@ -97,13 +99,13 @@ testProblems gr ps =
        proportion "recall (yes)" correctYes goldYes
        proportion "recall (no)"  correctNo goldNo
     where
-      filterAnswers rs f g = [ p | (p, r) <- rs, maybe False f (getAnswer r), g (problemAnswer p)]
+      filterAnswers rs f g = [ problem r | r <- rs, maybe False f (getAnswer r), g (problemAnswer (problem r))]
 
       report :: Int -> String -> [Problem] -> IO ()
-      report t s xs = printf "%3d (%5.1f%%) %s: %s\n" (length xs) (percentage (length xs) t) s (show (map problemId xs))
+      report t s xs = printf "%5.1f%% (%3d / %3d) %s: %s\n" (percentage (length xs) t) (length xs) t s (show (map (problemId) xs))
 
       proportion :: String -> [Problem] -> [Problem] -> IO ()
-      proportion s xs ys = printf "%5.1f%% (%3d/%3d) %s\n" (percentage (length xs) (length ys)) (length xs) (length ys) s
+      proportion s xs ys = printf "%5.1f%% (%3d / %3d) %s\n" (percentage (length xs) (length ys)) (length xs) (length ys) s
 
       percentage :: Int -> Int -> Double
       percentage x t | t == 0 = 0
