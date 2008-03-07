@@ -1,6 +1,7 @@
 import Mosg
 import FraCaS
 import Problem
+import ResultXHtml
 
 import Control.Exception
 import Control.Monad
@@ -8,7 +9,6 @@ import Data.List
 import Data.Maybe
 import System.Environment
 import Text.Printf
-
 
 putRule = putStrLn "----------------------------------------------------------------------"
 
@@ -39,12 +39,7 @@ testProblem gr p =
                        _                   -> th
            return (res, th')
 
-isUnknown :: Problem.Answer -> Bool
-isUnknown Problem.Unknown = True
-isUnknown Problem.Undef = True
-isUnknown _ = False
-
-testProblems :: Grammar -> [Problem] -> IO ()
+testProblems :: Grammar -> [Problem] -> IO [ProblemResult]
 testProblems gr ps = 
     do rs <- mapM (testProblem gr) ps
        let goldYes          = [ p | p <- ps, problemAnswer p == Problem.Yes ]
@@ -82,6 +77,8 @@ testProblems gr ps =
        proportion "precision (no)" correctNo (correctNo ++ incorrectNo)
        proportion "recall (yes)" correctYes goldYes
        proportion "recall (no)"  correctNo goldNo
+
+       return rs
     where
       filterAnswers rs f g = [ problem r | r <- rs, maybe False f (getAnswer r), g (problemAnswer (problem r))]
 
@@ -101,4 +98,5 @@ main = do args <- getArgs
                             | otherwise = dropWhile (=='0') (problemId p) `elem` args
           gr <- loadGrammar
           problems <- liftM (filter keepProblem) $ readFraCaS "fracas/fracas.xml"
-          testProblems gr problems
+          rs <- testProblems gr problems
+          writeOutput rs

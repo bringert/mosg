@@ -1,0 +1,26 @@
+body {
+    color: black;
+    background-color: white;
+}
+
+table.results {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+table.results td, table.results th {
+    border: 1px solid black;
+    padding: 0.2em;
+}
+
+.correct {
+    background-color: green;
+}
+
+.incorrect {
+    background-color: red;
+}
+
+.failed {
+    background-color: yellow;
+}

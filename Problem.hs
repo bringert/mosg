@@ -33,3 +33,16 @@ premiseFailed res = case resOutput res of
                       AcceptedStatement _ -> False
                       NoInformative       -> False
                       _                   -> True
+
+isUnknown :: Problem.Answer -> Bool
+isUnknown Problem.Unknown = True
+isUnknown Problem.Undef = True
+isUnknown _ = False
+
+isCorrect :: ProblemResult -> Maybe Bool
+isCorrect r = case (getAnswer r, problemAnswer (problem r)) of
+                (Nothing,            _          ) -> Nothing
+                (Just Mosg.Yes,      Problem.Yes) -> Just True
+                (Just Mosg.No,       Problem.No ) -> Just True
+                (Just Mosg.DontKnow, x          ) -> Just  (isUnknown x)
+                (_,                  _          ) -> Just False
