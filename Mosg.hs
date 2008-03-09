@@ -23,8 +23,7 @@ type Grammar = MultiGrammar
 
 data Result = Result {
       resInputText :: String,
-      resTrees :: Either Input [GText],
-      resInterpretations :: [[Input]],
+      resInterpretations :: Either Input [(GText,[Input])],
       resDifferentInterpretations :: [Input],
       resInputType :: InputType,
       resConsistent :: [Prop],
@@ -105,17 +104,18 @@ parseInput gr i =
                        debug $ "Parse results: " ++ show (length ps)
                        return $ Right ps
 
-interpretTrees :: Either Input [GText] -> IO [[Input]]
-interpretTrees (Left i) = return [[i]]
-interpretTrees (Right ts) = filterComplete $ map (retrieveInput . iText) ts
+interpretTrees :: Either Input [GText] -> IO (Either Input [(GText,[Input])])
+interpretTrees (Left i) = return (Left i)
+interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (filterComplete . retrieveInput . iText) ts
 
 handleText :: Grammar -> Theory -> String -> IO Result
 handleText gr th i = 
     do debug $ "Input: " ++ show i
        trees <- parseInput gr i
-       is <- interpretTrees trees
-       debug $ "Interpretations: " ++ show (sum (map length is))
-       let is' = sortNub (concat is)
+       treesAndInterpretations <- interpretTrees trees
+       let is = either (:[]) (concatMap snd) treesAndInterpretations
+       debug $ "Interpretations: " ++ show (length is)
+       let is' = sortNub is
        debug $ "Syntactically different interpretations: " ++ show (length is')
        -- debug $ unlines $ map show is'
        let ss = [p | Statement p <- is']
@@ -147,8 +147,7 @@ handleText gr th i =
              QuestionType  -> answerQuestion th qs
        return $ Result {
                     resInputText = i,
-                    resTrees = trees,
-                    resInterpretations = is,
+                    resInterpretations = treesAndInterpretations,
                     resDifferentInterpretations = is',
                     resInputType = typ,
                     resConsistent = consistent,

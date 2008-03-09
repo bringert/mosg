@@ -1,5 +1,6 @@
 module ResultXHtml where
 
+import GSyntax
 import Mosg
 import Problem
 import Input_XHtml
@@ -37,15 +38,16 @@ resultsPage rs = header << [thetitle << "MOSG results",
 
 instance HTML ProblemResult where
     toHtml r = tbody << 
-               [tr ! [theclass "problem_result", identifier ("result_" ++ problemId (problem r))] 
+               [tr ! [theclass "problem_result", identifier ("result_" ++ pid)] 
                   << [problemIdCell, problemAnswerCell, answerCell],
-                tr ! [theclass "problem_details", identifier ("details_"++problemId (problem r))] 
-                  << td ! [colspan 2] << details]
+                tr ! [theclass "problem_details", identifier ("details_" ++ pid)] 
+                  << td ! [colspan 3] << details]
       where
-        problemIdCell = td ! [theclass "problem_id", rowspan 2] 
-                        << [toHtml (problemId (problem r)),
+        pid = problemId (problem r)
+        problemIdCell = td ! [theclass "problem_id"] 
+                        << [anchor ! [name pid] << pid,
                             toHtml " ",
-                            showHide "+" ("details_"++problemId (problem r))]
+                            showHide ("details_"++pid)]
         problemAnswerCell = td ! [theclass ("problem_answer_"++s)] << s
             where s = case problemAnswer (problem r) of
                         Problem.Yes     -> "yes"
@@ -59,14 +61,34 @@ instance HTML ProblemResult where
                         Just Mosg.DontKnow -> "unknown"
                         Nothing            -> "failed"
                   corr = maybe "failed" (\c -> if c then "correct" else "incorrect") (isCorrect r)
-        details = ordList $ map (unordList . resConsistentInformative) (premiseResults r)
+        details = [ordList (zipWith result [1..] (premiseResults r ++ [questionResult r]))]
+
+        result i x = [p << resInputText x,
+                      p << (("Parse results: " ++ show countTrees) 
+                            +++ if countTrees > 0 then showHide (rid ++ "_trees") else noHtml),
+                      either (unordList . (:[]) . toHtml) (defList . map inter) (resInterpretations x)
+                             ! [theclass "trees", identifier (rid ++ "_trees")],
+                      p << (("Different interpretations: " ++ show countUnique) 
+                            +++ if countUnique > 0 then showHide (rid ++ "_unique") else noHtml),
+                      unordList (resDifferentInterpretations x)
+                             ! [theclass "unique", identifier (rid ++ "_unique")]
+                     ]
+            where
+              rid = pid ++ "_" ++ show i
+              countTrees = either (const 1) length (resInterpretations x)
+              countUnique = length (resDifferentInterpretations x)
+              inter (t,is) = (toHtml t, unordList is)
 
     toHtmlFromList rs = table ! [theclass "results"] 
                         << (thead << tr << map (th <<) ["ID","Problem answer","Answer"]
                             +++ map toHtml rs)
 
-showHide :: String -> String -> Html
-showHide t i = anchor ! [theclass "show_hide", href ("javascript:toggle('"++ i++"')")] << t
+
+instance HTML GText where
+    toHtml t = toHtml $ show t
+
+showHide :: String -> Html
+showHide i = anchor ! [theclass "show_hide", href "#", strAttr "onclick" ("return toggle(this,'"++ i++"')")] << "+"
 
 {-
 data Result = Result {

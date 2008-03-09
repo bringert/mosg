@@ -7,14 +7,29 @@ a.show_hide {
     text-decoration: none;
 }
 
+table.results, table.results tr, table.results th, table.results td {
+    border-width: 0;
+    border-color: black;
+    border-style: solid;
+}
+
 table.results {
-    border: 1px solid black;
+    width: 100%;
+    border-width: 1px;
     border-collapse: collapse;
 }
 
 table.results td, table.results th {
-    border: 1px solid black;
-    padding: 0.2em;
+    border-width: 0px 1px;
+    vertical-align: top;
+}
+
+table.results tr {
+    border-top-width: 1px;
+}
+
+.problem_details, .trees, .unique {
+    display: none;
 }
 
 .correct {
