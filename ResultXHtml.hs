@@ -92,7 +92,8 @@ resultsPage rs = header << [thetitle << "MOSG results",
                               toHtml rs]
 
 statsHtml :: [(String,[Problem])] -> Html
-statsHtml ls = table << map statsLine ls
+statsHtml ls = table << (colgroup << map (\c -> col ! [identifier c] << noHtml) ["stats_col_text","stats_col_problems"]
+                         +++ map statsLine ls)
   where statsLine (s,xs) = tr << [td << s, td << intersperse (toHtml " ") (probs xs)]
         probs xs = [anchor ! [href ("#" ++ pid)] << pid | pid <- nub $ map problemId xs]
 
@@ -130,7 +131,7 @@ instance HTML ProblemResult where
                       inters "informative" "consistent and informative statement interpretations" (resConsistentInformative x)
                      ]
             where
-              rid = pid ++ "_" ++ show i
+              rid = "problem_" ++ pid ++ "_" ++ show i
               countTrees = either (const 1) length (resInterpretations x)
               countUnique = length (resDifferentInterpretations x)
               inters i s is = expandable (rid ++ "_" ++ i) 
@@ -140,7 +141,7 @@ instance HTML ProblemResult where
               inter n (t,Right is) = (toHtml t, inters ("tree_"++show n) "Interpretations" is)
 
     toHtmlFromList rs = table ! [theclass "results"] 
-                        << (colgroup << map (\c -> col ! [identifier c] << noHtml) ["col_details","col_id","col_correct","col_answer"]
+                        << (colgroup << map (\c -> col ! [identifier c] << noHtml) ["results_col_details","results_col_id","results_col_correct","results_col_answer"]
                             +++ thead << tr << map (th <<) ["Details","ID","Correct answer","Answer"]
                             +++ map toHtml rs)
 

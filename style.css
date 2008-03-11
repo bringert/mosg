@@ -28,7 +28,11 @@ table.results tr {
     border-top-width: 1px;
 }
 
-#col_details, #col_id {
+#stats_col_text {
+    width: 30%;
+}
+
+#results_col_details, #results_col_id {
     width: 5%;
 }
 
