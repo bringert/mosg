@@ -78,12 +78,13 @@ preprocess = unwords . unfoldr split
 parseText :: Grammar -> String -> [GText]
 parseText gr = map fg . concat . parseAll gr "Text" . preprocess
 
-tryInput :: Show a => a -> IO (Either Exception a)
-tryInput p = try (evaluate (length (show p) `seq` p))
+tryInput :: Show a => a -> a -> IO a
+tryInput def p = try (evaluate (length (show p) `seq` p)) 
+                 >>= either (\e -> hPutStrLn stderr (show e) >> return def) return
 
 -- | Keep only interpretations that do not throw exceptions.
 filterComplete :: Show a => [a] -> IO [a]
-filterComplete = fmap concat . mapM (\i -> tryInput i >>= either (\e -> hPutStrLn stderr (show e) >> return []) (return . (:[]))) 
+filterComplete = tryInput []
 
 readInputMaybe :: String -> Maybe Input
 readInputMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
