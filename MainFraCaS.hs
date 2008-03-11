@@ -42,55 +42,9 @@ testProblem gr p =
 testProblems :: Grammar -> [Problem] -> IO [ProblemResult]
 testProblems gr ps = 
     do rs <- mapM (testProblem gr) ps
-       let goldYes          = [ p | p <- ps, problemAnswer p == Problem.Yes ]
-           goldUnknown      = [ p | p <- ps, isUnknown (problemAnswer p) ]
-           goldNo           = [ p | p <- ps, problemAnswer p == Problem.No  ]
-           answered         = [ problem r | r <- rs, isJust (getAnswer r)]
-           failed           = [ problem r | r <- rs, isNothing (getAnswer r)]
-           correctYes       = filterAnswers rs (== Mosg.Yes)      (== Problem.Yes)
-           correctUnknown   = filterAnswers rs (== Mosg.DontKnow) isUnknown
-           correctNo        = filterAnswers rs (== Mosg.No)       (== Problem.No)
-           incorrectYes     = filterAnswers rs (== Mosg.Yes)      (/= Problem.Yes)
-           incorrectUnknown = filterAnswers rs (== Mosg.DontKnow) (not . isUnknown)
-           incorrectNo      = filterAnswers rs (== Mosg.No)       (/= Problem.No)
-           report' = report (length ps) 
-       putRule
-       report' "answered"          answered
-       report' "failed"            failed
-       putRule
-       report' "correct yes"       correctYes
-       report' "correct no"        correctNo
-       report' "correct unknown"   correctUnknown
-       report' "incorrect yes"     incorrectYes
-       report' "incorrect no"      incorrectNo
-       report' "incorrect unknown" incorrectUnknown
-
-       let xs = [(problem r,res) | r <- rs, res <- premiseResults r ++ [questionResult r]]
-           reportError = report (length xs)
-       putRule
-       reportError "parse errors"            [ p | (p,r) <- xs, resOutput r == NoParse]
-       reportError "interpretation errors"   [ p | (p,r) <- xs, resOutput r == NoInterpretation]
-       reportError "inconsistent"            [ p | (p,r) <- xs, resOutput r == NoConsistent]
-
-       putRule
-       proportion "precision (yes)" correctYes (correctYes ++ incorrectYes)
-       proportion "precision (no)" correctNo (correctNo ++ incorrectNo)
-       proportion "recall (yes)" correctYes goldYes
-       proportion "recall (no)"  correctNo goldNo
-
+       let statLine (s,xs) = s ++ (if null xs then "" else ": " ++ unwords (map (problemId) xs))
+       mapM_ (putStrLn . statLine) (statistics rs)
        return rs
-    where
-      filterAnswers rs f g = [ problem r | r <- rs, maybe False f (getAnswer r), g (problemAnswer (problem r))]
-
-      report :: Int -> String -> [Problem] -> IO ()
-      report t s xs = printf "%5.1f%% (%3d / %3d) %s: %s\n" (percentage (length xs) t) (length xs) t s (unwords (map (problemId) xs))
-
-      proportion :: String -> [Problem] -> [Problem] -> IO ()
-      proportion s xs ys = printf "%5.1f%% (%3d / %3d) %s\n" (percentage (length xs) (length ys)) (length xs) (length ys) s
-
-      percentage :: Int -> Int -> Double
-      percentage x t | t == 0 = 0
-                     | otherwise = 100 * fromIntegral x / fromIntegral t
 
 main :: IO ()
 main = do args <- getArgs

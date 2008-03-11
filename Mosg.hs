@@ -109,6 +109,12 @@ interpretTrees :: Either Input [GText] -> IO (Either Input [(GText,[Input])])
 interpretTrees (Left i) = return (Left i)
 interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (filterComplete . retrieveInput . iText) ts
 
+filterConsistent :: Theory -> [Prop] -> IO [Prop]
+filterConsistent th = filterM (\p -> debug ("Checking consistency: " ++ show p) >> liftM (==Yes) (isConsistent th p))
+
+filterInformative :: Theory -> [Prop] -> IO [Prop]
+filterInformative th = filterM (\p -> debug ("Checking informativity: " ++ show p) >> liftM (==Yes) (isInformative th p))
+
 handleText :: Grammar -> Theory -> String -> IO Result
 handleText gr th i = 
     do debug $ "Input: " ++ show i
@@ -129,9 +135,9 @@ handleText gr th i =
                    ([] ,_  ) -> QuestionType
        (consistent, informative) <- 
            case typ of
-             StatementType -> do sc <- filterM (liftM (==Yes) . isConsistent th) ss
+             StatementType -> do sc <- filterConsistent th ss
                                  debug $ "Consistent statements: " ++ show (length sc)
-                                 si <- filterM (liftM (==Yes) . isInformative th) sc
+                                 si <- filterInformative th sc
                                  debug $ "Consistent and informative statements: " ++ show (length si)
                                  debug $ unlines $ map show si
                                  return (sc,si)

@@ -1,16 +1,67 @@
-module ResultXHtml where
+module ResultXHtml (statistics, writeOutput) where
 
 import GSyntax
 import Mosg
 import Problem
 import Input_XHtml
 
+import Data.List
+import Data.Maybe
 import Data.Time
 import System.Directory
 import System.Locale
 import System.FilePath
 import Text.Printf
 import Text.XHtml.Strict
+
+
+statistics :: [ProblemResult] -> [(String, [Problem])]
+statistics rs = 
+       let goldYes          = [ problem r | r <- rs, problemAnswer (problem r) == Problem.Yes ]
+           goldUnknown      = [ problem r | r <- rs, isUnknown (problemAnswer (problem r)) ]
+           goldNo           = [ problem r | r <- rs, problemAnswer (problem r) == Problem.No  ]
+           answered         = [ problem r | r <- rs, isJust (getAnswer r)]
+           failed           = [ problem r | r <- rs, isNothing (getAnswer r)]
+           correctYes       = filterAnswers rs (== Mosg.Yes)      (== Problem.Yes)
+           correctUnknown   = filterAnswers rs (== Mosg.DontKnow) isUnknown
+           correctNo        = filterAnswers rs (== Mosg.No)       (== Problem.No)
+           incorrectYes     = filterAnswers rs (== Mosg.Yes)      (/= Problem.Yes)
+           incorrectUnknown = filterAnswers rs (== Mosg.DontKnow) (not . isUnknown)
+           incorrectNo      = filterAnswers rs (== Mosg.No)       (/= Problem.No)
+           report' = report (length rs) 
+           xs = [(problem r,res) | r <- rs, res <- premiseResults r ++ [questionResult r]]
+           reportError = report (length xs)
+        in [
+            report' "answered"          answered,
+            report' "failed"            failed,
+            report' "correct yes"       correctYes,
+            report' "correct no"        correctNo,
+            report' "correct unknown"   correctUnknown,
+            report' "incorrect yes"     incorrectYes,
+            report' "incorrect no"      incorrectNo,
+            report' "incorrect unknown" incorrectUnknown,
+            ("",[]),
+            reportError "parse errors"            [ p | (p,r) <- xs, resOutput r == NoParse],
+            reportError "interpretation errors"   [ p | (p,r) <- xs, resOutput r == NoInterpretation],
+            reportError "inconsistent"            [ p | (p,r) <- xs, resOutput r == NoConsistent],
+            ("",[]),
+            proportion "precision (yes)" correctYes (correctYes ++ incorrectYes),
+            proportion "precision (no)" correctNo (correctNo ++ incorrectNo),
+            proportion "recall (yes)" correctYes goldYes,
+            proportion "recall (no)"  correctNo goldNo
+           ]
+    where
+      filterAnswers rs f g = [ problem r | r <- rs, maybe False f (getAnswer r), g (problemAnswer (problem r))]
+
+      report :: Int -> String -> [Problem] -> (String, [Problem])
+      report t s xs = (printf "%5.1f%% (%3d / %3d) %s" (percentage (length xs) t) (length xs) t s, xs)
+
+      proportion :: String -> [Problem] -> [Problem] -> (String, [Problem])
+      proportion s xs ys = (printf "%5.1f%% (%3d / %3d) %s" (percentage (length xs) (length ys)) (length xs) (length ys) s, [])
+
+      percentage :: Int -> Int -> Double
+      percentage x t | t == 0 = 0
+                     | otherwise = 100 * fromIntegral x / fromIntegral t
 
 
 mkOutputDir :: IO FilePath
@@ -34,7 +85,12 @@ resultsPage :: [ProblemResult] -> Html
 resultsPage rs = header << [thetitle << "MOSG results", 
                             cssLink "style.css",
                             javascriptLink "ui.js"]
-                 +++ body << toHtml rs
+                 +++ body << [h1 << "MOSG Output", statsHtml (statistics rs), toHtml rs]
+
+statsHtml :: [(String,[Problem])] -> Html
+statsHtml ls = table << map statsLine ls
+  where statsLine (s,xs) = tr << [td << s, td << intersperse (toHtml " ") (probs xs)]
+        probs xs = [anchor ! [href ("#" ++ pid)] << pid | pid <- nub $ map problemId xs]
 
 instance HTML ProblemResult where
     toHtml r = tbody << 
