@@ -28,7 +28,11 @@ table.results tr {
     border-top-width: 1px;
 }
 
-.problem_details, .trees, .unique {
+#col_details, #col_id {
+    width: 5%;
+}
+
+.expandable {
     display: none;
 }
 

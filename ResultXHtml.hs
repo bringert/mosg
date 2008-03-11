@@ -85,7 +85,11 @@ resultsPage :: [ProblemResult] -> Html
 resultsPage rs = header << [thetitle << "MOSG results", 
                             cssLink "style.css",
                             javascriptLink "ui.js"]
-                 +++ body << [h1 << "MOSG Output", statsHtml (statistics rs), toHtml rs]
+                 +++ body << [h1 << "MOSG Output", 
+                              h2 << "Overall statistics",
+                              statsHtml (statistics rs), 
+                              h2 << "Problems",
+                              toHtml rs]
 
 statsHtml :: [(String,[Problem])] -> Html
 statsHtml ls = table << map statsLine ls
@@ -95,15 +99,13 @@ statsHtml ls = table << map statsLine ls
 instance HTML ProblemResult where
     toHtml r = tbody << 
                [tr ! [theclass "problem_result", identifier ("result_" ++ pid)] 
-                  << [problemIdCell, problemAnswerCell, answerCell],
-                tr ! [theclass "problem_details", identifier ("details_" ++ pid)] 
+                  << [expandCell, problemIdCell, problemAnswerCell, answerCell],
+                tr ! [classes ["problem_details", "expandable"], identifier ("details_" ++ pid)] 
                   << td ! [colspan 3] << details]
       where
         pid = problemId (problem r)
-        problemIdCell = td ! [theclass "problem_id"] 
-                        << [anchor ! [name pid] << pid,
-                            toHtml " ",
-                            showHide ("details_"++pid)]
+        expandCell = td << showHide ("details_"++pid)
+        problemIdCell = td ! [theclass "problem_id"] << [anchor ! [name pid] << pid]
         problemAnswerCell = td ! [theclass ("problem_answer_"++s)] << s
             where s = case problemAnswer (problem r) of
                         Problem.Yes     -> "yes"
@@ -120,45 +122,40 @@ instance HTML ProblemResult where
         details = [ordList (zipWith result [1..] (premiseResults r ++ [questionResult r]))]
 
         result i x = [p << resInputText x,
-                      p << (("Parse results: " ++ show countTrees) 
-                            +++ if countTrees > 0 then showHide (rid ++ "_trees") else noHtml),
-                      either (unordList . (:[]) . toHtml) (defList . map inter) (resInterpretations x)
-                             ! [theclass "trees", identifier (rid ++ "_trees")],
-                      p << (("Different interpretations: " ++ show countUnique) 
-                            +++ if countUnique > 0 then showHide (rid ++ "_unique") else noHtml),
-                      unordList (resDifferentInterpretations x)
-                             ! [theclass "unique", identifier (rid ++ "_unique")]
+                      expandable (rid ++ "_trees") 
+                                 (show countTrees ++ " parse results")
+                                 (either (unordList . (:[]) . toHtml) (nonEmptyDefList . zipWith inter [1..]) (resInterpretations x)),
+                      inters "unique" "different interpretations" (resDifferentInterpretations x),
+                      inters "consistent" "consistent statement interpretations" (resConsistent x),
+                      inters "informative" "consistent and informative statement interpretations" (resConsistentInformative x)
                      ]
             where
               rid = pid ++ "_" ++ show i
               countTrees = either (const 1) length (resInterpretations x)
               countUnique = length (resDifferentInterpretations x)
-              inter (t,Left err) = (toHtml t, toHtml err)
-              inter (t,Right is) = (toHtml t, unordList is)
+              inters i s is = expandable (rid ++ "_" ++ i) 
+                                         (show (length is) ++ " " ++ s)
+                                         (nonEmptyList is)
+              inter _ (t,Left err) = (toHtml t, toHtml err)
+              inter n (t,Right is) = (toHtml t, inters ("tree_"++show n) "Interpretations" is)
 
     toHtmlFromList rs = table ! [theclass "results"] 
-                        << (thead << tr << map (th <<) ["ID","Problem answer","Answer"]
+                        << (colgroup << map (\c -> col ! [identifier c] << noHtml) ["col_details","col_id","col_correct","col_answer"]
+                            +++ thead << tr << map (th <<) ["Details","ID","Correct answer","Answer"]
                             +++ map toHtml rs)
 
 
 instance HTML GText where
     toHtml t = toHtml $ show t
 
-showHide :: String -> Html
-showHide i = anchor ! [theclass "show_hide", href "#", strAttr "onclick" ("return toggle(this,'"++ i++"')")] << "+"
+expandable :: (HTML a, HTML b) => String -> a -> b -> Html
+expandable id x y = p << [toHtml x, if isNoHtml y' then noHtml else " " +++ showHide id]
+                    +++ y' ! [identifier id, theclass "expandable"]
+  where y' = toHtml y
 
-{-
-data Result = Result {
-      resInputText :: String,
-      resTrees :: Either Input [GText],
-      resInterpretations :: [[Input]],
-      resDifferentInterpretations :: [Input],
-      resInputType :: InputType,
-      resConsistent :: [Prop],
-      resConsistentInformative :: [Prop],
-      resOutput :: Output
-    }
--}
+showHide :: String -> Html
+showHide i = anchor ! [theclass "show_hide", href "#", strAttr "onclick" ("return toggle(this,'"++ i++"')")] << "(+)"
+
 
 -- XHtml utilities
 
@@ -171,3 +168,15 @@ javascriptLink s = tag "script" ! [src s, thetype "text/javascript"] << noHtml
 
 classes :: [String] -> HtmlAttr
 classes = theclass . unwords
+
+nonEmptyList :: HTML a => [a] -> Html
+nonEmptyList = nonEmptyTag unordList 
+
+nonEmptyDefList :: (HTML a, HTML b) => [(a,b)] -> Html
+nonEmptyDefList ds = if null ds' then noHtml else defList ds' 
+    where ds' = [(t',d') | (t,d) <- ds, let t' = toHtml t,
+                                        let d' = toHtml d,
+                                        not (isNoHtml t' && isNoHtml d')]
+
+nonEmptyTag :: HTML a => (a -> Html) -> a -> Html
+nonEmptyTag t x = if isNoHtml (toHtml x) then noHtml else t x

@@ -6,6 +6,6 @@ function toggle(widget,id) {
   // HACK: there should be a nicer way to do this
   defaultDisplay = n.tagName == "TR" ? "table-row" : "block";
   n.style.display = show ? defaultDisplay : "none";
-  widget.firstChild.data = show ? "-" : "+";
+  widget.firstChild.data = show ? "(-)" : "(+)";
   return false;
 }
