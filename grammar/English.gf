@@ -42,6 +42,8 @@ lin
       a = RNoAg
       } ;
 
+    either_Det = mkDeterminer Sg "either" ;
+
     neither_Det = mkDeterminer Sg "neither" ;
 
     nobody_NP = variants { regNP "nobody" Sg; regNP "noone" Sg; regNP ["no one"] Sg };
