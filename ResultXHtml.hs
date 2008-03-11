@@ -133,7 +133,8 @@ instance HTML ProblemResult where
               rid = pid ++ "_" ++ show i
               countTrees = either (const 1) length (resInterpretations x)
               countUnique = length (resDifferentInterpretations x)
-              inter (t,is) = (toHtml t, unordList is)
+              inter (t,Left err) = (toHtml t, toHtml err)
+              inter (t,Right is) = (toHtml t, unordList is)
 
     toHtmlFromList rs = table ! [theclass "results"] 
                         << (thead << tr << map (th <<) ["ID","Problem answer","Answer"]

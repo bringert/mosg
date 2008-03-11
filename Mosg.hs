@@ -21,9 +21,11 @@ import System.Time
 
 type Grammar = MultiGrammar
 
+type Error = String
+
 data Result = Result {
       resInputText :: String,
-      resInterpretations :: Either Input [(GText,[Input])],
+      resInterpretations :: Either Input [(GText,Either Error [Input])],
       resDifferentInterpretations :: [Input],
       resInputType :: InputType,
       resConsistent :: [Prop],
@@ -78,13 +80,9 @@ preprocess = unwords . unfoldr split
 parseText :: Grammar -> String -> [GText]
 parseText gr = map fg . concat . parseAll gr "Text" . preprocess
 
-tryInput :: Show a => a -> a -> IO a
-tryInput def p = try (evaluate (length (show p) `seq` p)) 
-                 >>= either (\e -> hPutStrLn stderr (show e) >> return def) return
-
--- | Keep only interpretations that do not throw exceptions.
-filterComplete :: Show a => [a] -> IO [a]
-filterComplete = tryInput []
+tryInput :: Show a => a -> IO (Either Error a)
+tryInput p = try (evaluate (length (show p) `seq` p)) 
+                 >>= either (\e -> hPutStrLn stderr (show e) >> return (Left (show e))) (return . Right)
 
 readInputMaybe :: String -> Maybe Input
 readInputMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
@@ -101,13 +99,13 @@ parseInput gr i =
     case readInputMaybe i `mplus` fmap Statement (readPropMaybe i) of
       Just input -> do debug $ "Formula input: " ++ show input
                        return $ Left input
-      Nothing    -> do ps <- filterComplete $ parseText gr i
+      Nothing    -> do let ps = parseText gr i
                        debug $ "Parse results: " ++ show (length ps)
                        return $ Right ps
 
-interpretTrees :: Either Input [GText] -> IO (Either Input [(GText,[Input])])
+interpretTrees :: Either Input [GText] -> IO (Either Input [(GText,Either Error [Input])])
 interpretTrees (Left i) = return (Left i)
-interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (filterComplete . retrieveInput . iText) ts
+interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (tryInput . retrieveInput . iText) ts
 
 filterConsistent :: Theory -> [Prop] -> IO [Prop]
 filterConsistent th = filterM (\p -> debug ("Checking consistency: " ++ show p) >> liftM (==Yes) (isConsistent th p))
@@ -120,7 +118,7 @@ handleText gr th i =
     do debug $ "Input: " ++ show i
        trees <- parseInput gr i
        treesAndInterpretations <- interpretTrees trees
-       let is = either (:[]) (concatMap snd) treesAndInterpretations
+       let is = either (:[]) (concatMap (either (const []) id . snd)) treesAndInterpretations
        debug $ "Interpretations: " ++ show (length is)
        let is' = sortNub is
        debug $ "Syntactically different interpretations: " ++ show (length is')
