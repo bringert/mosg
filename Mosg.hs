@@ -99,7 +99,7 @@ parseInput gr i =
     case readInputMaybe i `mplus` fmap Statement (readPropMaybe i) of
       Just input -> do debug $ "Formula input: " ++ show input
                        return $ Left input
-      Nothing    -> do let ps = parseText gr i
+      Nothing    -> do ps <- liftM catRights $ mapM tryInput $ parseText gr i
                        debug $ "Parse results: " ++ show (length ps)
                        return $ Right ps
 
@@ -207,3 +207,6 @@ nubByM f (x:xs) = liftM (x:) $ filterM (liftM not . f x) xs >>= nubByM f
 
 sortNub :: Ord a => [a] -> [a]
 sortNub = map head . group . sort
+
+catRights :: [Either a b] -> [b]
+catRights xs = [x | Right x <- xs]
