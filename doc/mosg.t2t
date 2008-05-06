@@ -99,7 +99,7 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
 
 == Problems in the resource grammar ==
 
-- No possesive relative pronoun: "the man whose dog John beats"
+- No possessive relative pronoun: "the man whose dog John beats"
 - English only has "itself", no "himself" and "herself"
 - Cannot combine an NP with a relative sentence, e.g. 
   "everybody who sleeps". Relatives only combine with CN.
@@ -107,14 +107,14 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
 - "john gambling is beautiful"
 - PN modifying a N: "nobel prize", "itel computer"
 - AP modifying PN: "southern europe"
-- Subjunctive for QS: "if john sleeps, does mary sleep"
+- Subjunctive for QS: "if john sleeps, does mary sleep?"
 - Time expressions:
   every week/month/year
   at a quarter past five
   in two years
   in two hours
 - Can't say "at least a few"
-- Can't say "more orders than itel", more ... than NP is not a determiner,
+- Can't say "more orders than itel", since "more ... than NP" is not a determiner,
   nor "more orders than itel won".
 
 == Missing from the lexicon ==
