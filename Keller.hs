@@ -1,8 +1,7 @@
 -- | Keller storage
-module Keller (Keller, retrieveInput) where
+module Keller where
 
 import FOL
-import Sem
 import GSyntax
 
 import Input
@@ -37,23 +36,11 @@ instance Applicative Store where
 choiceKeller :: [Keller a] -> Keller a
 choiceKeller xs = Keller $ concat [ys | Keller ys <- xs]
 
-defaultKeller :: Id a -> Keller a
-defaultKeller = Keller . map pure . retrieveId
-
 noStorage :: Keller (Exp -> Prop) -> Keller (Exp -> Prop)
 noStorage k = Keller (map Core (retrieveKellerPred k))
 
 store :: Keller NP -> Keller NP
 store (Keller nps) = Keller [Stored (Core (\z u -> u z)) np | np <- nps]
-
-instance Inter Keller where
-    -- Quantifiers in a relative clause cannot outscope those
-    -- outside the relative clause.
-    iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> noStorage (iRS rs)
-    iCN cn = defaultKeller $ iCN cn
-
-    iNP (GDetCN det cn) = let np = iDet det <*> iCN cn in choiceKeller [np, store np]
-    iNP np = defaultKeller $ iNP np
 
 --
 -- * Retrieval
