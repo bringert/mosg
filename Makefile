@@ -15,7 +15,7 @@ mosg:
 	ghc $(GHCFLAGS) --make -o $@ Main.hs
 
 mosg-fracas:
-	ghc $(GHCFLAGS) --make -o $@ MainFraCaS.hs
+	ghc $(GHCFLAGS) -package HaXml-1.13.3 --make -o $@ MainFraCaS.hs
 
 test:
 	ghc $(GHCFLAGS) -i../embedded-gf/src --make -o $@ test.hs
