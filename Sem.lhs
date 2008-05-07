@@ -1,3 +1,21 @@
+\documentclass{article}
+
+%include polycode.fmt
+
+%format <*>          = "\varoast"
+%format &&&          = "\land"
+%format |||          = "\lor"
+%format ==>          = "\Rightarrow"
+%format thereIs      = "\exists"
+%format forAll       = "\forall"
+%format neg          = "\lnot"
+
+\begin{document}
+
+%if style == newcode
+
+\begin{code}
+
 {-# OPTIONS_GHC -fwarn-incomplete-patterns -fwarn-overlapping-patterns #-}
 module Sem where
 
@@ -27,6 +45,12 @@ instance Inter Id
 retrieveId :: Id a -> [a]
 retrieveId (Id x) = [x]
 
+\end{code}
+
+%endif
+
+\begin{code}
+
 --
 -- * Interpretation
 --
@@ -44,6 +68,10 @@ class Applicative i => Inter i where
     iText (GTQuestMark phr GTEmpty) = toQuestion (iPhr phr)
     iText GTEmpty = StatementI (pure true)
     iText text = unhandled "iText" text
+
+\end{code}
+
+\begin{code}
 
     iPhr :: GPhr -> InputI i
     iPhr (GPhrUtt GNoPConj utt GNoVoc) = iUtt utt 
@@ -75,6 +103,10 @@ class Applicative i => Inter i where
     -- FIXME: person(x)
     iIP GwhoSg_IP  = (pure (\u -> u), WhQuestI)
     iIP ip = unhandled "iIP" ip
+
+\end{code}
+
+\begin{code}
 
     iIDet :: GIDet -> (i ((Exp -> Prop) -> (Exp -> Prop) -> (Exp -> Prop)),
                        i (Exp -> Prop) -> QuestI i)
@@ -120,6 +152,10 @@ class Applicative i => Inter i where
     iRP GIdRP = pure (\u -> u)
     -- FIXME: person(x)
     iRP Gwho_RP = pure (\u -> u)
+
+\end{code}
+
+\begin{code}
 
     iSlash :: GSlash -> i (Exp -> Prop)
     -- (which) a woman kills in Paris
@@ -168,6 +204,10 @@ class Applicative i => Inter i where
     iComp (GCompAdv adv) = iAdv adv <*> pure (\x -> true)
     iComp (GCompNP np) = pure (\ni x -> ni (\y -> x === y)) <*> iNP np
 
+\end{code}
+
+\begin{code}
+
     iNP :: GNP -> i ((Exp -> Prop) -> Prop)
     iNP (GAdvNP np adv) = pure (.) <*> iNP np <*> iAdv adv
 
@@ -206,10 +246,14 @@ class Applicative i => Inter i where
     iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni (\u -> u y) x)) <*> iN2 n2
     iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
     -- FIXME: this produces some odd predicates, 
-    -- e.g. "labour mp" -> "labour(X) & mp(X)",
+    -- e.g. "labour mp" -> "labour(X) \& mp(X)",
     -- but the person is not the party
     iCN (GCompoundCN cn1 cn2) = pure (\ci1 ci2 x -> ci1 x &&& ci2 x) <*> iCN cn1 <*> iCN cn2
     iCN cn = unhandled "iCN" cn
+
+\end{code}
+
+\begin{code}
 
     iDet :: GDet -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     -- FIXME: does this mean more than one?
@@ -237,18 +281,19 @@ class Applicative i => Inter i where
     iInt 0 = pure (\q -> q (\p -> true))
     iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
 
---    iAdN :: GAdN -> i ...
---    iAdN Gexactly_AdN = 
---    iAdN Gat8most_AdN = 
---    iAdN Gat8least_AdN = 
+\end{code}
+
+\begin{code}
 
     iQuant_Pl :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
-    iQuant_Pl GDefArt = pure (\u v n -> n (\x -> u x &&& v x) &&& neg (thereIs (\y -> u y &&& n (\z -> y =/= z))))
     iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
---    iQuant_Pl (GGenNP np) = pure (\ni u v n -> n (\x -> u x &&& ni (\y -> of_Pred y x) &&& v x) &&& neg (thereIs (\y -> u y &&& ni (\y -> of_Pred y x) &&& n (\z -> y =/= z)))) <*> iNP np
     -- FIXME: universal as subject, existential in object position?
     iQuant_Pl GMassDet = pure (\u v n -> n (\x -> u x &&& v x))
     iQuant_Pl quant = unhandled "iQuant_Pl" quant
+
+\end{code}
+
+\begin{code}
 
     iQuant_Sg :: GQuant -> i ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
     iQuant_Sg GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& neg (thereIs (\y -> u y &&& y =/= x))))
@@ -259,10 +304,18 @@ class Applicative i => Inter i where
     iQuant_Sg GMassDet = pure (\u v -> forAll (\x -> u x &&& v x))
     iQuant_Sg quant = unhandled "iQuant_Sg" quant
 
+\end{code}
+
+\begin{code}
+
     iOrd :: GOrd -> i ((Exp -> Prop) -> (Exp -> Prop))
     iOrd GNoOrd = pure id
     iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
     iOrd ord = unhandled "iOrd" ord
+
+\end{code}
+
+\begin{code}
 
     iAP :: GAP -> i (Exp -> Prop)
     iAP (GComplA2 a2 np) = iA2 a2 <*> iNP np
@@ -295,13 +348,14 @@ class Applicative i => Inter i where
     iSubj Gbecause_Subj = pure ((==>))
     iSubj Gif_Subj = pure (==>)
     iSubj Gwhen_Subj = pure (==>)
-    -- english only
-    -- FIXME: weird syntax: "therefore john sleeps , felix sleeps"
-    --iSubj Gtherefore_Subj = pure (flip (==>))
     iSubj subj = unhandled "iSubj" subj
 
     iListAdv :: GListAdv -> i [(Exp -> Prop) -> (Exp -> Prop)]
     iListAdv (GListAdv advs) = traverse iAdv advs
+
+\end{code}
+
+\begin{code}
 
 --
 -- Lexical 
@@ -342,6 +396,10 @@ class Applicative i => Inter i where
 
     iPrep :: GPrep -> i (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
     iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
+
+\end{code}
+
+\begin{code}
 
 --
 -- * Numbers
@@ -429,5 +487,8 @@ symbol :: Show a => a -> String
 symbol = map toLower . takeWhile (/='_') . tail . head . words . show 
 
 unhandled :: Show a => String -> a -> b
---unhandled f x = error $ "Missing case in " ++ f ++ ": " ++ show x
 unhandled f x = error $ "Missing case in " ++ f ++ ": " ++ head (words (show x))
+
+\end{code}
+
+\end{document}
