@@ -24,6 +24,9 @@ data IP = Who
 data Cl = PredVP NP VP
   deriving Show
 
+data RCl = RelVP VP 
+  deriving Show
+
 data VP = ComplV2 V2 NP
         | UseV V
   deriving Show
@@ -37,7 +40,10 @@ data NP = DetCN Det CN
 data Det = Every | A
   deriving Show
 
-data CN = Man | Woman
+data CN = Man 
+        | Woman
+        | Shake
+        | RelCN CN RCl
   deriving Show
 
 data V = Sleep
@@ -87,6 +93,9 @@ iIP Who = pure id
 iCl :: Cl -> I Prop
 iCl (PredVP np vp) = iNP np <*> iVP vp
 
+iRCl :: RCl -> I (Exp -> Prop)
+iRCl (RelVP vp) = iVP vp
+
 iVP :: VP -> I (Exp -> Prop)
 iVP (ComplV2 v2 np) = iV2 v2 <*> iNP np
 iVP (UseV v) = iV v
@@ -98,12 +107,16 @@ iNP Someone  = cont $ \c -> thereIs (\x -> c ($ x))
 iNP John = pure ($ FOL.Const "john")
 
 iDet :: Det -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-iDet Every = cont $ \c -> forAll (\x -> c (\u v -> u x ==> v x))
-iDet A = cont $ \c -> thereIs (\x -> c (\u v -> u x ==> v x))
+iDet Every =     pure (\u v -> forAll (\x -> u x ==> v x))
+             <|> cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
+iDet A =     pure (\u v -> thereIs (\x -> u x ==> v x))
+         <|> cont (\c -> thereIs (\x -> c (\u v -> u x ==> v x)))
 
 iCN :: CN -> I (Exp -> Prop)
 iCN Man   = pure (\x -> Pred "man"   [x])
 iCN Woman = pure (\x -> Pred "woman" [x])
+iCN Shake = pure (\x -> Pred "shake" [x])
+iCN (RelCN cn rcl) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> iRCl rcl
 
 iV :: V -> I (Exp -> Prop)
 iV Sleep = pure (\x -> Pred "sleep" [x])
@@ -117,6 +130,8 @@ iV2 Love = pure (\u x -> u (\y -> Pred "love" [x,y]))
 --
 
 utt1 = QuestCl (PredVP (DetCN Every Man) (ComplV2 Love (DetCN A Woman)))
+
+utt2 = DeclCl (PredVP (DetCN A Man) (ComplV2 Love (DetCN Every (RelCN Woman (RelVP (ComplV2 Love (DetCN A Shake)))))))
 
 test = mapM_ print . nub . iUtt
 

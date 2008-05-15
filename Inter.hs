@@ -22,6 +22,14 @@ instance Applicative I where
                            \c -> runCont y $ \a -> runCont x $ \f -> (c (f a))]
                            | x <- xs, y <- ys]
 
+instance Alternative I where
+    empty          = I []
+    I xs <|> I ys  = I (xs++ys)
+
+instance Monoid (I a) where
+    mempty   = empty
+    mappend  = (<|>)
+
 cont :: ((a -> Prop) -> Prop) -> I a
 cont f = I [Cont f]
 
