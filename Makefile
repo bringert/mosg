@@ -20,6 +20,10 @@ mosg-fracas:
 test:
 	ghc $(GHCFLAGS) -i../embedded-gf/src --make -o $@ test.hs
 
+Sem.pdf: Sem.lhs
+	lhs2tex Sem.lhs > Sem.tex
+	pdflatex Sem.tex
+
 Union.gfcc GSyntax.hs:
 	gfc --make -haskell grammar/UnionEng.gf # grammar/UnionSwe.gf grammar/UnionNor.gf grammar/UnionGer.gf
 
