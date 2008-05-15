@@ -77,9 +77,9 @@ wrapFun o u = do v <- getUnique
 
 
 iUtt :: Utt -> [Input]
-iUtt (DeclCl cl) = nub $ map Statement $ retrieve $ iCl cl
-iUtt (QuestCl cl) = nub $ map YNQ $ retrieve $ iCl cl
-iUtt (QuestVP ip vp) = nub $ map WhQ $ retrieveFun $ iIP ip <*> iVP vp
+iUtt (DeclCl cl) = map Statement $ retrieve $ iCl cl
+iUtt (QuestCl cl) = map YNQ $ retrieve $ iCl cl
+iUtt (QuestVP ip vp) = map WhQ $ retrieveFun $ iIP ip <*> iVP vp
 
 iIP :: IP -> I ((Exp -> Prop) -> (Exp -> Prop))
 iIP Who = pure id
@@ -112,7 +112,13 @@ iV2 :: V2 -> I (((Exp -> Prop) -> Prop) -> Exp -> Prop)
 iV2 Love = pure (\u x -> u (\y -> Pred "love" [x,y]))
 
 
+--
+-- Testing
+--
 
+utt1 = QuestCl (PredVP (DetCN Every Man) (ComplV2 Love (DetCN A Woman)))
+
+test = mapM_ print . nub . iUtt
 
 
 --
