@@ -40,9 +40,8 @@ data NP = DetCN Det CN
 data Det = Every | A
   deriving Show
 
-data CN = Man 
-        | Woman
-        | Shake
+data CN = UseN N
+        | ComplN2 N2 NP 
         | RelCN CN RCl
   deriving Show
 
@@ -50,6 +49,14 @@ data V = Sleep
   deriving Show
 
 data V2 = Love
+  deriving Show
+
+data N = Man 
+        | Woman
+        | Shake
+  deriving Show
+
+data N2 = Owner
   deriving Show
 
 --
@@ -107,16 +114,13 @@ iNP Someone  = cont $ \c -> thereIs (\x -> c ($ x))
 iNP John = pure ($ FOL.Const "john")
 
 iDet :: Det -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-iDet Every =     pure (\u v -> forAll (\x -> u x ==> v x))
-             <|> cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
-iDet A =     pure (\u v -> thereIs (\x -> u x ==> v x))
-         <|> cont (\c -> thereIs (\x -> c (\u v -> u x ==> v x)))
+iDet Every  = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
+iDet A      = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
 iCN :: CN -> I (Exp -> Prop)
-iCN Man   = pure (\x -> Pred "man"   [x])
-iCN Woman = pure (\x -> Pred "woman" [x])
-iCN Shake = pure (\x -> Pred "shake" [x])
-iCN (RelCN cn rcl) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> iRCl rcl
+iCN (UseN n) = iN n
+iCN (ComplN2 n2 np) = iN2 n2 <*> iNP np
+iCN (RelCN cn rcl) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> barrier (iRCl rcl)
 
 iV :: V -> I (Exp -> Prop)
 iV Sleep = pure (\x -> Pred "sleep" [x])
@@ -124,14 +128,25 @@ iV Sleep = pure (\x -> Pred "sleep" [x])
 iV2 :: V2 -> I (((Exp -> Prop) -> Prop) -> Exp -> Prop)
 iV2 Love = pure (\u x -> u (\y -> Pred "love" [x,y]))
 
+iN :: N -> I (Exp -> Prop)
+iN Man   = pure (\x -> Pred "man"   [x])
+iN Woman = pure (\x -> Pred "woman" [x])
+iN Shake = pure (\x -> Pred "shake" [x])
+
+iN2 :: N2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+iN2 Owner = pure (\o x -> o (\y -> Pred "owner" [x,y]))
 
 --
 -- Testing
 --
 
-utt1 = QuestCl (PredVP (DetCN Every Man) (ComplV2 Love (DetCN A Woman)))
+utt1 = QuestCl (PredVP (DetCN Every (UseN Man)) (ComplV2 Love (DetCN A (UseN Woman))))
 
-utt2 = DeclCl (PredVP (DetCN A Man) (ComplV2 Love (DetCN Every (RelCN Woman (RelVP (ComplV2 Love (DetCN A Shake)))))))
+utt2 = DeclCl (PredVP (DetCN A (UseN Man)) (ComplV2 Love (DetCN Every (RelCN (UseN Woman) (RelVP (ComplV2 Love (DetCN A (UseN Shake))))))))
+
+utt3 = DeclCl (PredVP John (ComplV2 Love (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake))))))
+
+utt4 = DeclCl (PredVP (DetCN Every (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Woman)))))) (UseV Sleep)) 
 
 test = mapM_ print . nub . iUtt
 

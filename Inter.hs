@@ -1,4 +1,4 @@
-module Inter (I, cont, retrieve, retrieveFun) where
+module Inter (I, cont, barrier, retrieve, retrieveFun) where
 
 import FOL
 
@@ -33,8 +33,11 @@ instance Monoid (I a) where
 cont :: ((a -> Prop) -> Prop) -> I a
 cont f = I [Cont f]
 
+barrier :: I (Exp -> Prop) -> I (Exp -> Prop)
+barrier = I . map return . retrieveFun
+
 retrieve :: I Prop -> [Prop]
-retrieve (I xs) = map (\x -> runCont x id) xs
+retrieve (I xs) = [runCont x id | x <- xs]
 
 retrieveFun :: I (Exp -> Prop) -> [Exp -> Prop]
 retrieveFun (I xs) = [\e -> runCont x ($ e) | x <- xs]
