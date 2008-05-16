@@ -1,6 +1,6 @@
 import FOL
 
-import Inter
+import InterShallow
 import Input
 
 import Control.Monad.Cont
