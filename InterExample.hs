@@ -123,34 +123,3 @@ utt3 = DeclCl (PredVP John (ComplV2 Love (DetCN Every (ComplN2 Owner (DetCN A (U
 utt4 = DeclCl (PredVP (DetCN Every (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Woman)))))) (UseV Sleep)) 
 
 test = mapM_ print . nub . iUtt
-
-
---
--- Old stuff
---
-
-
-{-
-data Cont r a = Cont ((a -> r) -> r)
-                 | forall b. Apply (Cont r (b -> a)) (Cont r b)
-
-instance Functor (Cont r) where
-    fmap f x = pure f <*> x
-
-instance Applicative (Cont r) where
-    pure a   = Cont ($ a)
-    x <*> y  = Apply x y
--}
-{-
-newtype Cont r a = Cont { runCont :: (a -> [r]) -> [r] }
-
-instance Functor (Cont r) where
-    fmap f x = pure f <*> x
-
--- Cont is not a monad, since we would need to be able to use the 
--- arguments of bind in any order.
-instance Applicative (Cont r) where
-    pure a   = Cont ($ a)
-    x <*> y  = Cont $ \c ->    (runCont x $ \f -> runCont y $ \a -> (c (f a)))
-                            ++ (runCont y $ \a -> runCont x $ \f -> (c (f a)))
--}
