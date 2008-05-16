@@ -245,13 +245,16 @@ iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
 iDet (GDetSg quant ord) = pure (.) <*> iQuant_Sg quant <*> iOrd ord
 iDet Gevery_Det = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
 iDet Gno_Det = cont (\c -> neg (thereIs (\x -> c (\u v -> u x &&& v x))))
+-- FIXME: does this mean more than one?
+iDet GsomePl_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
 -- Same as IndefArt
 iDet GsomeSg_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 iDet det = unhandled "iDet" det
 
+\end{code}
 
-{-
+\begin{code}
 iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 -- FIXME: wrong, indef pl without num should be universal as subject, existential as object
 iNum GNoNum = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
@@ -270,8 +273,6 @@ iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
 -- FIXME: universal as subject, existential in object position?
 iQuant_Pl GMassDet = pure (\u v n -> n (\x -> u x &&& v x))
 iQuant_Pl quant = unhandled "iQuant_Pl" quant
--}
-
 \end{code}
 
 \begin{code}
@@ -282,7 +283,7 @@ iQuant_Sg GIndefArt = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 -- FIXME: Should this really allow more than one? Now "john's dog runs" allows john to have several dogs.
 iQuant_Sg (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
 -- FIXME: universal as subject, existential in object position?
---iQuant_Sg GMassDet = pure (\u v -> forAll (\x -> u x &&& v x))
+iQuant_Sg GMassDet = cont (\c -> forAll (\x -> c (\u v -> u x &&& v x)))
 iQuant_Sg quant = unhandled "iQuant_Sg" quant
 
 \end{code}
