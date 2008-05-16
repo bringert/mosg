@@ -1,4 +1,4 @@
-module Mosg (Theory, Result(..), Output(..), Answer(..), Input(..), Quest(..), Grammar, 
+module Mosg (Theory, Result(..), Output(..), Answer(..), Input(..), Grammar, 
              loadGrammar, grammarModificationTime, handleText) where
 
 import GSyntax
@@ -6,7 +6,6 @@ import FOL
 import ReasonFolkung
 import Input
 import Sem
-import Keller
 import GF.GFCC.API
 import Otter
 
@@ -105,7 +104,7 @@ parseInput gr i =
 
 interpretTrees :: Either Input [GText] -> IO (Either Input [(GText,Either Error [Input])])
 interpretTrees (Left i) = return (Left i)
-interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (tryInput . retrieveInput . iText) ts
+interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (tryInput . iText) ts
 
 filterConsistent :: Theory -> [Prop] -> IO [Prop]
 filterConsistent th = filterM (\p -> debug ("Checking consistency: " ++ show p) >> liftM (==Yes) (isConsistent th p))
@@ -124,7 +123,7 @@ handleText gr th i =
        debug $ "Syntactically different interpretations: " ++ show (length is')
        -- debug $ unlines $ map show is'
        let ss = [p | Statement p <- is']
-           qs = [q | Question q  <- is']
+           qs = [q | q  <- is', not (isStatement q)]
        debug $ "Statement interpretations: " ++ show (length ss)
        debug $ "Question interpretations: " ++ show (length qs)
        let typ = case (ss,qs) of
@@ -160,7 +159,7 @@ handleText gr th i =
                     resOutput = output
                   }
 
-answerQuestion :: Theory -> [Quest] -> IO Output
+answerQuestion :: Theory -> [Input] -> IO Output
 answerQuestion th qs = 
     do debug $ unlines $ map show qs
        let ynq = [p | YNQuest p <- qs]

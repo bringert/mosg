@@ -21,10 +21,11 @@ module Sem where
 
 import GSyntax
 import FOL
-import Keller
+import Inter
 import Input
 
 import Control.Applicative (Applicative(..))
+import Control.Monad
 import Data.Traversable (traverse)
 import Data.Char
 
@@ -39,60 +40,65 @@ import Data.Char
 -- * Interpretation (syntactic)
 --
 
-iText :: GText -> InputI Keller
+iText :: GText -> [Input]
 iText (GTNoPunct phr)        = iPhr phr
-iText (GTExclMark  phr text) = twoStatements (iPhr phr) (iText text)
-iText (GTFullStop  phr text) = twoStatements (iPhr phr) (iText text)
-iText (GTQuestMark phr GTEmpty) = toQuestion (iPhr phr)
-iText GTEmpty = StatementI (pure true)
+iText (GTExclMark  phr text) = pure twoStatements <*> iPhr phr <*> iText text
+iText (GTFullStop  phr text) = pure twoStatements <*> iPhr phr <*> iText text
+iText (GTQuestMark phr GTEmpty) = pure toYNQuest <*> iPhr phr
+iText GTEmpty = pure (Statement true)
 iText text = unhandled "iText" text
 
-\end{code}
-
-\begin{code}
-
-iPhr :: GPhr -> InputI Keller
+iPhr :: GPhr -> [Input]
 iPhr (GPhrUtt GNoPConj utt GNoVoc) = iUtt utt 
 iPhr phr = unhandled "iPhr" phr
 
-iUtt :: GUtt -> InputI Keller
-iUtt (GUttS s) = StatementI (iS s)
-iUtt (GUttQS qs) = QuestionI (iQS qs)
+iUtt :: GUtt -> [Input]
+iUtt (GUttS s) = pure Statement <*> retrieve (iS s)
+iUtt (GUttQS qs) = iQS qs
 iUtt utt = unhandled "iUtt" utt
-
-iQS :: GQS -> QuestI Keller
--- FIXME: ignores tense and anteriority
-iQS (GUseQCl _ _ GPPos qcl) = iQCl qcl
-iQS (GUseQCl _ _ GPNeg qcl) = negQuestI (iQCl qcl)
--- english only
-iQS (GUncNegQCl _ _ qcl) = negQuestI (iQCl qcl)
-
-iQCl :: GQCl -> QuestI Keller
-iQCl (GQuestCl cl)          = YNQuestI (iCl cl)
-iQCl (GQuestSlash ip slash) = let (i,q) = iIP ip in q (i <*> iSlash slash)
-iQCl (GQuestVP ip vp)       = let (i,q) = iIP ip in q (i <*> iVP vp)
-iQCl (GExistIP ip)          = let (i,q) = iIP ip in q (i <*> pure (\x -> true))
-iQCl qcl = unhandled "iQcl" qcl
-           
-iIP :: GIP -> (Keller ((Exp -> Prop) -> (Exp -> Prop)), 
-                 Keller (Exp -> Prop) -> QuestI Keller)
-iIP (GIDetCN idet GNoNum GNoOrd cn) = let (d,q) = iIDet idet in (d <*> iCN cn, q)
-iIP GwhatSg_IP = (pure (\u -> u), WhQuestI)
--- FIXME: person(x)
-iIP GwhoSg_IP  = (pure (\u -> u), WhQuestI)
-iIP ip = unhandled "iIP" ip
 
 \end{code}
 
 \begin{code}
 
-iIDet :: GIDet -> (Keller ((Exp -> Prop) -> (Exp -> Prop) -> (Exp -> Prop)),
-                     Keller (Exp -> Prop) -> QuestI Keller)
-iIDet Ghow8many_IDet = (pure (\u v -> (\x -> u x &&& v x)), CountQuestI)
-iIDet GwhichSg_IDet  = (pure (\u v -> (\x -> u x &&& v x)), WhQuestI)
+-- Questions
+
+iQS :: GQS -> [Input]
+-- FIXME: ignores tense and anteriority
+iQS (GUseQCl _ _ GPPos qcl) = iQCl qcl
+iQS (GUseQCl _ _ GPNeg qcl) = pure negInput <*> iQCl qcl
+-- english only
+iQS (GUncNegQCl _ _ qcl) = pure negInput <*> iQCl qcl
+
+iQCl :: GQCl -> [Input]
+-- does John walk
+iQCl (GQuestCl cl)          = pure YNQuest <*> retrieve (iCl cl)
+-- whom does John love
+iQCl (GQuestSlash ip slash) = pure ($) <*> iIP ip <*> retrieveFun (iSlash slash)
+-- who walks
+iQCl (GQuestVP ip vp)       = pure ($) <*> iIP ip <*> retrieveFun (iVP vp)
+-- which houses are there
+iQCl (GExistIP ip)          = pure ($ (\x -> true)) <*> iIP ip
+iQCl qcl = unhandled "iQcl" qcl
+           
+iIP :: GIP -> [(Exp -> Prop) -> Input]
+-- which man
+iIP (GIDetCN idet GNoNum GNoOrd cn) = pure (iIDet idet) <*> retrieveFun (iCN cn)
+iIP GwhatSg_IP = pure (\u -> WhQuest u)
+-- FIXME: person(x)
+iIP GwhoSg_IP  = pure (\u -> WhQuest u)
+iIP ip = unhandled "iIP" ip
+
+iIDet :: GIDet -> (Exp -> Prop) -> (Exp -> Prop) -> Input
+iIDet Ghow8many_IDet = (\u v -> CountQuest (\x -> u x &&& v x))
+iIDet GwhichSg_IDet  = (\u v -> WhQuest (\x -> u x &&& v x))
 iIDet idet = unhandled "iIDet" idet
 
-iS :: GS -> Keller Prop
+\end{code}
+
+\begin{code}
+
+iS :: GS -> I Prop
 iS (GConjS conj ss) = pure foldr1 <*> iConj conj <*> iListS ss
 iS (GDConjS dconj ss) = pure foldr1 <*> iDConj dconj <*> iListS ss
 -- FIXME: ignores tense and anteriority
@@ -104,17 +110,17 @@ iS (GAdvS adv s) = iAdv_S adv <*> iS s
 -- FIXME: ignores tense and anteriority
 iS (GUncNegCl _ _ cl) = fmap neg (iCl cl)
 
-iListS :: GListS -> Keller [Prop]
+iListS :: GListS -> I [Prop]
 iListS (GListS ss) = traverse iS ss
 
-iRS :: GRS -> Keller (Exp -> Prop)
+iRS :: GRS -> I (Exp -> Prop)
 -- FIXME: ignores tense and anteriority
 iRS (GUseRCl _ _ GPPos rcl) = iRCl rcl
 iRS (GUseRCl _ _ GPNeg rcl) = pure (\i x -> neg (i x)) <*> iRCl rcl
 -- english only
 iRS (GUncNegRCl _ _ rcl) = pure (\i x -> neg (i x)) <*> iRCl rcl
 
-iRCl :: GRCl -> Keller (Exp -> Prop)
+iRCl :: GRCl -> I (Exp -> Prop)
 -- WEIRD: such that a woman sleeps
 iRCl (GRelCl cl) = pure (\i x -> i) <*> iCl cl
 -- which a woman kills
@@ -123,7 +129,7 @@ iRCl (GRelSlash rp slash) = iRP rp <*> iSlash slash
 iRCl (GRelVP rp vp) = iRP rp <*> iVP vp
 iRCl rcl = unhandled "iRCl" rcl
 
-iRP :: GRP -> Keller ((Exp -> Prop) -> (Exp -> Prop))
+iRP :: GRP -> I ((Exp -> Prop) -> (Exp -> Prop))
 -- a woman of which
 iRP (GFunRP prep np rp) = pure (\pi ni ri u x -> ni (\y -> (ri u) y &&& pi (\v -> v y) x))
                           <*> iPrep prep <*> iNP np <*> iRP rp
@@ -135,7 +141,7 @@ iRP Gwho_RP = pure (\u -> u)
 
 \begin{code}
 
-iSlash :: GSlash -> Keller (Exp -> Prop)
+iSlash :: GSlash -> I (Exp -> Prop)
 -- (which) a woman kills in Paris
 iSlash (GAdvSlash slash adv) = iAdv adv <*> iSlash slash
 -- (which) a woman kills
@@ -143,22 +149,23 @@ iSlash (GSlashV2 np v2) = pure (\ni vi x -> ni (vi (\u -> u x)))
                               <*> iNP np <*> iV2 v2
 iSlash slash = unhandled "iSlash" slash
 
-iConj :: GConj -> Keller (Prop -> Prop -> Prop)
+iConj :: GConj -> I (Prop -> Prop -> Prop)
 iConj Gand_Conj = pure (&&&)
 iConj Gor_Conj = pure (|||)
 
-iDConj :: GDConj -> Keller (Prop -> Prop -> Prop)
+iDConj :: GDConj -> I (Prop -> Prop -> Prop)
 iDConj Gboth7and_DConj = pure (&&&)
 -- FIXME: xor (nequiv)
 iDConj Geither7or_DConj = pure (|||)
 
-iCl :: GCl -> Keller Prop
-iCl (GPredVP np vp) = iNP np <*> iVP vp
+iCl :: GCl -> I Prop
+-- Either the NP or the VP can have scope priority
+iCl (GPredVP np vp) = iNP np <=*=> iVP vp
 iCl (GCleftNP np rs) = iNP np <*> iRS rs
 iCl (GExistNP np) = iNP np <*> pure (\x -> true)
 iCl cl = unhandled "iCl" cl
 
-iVP :: GVP -> Keller (Exp -> Prop)
+iVP :: GVP -> I (Exp -> Prop)
 -- sleeps with a woman
 iVP (GAdvVP vp adv) = iAdv adv <*> iVP vp
 -- kills Paris
@@ -177,7 +184,7 @@ iVP (GUseV v) = iV v
 iVP (GProgrVP vp) = iVP vp
 iVP vp = unhandled "iVP" vp
 
-iComp :: GComp -> Keller (Exp -> Prop)
+iComp :: GComp -> I (Exp -> Prop)
 iComp (GCompAP ap) = iAP ap
 iComp (GCompAdv adv) = iAdv adv <*> pure (\x -> true)
 iComp (GCompNP np) = pure (\ni x -> ni (\y -> x === y)) <*> iNP np
@@ -186,13 +193,13 @@ iComp (GCompNP np) = pure (\ni x -> ni (\y -> x === y)) <*> iNP np
 
 \begin{code}
 
-iNP :: GNP -> Keller ((Exp -> Prop) -> Prop)
+iNP :: GNP -> I ((Exp -> Prop) -> Prop)
 iNP (GAdvNP np adv) = pure (.) <*> iNP np <*> iAdv adv
 
 iNP (GConjNP conj nps)   = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iConj conj   <*> iListNP nps
 iNP (GDConjNP dconj nps) = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iDConj dconj <*> iListNP nps
--- *** here's where the storage happens
-iNP (GDetCN det cn) = let np = iDet det <*> iCN cn in choiceKeller [np, store np]
+iNP (GDetCN det cn) = iDet det <*> iCN cn
+
 -- all men
 -- FIXME: what should we do about predet + plural?
 -- iNP (GPredetNP predet np) = (iPredet predet) (iNP np)
@@ -208,10 +215,10 @@ iNP Gsomething_NP = pure (\u -> thereIs (\x -> u x))
 iNP Gnobody_NP = pure (\u -> neg (thereIs (\x -> u x)))
 iNP np = unhandled "iNP" np
 
-iListNP :: GListNP -> Keller [(Exp -> Prop) -> Prop]
+iListNP :: GListNP -> I [(Exp -> Prop) -> Prop]
 iListNP (GListNP nps) = traverse iNP nps
 
-iCN :: GCN -> Keller (Exp -> Prop)
+iCN :: GCN -> I (Exp -> Prop)
 -- beautiful woman
 iCN (GAdjCN ap cn) = pure (\ai ci x -> ai x &&& ci x) <*> iAP ap <*> iCN cn
 -- woman with a woman
@@ -220,7 +227,7 @@ iCN (GAdvCN cn adv) = iAdv adv <*> iCN cn
 iCN (GApposCN cn np) = pure (\ni ci x -> ni (x ===) &&& ci x) <*> iNP np <*> iCN cn
 iCN (GComplN2 n2 np) = iN2 n2 <*> iNP np
 -- Quantifiers in a relative clause cannot outscope those outside the relative clause.
-iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> noStorage (iRS rs)
+iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> iRS rs
 iCN (GUseN n) = iN n
 iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni (\u -> u y) x)) <*> iN2 n2
 iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
@@ -234,20 +241,18 @@ iCN cn = unhandled "iCN" cn
 
 \begin{code}
 
-iDet :: GDet -> Keller ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
--- FIXME: does this mean more than one?
--- FIXME: wrong, indef pl should be universal as subject, existential as object
-iDet (GDetPl quant num ord) = pure (\qi ni oi u v -> ni (qi (oi u) v) (oi u) v) <*> iQuant_Pl quant <*> iNum num <*> iOrd ord
+iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
 iDet (GDetSg quant ord) = pure (.) <*> iQuant_Sg quant <*> iOrd ord
-iDet Gevery_Det = pure (\u v -> forAll (\x -> u x ==> v x))
-iDet Gno_Det = pure (\u v -> neg (thereIs (\x -> u x &&& v x)))
--- FIXME: does this mean more than one?
-iDet GsomePl_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
-iDet GsomeSg_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
-iDet Gneither_Det = pure (\u v -> thereIs (\x -> thereIs (\y -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& neg (thereIs (\z -> u z &&& z =/= x &&& z =/= y)))))
+iDet Gevery_Det = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
+iDet Gno_Det = cont (\c -> neg (thereIs (\x -> c (\u v -> u x &&& v x))))
+-- Same as IndefArt
+iDet GsomeSg_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 iDet det = unhandled "iDet" det
 
-iNum :: GNum -> Keller ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+
+{-
+iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 -- FIXME: wrong, indef pl without num should be universal as subject, existential as object
 iNum GNoNum = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
 iNum (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
@@ -256,38 +261,35 @@ iNum (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
 iNum num = unhandled "iNum" num
 
 -- FIXME: they should be unique
-iInt :: Int -> Keller ((((Exp -> Prop) -> Prop) -> Prop) -> Prop)
+iInt :: Int -> I ((((Exp -> Prop) -> Prop) -> Prop) -> Prop)
 iInt 0 = pure (\q -> q (\p -> true))
 iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
 
-\end{code}
-
-\begin{code}
-
-iQuant_Pl :: GQuant -> Keller ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
+iQuant_Pl :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
 iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
 -- FIXME: universal as subject, existential in object position?
 iQuant_Pl GMassDet = pure (\u v n -> n (\x -> u x &&& v x))
 iQuant_Pl quant = unhandled "iQuant_Pl" quant
+-}
 
 \end{code}
 
 \begin{code}
 
-iQuant_Sg :: GQuant -> Keller ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-iQuant_Sg GDefArt = pure (\u v -> thereIs (\x -> u x &&& v x &&& neg (thereIs (\y -> u y &&& y =/= x))))
-iQuant_Sg GIndefArt = pure (\u v -> thereIs (\x -> u x &&& v x))
+iQuant_Sg :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+iQuant_Sg GDefArt = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> u x &&& v x &&& (u y ==> y === x)))))
+iQuant_Sg GIndefArt = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 -- FIXME: Should this really allow more than one? Now "john's dog runs" allows john to have several dogs.
-iQuant_Sg (GGenNP np) = pure (\ni u v -> thereIs (\x -> u x &&& v x &&& ni (\y -> of_Pred y x))) <*> iNP np
+iQuant_Sg (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
 -- FIXME: universal as subject, existential in object position?
-iQuant_Sg GMassDet = pure (\u v -> forAll (\x -> u x &&& v x))
+--iQuant_Sg GMassDet = pure (\u v -> forAll (\x -> u x &&& v x))
 iQuant_Sg quant = unhandled "iQuant_Sg" quant
 
 \end{code}
 
 \begin{code}
 
-iOrd :: GOrd -> Keller ((Exp -> Prop) -> (Exp -> Prop))
+iOrd :: GOrd -> I ((Exp -> Prop) -> (Exp -> Prop))
 iOrd GNoOrd = pure id
 iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
 iOrd ord = unhandled "iOrd" ord
@@ -296,7 +298,7 @@ iOrd ord = unhandled "iOrd" ord
 
 \begin{code}
 
-iAP :: GAP -> Keller (Exp -> Prop)
+iAP :: GAP -> I (Exp -> Prop)
 iAP (GComplA2 a2 np) = iA2 a2 <*> iNP np
 iAP (GConjAP conj aps)   = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iConj conj   <*> iListAP aps
 iAP (GDConjAP dconj aps) = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iDConj dconj <*> iListAP aps
@@ -305,11 +307,11 @@ iAP (GComparA a np) = iA_comparative a <*> iNP np
 iAP (GReflA2 a2) = pure (\ia x -> ia (\u -> u x) x) <*> iA2 a2
 iAP ap = unhandled "iAP" ap
 
-iListAP :: GListAP -> Keller [Exp -> Prop]
+iListAP :: GListAP -> I [Exp -> Prop]
 iListAP (GListAP aps) = traverse iAP aps
 
 -- Adv modifying NP, CN, VP
-iAdv :: GAdv -> Keller ((Exp -> Prop) -> (Exp -> Prop))
+iAdv :: GAdv -> I ((Exp -> Prop) -> (Exp -> Prop))
 iAdv (GConjAdv conj advs)   = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iConj conj   <*> iListAdv advs
 iAdv (GDConjAdv dconj advs) = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iDConj dconj <*> iListAdv advs
 iAdv (GPrepNP prep np) = pure (\pp u x -> u x &&& pp x) <*> (iPrep prep <*> iNP np)
@@ -317,19 +319,18 @@ iAdv (GSubjS subj s) = pure (\sui si u x -> sui si (u x)) <*> iSubj subj <*> iS 
 iAdv adv = unhandled "iAdv" adv
     
 -- Adv modifying S
-iAdv_S :: GAdv -> Keller (Prop -> Prop)
+iAdv_S :: GAdv -> I (Prop -> Prop)
 iAdv_S (GSubjS subj s) = iSubj subj <*> iS s
 iAdv_S adv = unhandled "iAdv_S" adv
 
-iSubj :: GSubj -> Keller (Prop -> Prop -> Prop)
+iSubj :: GSubj -> I (Prop -> Prop -> Prop)
 iSubj Galthough_Subj = pure (&&&)
--- FIXME: is because implication?
 iSubj Gbecause_Subj = pure ((==>))
 iSubj Gif_Subj = pure (==>)
 iSubj Gwhen_Subj = pure (==>)
 iSubj subj = unhandled "iSubj" subj
 
-iListAdv :: GListAdv -> Keller [(Exp -> Prop) -> (Exp -> Prop)]
+iListAdv :: GListAdv -> I [(Exp -> Prop) -> (Exp -> Prop)]
 iListAdv (GListAdv advs) = traverse iAdv advs
 
 \end{code}
@@ -340,40 +341,40 @@ iListAdv (GListAdv advs) = traverse iAdv advs
 -- Lexical 
 --
 
-iN :: GN -> Keller (Exp -> Prop)
+iN :: GN -> I (Exp -> Prop)
 iN n = pure (\x -> Pred (symbol n) [x])
 
-iN2 :: GN2 -> Keller (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+iN2 :: GN2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 iN2 (GComplN3 n3 np) = iN3 n3 <*> iNP np
 iN2 n2 = pure (\o x -> o (\y -> Pred (symbol n2) [x,y]))
 
-iN3 :: GN3 -> Keller (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+iN3 :: GN3 -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 iN3 n3 = pure (\u v x -> u (\y -> v (\z -> Pred (symbol n3) [x,y,z])))
 
-iPN :: GPN -> Keller Exp
+iPN :: GPN -> I Exp
 iPN pn = pure (Const (symbol pn))
 
-iA :: GA -> Keller (Exp -> Prop)
+iA :: GA -> I (Exp -> Prop)
 iA (GUseA2 a2) = pure (\i x -> thereIs (\y -> i (\v -> v y) x)) <*> iA2 a2
 iA a = pure (\x -> Pred (symbol a) [x])
 
-iA_comparative :: GA -> Keller (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+iA_comparative :: GA -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 iA_comparative a@(GUseA2 _) = unhandled "iA_comparative" a
 iA_comparative a = pure (\o x -> o (\y -> Pred (comparativeSymbol a) [x,y]))
 
-iA2 :: GA2 -> Keller (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+iA2 :: GA2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 iA2 a2 = pure (\o x -> o (\y -> Pred (symbol a2) [x,y]))
 
-iV :: GV -> Keller (Exp -> Prop)
+iV :: GV -> I (Exp -> Prop)
 iV v = pure (\x -> Pred (symbol v) [x])
 
-iV2 :: GV2 -> Keller (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+iV2 :: GV2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 iV2 v2 = pure (\u x -> u (\y -> Pred (symbol v2) [x,y]))
 
-iV3 :: GV3 -> Keller (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+iV3 :: GV3 -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 iV3 v3 = pure (\u v x -> u (\y -> v (\z -> Pred (symbol v3) [x,y,z])))
 
-iPrep :: GPrep -> Keller (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+iPrep :: GPrep -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
 
 \end{code}
@@ -440,13 +441,9 @@ iDigit Gn9 = 9
 -- * Merging, fixing inputs
 --
 
-twoStatements :: InputI Keller -> InputI Keller -> InputI Keller
-twoStatements (StatementI istm1) (StatementI istm2) = StatementI (pure (&&&) <*> istm1 <*> istm2)
+twoStatements :: Input -> Input -> Input
+twoStatements (Statement p) (Statement q) = Statement (p &&& q)
 twoStatements s1 s2 = error "statement + question in input"
-
-toQuestion :: InputI Keller -> InputI Keller
-toQuestion (StatementI istm) = QuestionI (YNQuestI istm)
-toQuestion (QuestionI iq)    = QuestionI iq
 
 --
 -- * Special predicates

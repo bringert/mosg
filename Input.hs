@@ -11,9 +11,7 @@ import Text.PrettyPrint.HughesPJ hiding (char)
 --
 
 data Input = Statement Prop
-           | Question Quest
-
-data Quest = YNQuest Prop
+           | YNQuest Prop
            | WhQuest (Exp -> Prop)
            | CountQuest (Exp -> Prop)
 
@@ -23,34 +21,35 @@ instance Eq Input where
 instance Ord Input where
     compare x y = compare (show x) (show y)
 
-instance Eq Quest where
-    x == y = show x == show y
+negInput :: Input -> Input
+negInput = mapInput neg
 
-instance Ord Quest where
-    compare x y = compare (show x) (show y)
+mapInput :: (Prop -> Prop) -> Input -> Input
+mapInput f (Statement p)  = Statement (f p)
+mapInput f (YNQuest p)    = YNQuest (f p)
+mapInput f (WhQuest g)    = WhQuest (f . g)
+mapInput f (CountQuest g) = CountQuest (f . g)
+
+isStatement :: Input -> Bool
+isStatement (Statement _) = True
+isStatement _ = False
 
 --
--- * Storage interface
+-- * Conversion
 --
 
-data InputI i = StatementI (i Prop)
-             | QuestionI (QuestI i)
+fromStatement :: Input -> Prop
+fromStatement (Statement p) = p
 
-data QuestI i = YNQuestI (i Prop)
-              | WhQuestI (i (Exp -> Prop))
-              | CountQuestI (i (Exp -> Prop))
+toYNQuest :: Input -> Input
+toYNQuest (Statement p) = YNQuest p
+toYNQuest (YNQuest p) = YNQuest p
 
-negQuestI :: Functor i => QuestI i -> QuestI i
-negQuestI = mapQuestI neg
+toWhQuest :: (Exp -> Input) -> Input
+toWhQuest f = WhQuest (\x -> case f x of { Statement p -> p})
 
-mapInputI :: Functor i => (Prop -> Prop) -> InputI i -> InputI i
-mapInputI f (StatementI p) = StatementI (fmap f p)
-mapInputI f (QuestionI q)  = QuestionI (mapQuestI f q)
-
-mapQuestI :: Functor i => (Prop -> Prop) -> QuestI i -> QuestI i
-mapQuestI f (YNQuestI p)    = YNQuestI (fmap f p)
-mapQuestI f (WhQuestI g)    = WhQuestI (fmap (f .) g)
-mapQuestI f (CountQuestI g) = CountQuestI (fmap (f .) g)
+toCountQuest :: (Exp -> Input) -> Input
+toCountQuest f = CountQuest (\x -> case f x of { Statement p -> p})
 
 --
 -- * Pretty-printing
@@ -59,17 +58,11 @@ mapQuestI f (CountQuestI g) = CountQuestI (fmap (f .) g)
 instance Show Input where
     showsPrec n = showString . render . runVars . pprInput n
 
-instance Show Quest where
-    showsPrec n = showString . render . runVars . pprQuestion n
-
 pprInput :: Int -> Input -> Vars Doc
 pprInput n (Statement p) = wrapProp "stm" p
-pprInput n (Question q) = pprQuestion n q
-
-pprQuestion :: Int -> Quest -> Vars Doc
-pprQuestion n (YNQuest p) = wrapProp "ynq" p
-pprQuestion n (WhQuest u) = wrapFun "whq" u
-pprQuestion n (CountQuest u) = wrapFun "countq" u
+pprInput n (YNQuest p) = wrapProp "ynq" p
+pprInput n (WhQuest u) = wrapFun "whq" u
+pprInput n (CountQuest u) = wrapFun "countq" u
 
 wrapProp :: String -> Prop -> Vars Doc
 wrapProp s p = liftM ((text s <>) . parens) (pprProp 0 p)
@@ -87,13 +80,10 @@ instance Read Input where
     readsPrec n = readP_to_S (readInput n)
 
 readInput :: Int -> ReadP Input
-readInput _ = liftM Statement (readWrappedProp "stm")
-              +++ liftM Question readQuestion
-
-readQuestion :: ReadP Quest
-readQuestion = liftM YNQuest (readWrappedProp "ynq") 
-               +++ liftM WhQuest (readWrappedFun "whq")
-               +++ liftM CountQuest (readWrappedFun "countq")
+readInput _ = choice [liftM Statement (readWrappedProp "stm"),
+                     liftM YNQuest (readWrappedProp "ynq"),
+                     liftM WhQuest (readWrappedFun "whq"),
+                     liftM CountQuest (readWrappedFun "countq")]
 
 readWrappedProp :: String -> ReadP Prop
 readWrappedProp s = do skipSpaces

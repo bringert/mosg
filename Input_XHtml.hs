@@ -11,20 +11,14 @@ import Text.XHtml
 instance HTML Input where
     toHtml = runVars . inputToHtml 0
 
-instance HTML Quest where
-    toHtml = runVars . questToHtml 0
-
 instance HTML Prop where
     toHtml = runVars . propToHtml 0
 
 inputToHtml :: Int -> Input -> Vars Html
 inputToHtml n (Statement p) = propToHtml n p
-inputToHtml n (Question q)  = questToHtml n q
-
-questToHtml :: Int -> Quest -> Vars Html
-questToHtml n (YNQuest p)    = liftM (\h -> "YNQ" +++ parens h) (propToHtml 0 p)
-questToHtml n (WhQuest q)    = quant (toHtml "Which ") n q
-questToHtml n (CountQuest q) = quant (toHtml "Count ") n q
+inputToHtml n (YNQuest p)    = liftM (\h -> "YNQ" +++ parens h) (propToHtml 0 p)
+inputToHtml n (WhQuest q)    = quant (toHtml "Which ") n q
+inputToHtml n (CountQuest q) = quant (toHtml "Count ") n q
 
 propToHtml :: Int -> Prop -> Vars Html
 propToHtml _ (Pred x xs) = do xs' <- mapM expToHtml xs

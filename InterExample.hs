@@ -1,13 +1,9 @@
 import FOL
-
-import InterShallow
+import Inter
 import Input
 
-import Control.Monad.Cont
-
-import Control.Applicative
-import Data.List
-import Data.Monoid
+import Control.Applicative (pure,(<*>))
+import Data.List (nub)
 
 import Text.PrettyPrint.HughesPJ hiding (char)
 
@@ -72,7 +68,7 @@ iIP :: IP -> I ((Exp -> Prop) -> (Exp -> Prop))
 iIP Who = pure id
 
 iCl :: Cl -> I Prop
-iCl (PredVP np vp) = iNP np <*> iVP vp
+iCl (PredVP np vp) = iNP np <=*=> iVP vp
 
 iRCl :: RCl -> I (Exp -> Prop)
 iRCl (RelVP vp) = iVP vp
@@ -94,7 +90,7 @@ iDet A      = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 iCN :: CN -> I (Exp -> Prop)
 iCN (UseN n) = iN n
 iCN (ComplN2 n2 np) = iN2 n2 <*> iNP np
-iCN (RelCN cn rcl) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> barrier (iRCl rcl)
+iCN (RelCN cn rcl) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> iRCl rcl
 
 iV :: V -> I (Exp -> Prop)
 iV Sleep = pure (\x -> Pred "sleep" [x])
