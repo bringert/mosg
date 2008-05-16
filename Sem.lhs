@@ -10,12 +10,33 @@
 %format forAll       = "\forall"
 %format neg          = "\lnot"
 
+
+\title{First-order Logic Semantics for the 
+Grammatical Framework Resource Grammar Library}
+
+\author{
+  Bj\"{o}rn Bringert \\
+  Department of Computer Science and Engineering \\
+  Chalmers University of Technology and University of Gothenburg\\
+  \texttt{bringert{\char64}cs.chalmers.se}}
+
 \begin{document}
+
+\maketitle
+
+
+\begin{abstract}
+We present a compositional first-order logic semantics
+for the Grammatical Framework resource grammar library.
+\end{abstract}
+
+\section{Introduction}
+
+
 
 %if style == newcode
 
 \begin{code}
-
 {-# OPTIONS_GHC -fwarn-incomplete-patterns -fwarn-overlapping-patterns #-}
 module Sem where
 
@@ -28,18 +49,13 @@ import Control.Applicative (Applicative(..))
 import Control.Monad
 import Data.Traversable (traverse)
 import Data.Char
-
-
 \end{code}
 
 %endif
 
+\section{Interpretation Rules}
+
 \begin{code}
-
---
--- * Interpretation (syntactic)
---
-
 iText :: GText -> [Input]
 iText (GTNoPunct phr)        = iPhr phr
 iText (GTExclMark  phr text) = pure twoStatements <*> iPhr phr <*> iText text
@@ -56,13 +72,11 @@ iUtt :: GUtt -> [Input]
 iUtt (GUttS s) = pure Statement <*> retrieve (iS s)
 iUtt (GUttQS qs) = iQS qs
 iUtt utt = unhandled "iUtt" utt
-
 \end{code}
 
+\subsection{Questions}
+
 \begin{code}
-
--- Questions
-
 iQS :: GQS -> [Input]
 -- FIXME: ignores tense and anteriority
 iQS (GUseQCl _ _ GPPos qcl) = iQCl qcl
@@ -93,11 +107,11 @@ iIDet :: GIDet -> (Exp -> Prop) -> (Exp -> Prop) -> Input
 iIDet Ghow8many_IDet = (\u v -> CountQuest (\x -> u x &&& v x))
 iIDet GwhichSg_IDet  = (\u v -> WhQuest (\x -> u x &&& v x))
 iIDet idet = unhandled "iIDet" idet
-
 \end{code}
 
-\begin{code}
+\subsection{Declarative Sentences and Clauses}
 
+\begin{code}
 iS :: GS -> I Prop
 iS (GConjS conj ss) = pure foldr1 <*> iConj conj <*> iListS ss
 iS (GDConjS dconj ss) = pure foldr1 <*> iDConj dconj <*> iListS ss
@@ -113,6 +127,17 @@ iS (GUncNegCl _ _ cl) = fmap neg (iCl cl)
 iListS :: GListS -> I [Prop]
 iListS (GListS ss) = traverse iS ss
 
+iCl :: GCl -> I Prop
+-- Either the NP or the VP can have scope priority
+iCl (GPredVP np vp) = iNP np <=*=> iVP vp
+iCl (GCleftNP np rs) = iNP np <*> iRS rs
+iCl (GExistNP np) = iNP np <*> pure (\x -> true)
+iCl cl = unhandled "iCl" cl
+\end{code}
+
+\subsection{Relative Clauses}
+
+\begin{code}
 iRS :: GRS -> I (Exp -> Prop)
 -- FIXME: ignores tense and anteriority
 iRS (GUseRCl _ _ GPPos rcl) = iRCl rcl
@@ -136,11 +161,11 @@ iRP (GFunRP prep np rp) = pure (\pi ni ri u x -> ni (\y -> (ri u) y &&& pi (\v -
 iRP GIdRP = pure (\u -> u)
 -- FIXME: person(x)
 iRP Gwho_RP = pure (\u -> u)
-
 \end{code}
 
-\begin{code}
+\subsection{Slash}
 
+\begin{code}
 iSlash :: GSlash -> I (Exp -> Prop)
 -- (which) a woman kills in Paris
 iSlash (GAdvSlash slash adv) = iAdv adv <*> iSlash slash
@@ -148,7 +173,11 @@ iSlash (GAdvSlash slash adv) = iAdv adv <*> iSlash slash
 iSlash (GSlashV2 np v2) = pure (\ni vi x -> ni (vi (\u -> u x)))
                               <*> iNP np <*> iV2 v2
 iSlash slash = unhandled "iSlash" slash
+\end{code}
 
+\subsection{Conjunctions}
+
+\begin{code}
 iConj :: GConj -> I (Prop -> Prop -> Prop)
 iConj Gand_Conj = pure (&&&)
 iConj Gor_Conj = pure (|||)
@@ -157,14 +186,11 @@ iDConj :: GDConj -> I (Prop -> Prop -> Prop)
 iDConj Gboth7and_DConj = pure (&&&)
 -- FIXME: xor (nequiv)
 iDConj Geither7or_DConj = pure (|||)
+\end{code}
 
-iCl :: GCl -> I Prop
--- Either the NP or the VP can have scope priority
-iCl (GPredVP np vp) = iNP np <=*=> iVP vp
-iCl (GCleftNP np rs) = iNP np <*> iRS rs
-iCl (GExistNP np) = iNP np <*> pure (\x -> true)
-iCl cl = unhandled "iCl" cl
+\subsection{Verb Phrases}
 
+\begin{code}
 iVP :: GVP -> I (Exp -> Prop)
 -- sleeps with a woman
 iVP (GAdvVP vp adv) = iAdv adv <*> iVP vp
@@ -188,11 +214,11 @@ iComp :: GComp -> I (Exp -> Prop)
 iComp (GCompAP ap) = iAP ap
 iComp (GCompAdv adv) = iAdv adv <*> pure (\x -> true)
 iComp (GCompNP np) = pure (\ni x -> ni (\y -> x === y)) <*> iNP np
-
 \end{code}
 
-\begin{code}
+\subsection{Noun Phrases}
 
+\begin{code}
 iNP :: GNP -> I ((Exp -> Prop) -> Prop)
 iNP (GAdvNP np adv) = pure (.) <*> iNP np <*> iAdv adv
 
@@ -236,11 +262,11 @@ iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (
 -- but the person is not the party
 iCN (GCompoundCN cn1 cn2) = pure (\ci1 ci2 x -> ci1 x &&& ci2 x) <*> iCN cn1 <*> iCN cn2
 iCN cn = unhandled "iCN" cn
-
 \end{code}
 
-\begin{code}
+\subsection{Determiners}
 
+\begin{code}
 iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
 iDet (GDetSg quant ord) = pure (.) <*> iQuant_Sg quant <*> iOrd ord
 iDet Gevery_Det = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
@@ -252,7 +278,28 @@ iDet GsomeSg_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 iDet det = unhandled "iDet" det
 
+iQuant_Pl :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
+iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
+-- FIXME: universal as subject, existential in object position?
+iQuant_Pl GMassDet = pure (\u v n -> n (\x -> u x &&& v x))
+iQuant_Pl quant = unhandled "iQuant_Pl" quant
+
+iQuant_Sg :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+iQuant_Sg GDefArt = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> u x &&& v x &&& (u y ==> y === x)))))
+iQuant_Sg GIndefArt = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+-- FIXME: Should this really allow more than one? Now "john's dog runs" allows john to have several dogs.
+iQuant_Sg (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
+-- FIXME: universal as subject, existential in object position?
+iQuant_Sg GMassDet = cont (\c -> forAll (\x -> c (\u v -> u x &&& v x)))
+iQuant_Sg quant = unhandled "iQuant_Sg" quant
+
+iOrd :: GOrd -> I ((Exp -> Prop) -> (Exp -> Prop))
+iOrd GNoOrd = pure id
+iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
+iOrd ord = unhandled "iOrd" ord
 \end{code}
+
+\subsection{Numerals}
 
 \begin{code}
 iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
@@ -267,38 +314,11 @@ iNum num = unhandled "iNum" num
 iInt :: Int -> I ((((Exp -> Prop) -> Prop) -> Prop) -> Prop)
 iInt 0 = pure (\q -> q (\p -> true))
 iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
-
-iQuant_Pl :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
-iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
--- FIXME: universal as subject, existential in object position?
-iQuant_Pl GMassDet = pure (\u v n -> n (\x -> u x &&& v x))
-iQuant_Pl quant = unhandled "iQuant_Pl" quant
 \end{code}
 
-\begin{code}
-
-iQuant_Sg :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-iQuant_Sg GDefArt = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> u x &&& v x &&& (u y ==> y === x)))))
-iQuant_Sg GIndefArt = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
--- FIXME: Should this really allow more than one? Now "john's dog runs" allows john to have several dogs.
-iQuant_Sg (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
--- FIXME: universal as subject, existential in object position?
-iQuant_Sg GMassDet = cont (\c -> forAll (\x -> c (\u v -> u x &&& v x)))
-iQuant_Sg quant = unhandled "iQuant_Sg" quant
-
-\end{code}
+\subsection{Adjectival Phrases}
 
 \begin{code}
-
-iOrd :: GOrd -> I ((Exp -> Prop) -> (Exp -> Prop))
-iOrd GNoOrd = pure id
-iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
-iOrd ord = unhandled "iOrd" ord
-
-\end{code}
-
-\begin{code}
-
 iAP :: GAP -> I (Exp -> Prop)
 iAP (GComplA2 a2 np) = iA2 a2 <*> iNP np
 iAP (GConjAP conj aps)   = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iConj conj   <*> iListAP aps
@@ -310,7 +330,11 @@ iAP ap = unhandled "iAP" ap
 
 iListAP :: GListAP -> I [Exp -> Prop]
 iListAP (GListAP aps) = traverse iAP aps
+\end{code}
 
+\subsection{Adverbs}
+
+\begin{code}
 -- Adv modifying NP, CN, VP
 iAdv :: GAdv -> I ((Exp -> Prop) -> (Exp -> Prop))
 iAdv (GConjAdv conj advs)   = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iConj conj   <*> iListAdv advs
@@ -333,15 +357,11 @@ iSubj subj = unhandled "iSubj" subj
 
 iListAdv :: GListAdv -> I [(Exp -> Prop) -> (Exp -> Prop)]
 iListAdv (GListAdv advs) = traverse iAdv advs
-
 \end{code}
 
+\subsection{Lexical Categories}
+
 \begin{code}
-
---
--- Lexical 
---
-
 iN :: GN -> I (Exp -> Prop)
 iN n = pure (\x -> Pred (symbol n) [x])
 
@@ -380,11 +400,9 @@ iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
 
 \end{code}
 
-\begin{code}
+\subsection{Numbers (merge with above?)}
 
---
--- * Numbers
---
+\begin{code}
 
 iDigits :: GDigits -> Int
 iDigits = f 0
@@ -437,6 +455,12 @@ iDigit Gn6 = 6
 iDigit Gn7 = 7
 iDigit Gn8 = 8
 iDigit Gn9 = 9
+
+\end{code}
+
+\subsection{Utilities}
+
+\begin{code}
 
 --
 -- * Merging, fixing inputs
