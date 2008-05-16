@@ -250,10 +250,13 @@ readExp :: ReadP Exp
 readExp = liftM Var readVar +++ liftM Const readConst
 
 readVar :: ReadP Var
-readVar = skipSpaceAround $ liftM2 (:) (satisfy isUpper) (munch isAlphaNum)
+readVar = skipSpaceAround $ liftM2 (:) (satisfy isUpper) (munch alpha_numeric)
 
 readConst :: ReadP String
-readConst = skipSpaceAround $ liftM2 (:) (satisfy isLower) (munch isAlphaNum)
+readConst = skipSpaceAround $ liftM2 (:) (satisfy isLower) (munch alpha_numeric)
+
+alpha_numeric :: Char -> Bool
+alpha_numeric c = isAlphaNum c || c == '_'
 
 skipSpaceAround :: ReadP a -> ReadP a
 skipSpaceAround = between skipSpaces skipSpaces
