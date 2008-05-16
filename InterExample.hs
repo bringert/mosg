@@ -1,6 +1,7 @@
 import FOL
 
 import Inter
+import Input
 
 import Control.Monad.Cont
 
@@ -9,7 +10,6 @@ import Data.List
 import Data.Monoid
 
 import Text.PrettyPrint.HughesPJ hiding (char)
-
 
 --
 -- Example abstract syntax
@@ -63,36 +63,10 @@ data N2 = Owner
 -- Example semantics
 --
 
-data Input = Statement Prop | YNQ Prop | WhQ (Exp -> Prop)
-
-instance Eq Input where
-    x == y = show x == show y
-
-instance Ord Input where
-    compare x y = compare (show x) (show y)
-
-instance Show Input where
-    showsPrec n = showString . render . runVars . pprInput n
-
-pprInput :: Int -> Input -> Vars Doc
-pprInput n (Statement p) = wrapProp "stm" p
-pprInput n (YNQ p) = wrapProp "ynq" p
-pprInput n (WhQ u) = wrapFun "whq" u
-
-wrapProp :: String -> Prop -> Vars Doc
-wrapProp s p = liftM ((text s <>) . parens) (pprProp 0 p)
-
-wrapFun :: String -> (Exp -> Prop) -> Vars Doc
-wrapFun o u = do v <- getUnique
-                 p <- pprProp 0 (u (Var v))
-                 return $ text o <> parens (text v <> text "," <> p)
-
-
-
 iUtt :: Utt -> [Input]
 iUtt (DeclCl cl) = map Statement $ retrieve $ iCl cl
-iUtt (QuestCl cl) = map YNQ $ retrieve $ iCl cl
-iUtt (QuestVP ip vp) = map WhQ $ retrieveFun $ iIP ip <*> iVP vp
+iUtt (QuestCl cl) = map YNQuest $ retrieve $ iCl cl
+iUtt (QuestVP ip vp) = map WhQuest $ retrieveFun $ iIP ip <*> iVP vp
 
 iIP :: IP -> I ((Exp -> Prop) -> (Exp -> Prop))
 iIP Who = pure id
