@@ -268,6 +268,9 @@ iCN cn = unhandled "iCN" cn
 
 \begin{code}
 iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+-- FIXME: does this mean more than one?
+-- FIXME: wrong, indef pl should be universal as subject, existential as object
+iDet (GDetPl quant num ord) = pure (\qi ni oi u v -> ni (qi (oi u) v) (oi u) v) <*> iQuant_Pl quant <*> iNum num <*> iOrd ord
 iDet (GDetSg quant ord) = pure (.) <*> iQuant_Sg quant <*> iOrd ord
 iDet Gevery_Det = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
 iDet Gno_Det = cont (\c -> neg (thereIs (\x -> c (\u v -> u x &&& v x))))
