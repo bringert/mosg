@@ -384,6 +384,7 @@ A proper name used as a noun phrase, e.g. ``John''.
 ``nobody'', ``nothing''
 
 > iNP Gnobody_NP = cont (\c -> neg (thereIs (\x -> c (\u -> u x))))
+> iNP Gnothing_NP = cont (\c -> neg (thereIs (\x -> c (\u -> u x))))
 
 > iNP np = unhandled "iNP" np
 
