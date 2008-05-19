@@ -460,16 +460,26 @@ FIXME: wrong, indef pl should be universal as subject, existential as object
 > iDet (GDetPl quant num ord) = pure (\qi ni oi u v -> ni (qi (oi u) v) (oi u) v) <*> iQuant_Pl quant <*> iNum num <*> iOrd ord
 
 > iDet (GDetSg quant ord) = pure (.) <*> iQuant_Sg quant <*> iOrd ord
+
+``every''
+
 > iDet Gevery_Det = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
+
+``no''
+
 > iDet Gno_Det = cont (\c -> neg (thereIs (\x -> c (\u v -> u x &&& v x))))
 
--- FIXME: does this mean more than one?
+FIXME: does this mean more than one?
+
+``some'' + plural
 
 > iDet GsomePl_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
-Same as |IndefArt|.
+``some'' + singular. Same as |IndefArt|.
 
 > iDet GsomeSg_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+
+``neither''
 
 > iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 > iDet det = unhandled "iDet" det
@@ -500,6 +510,8 @@ FIXME: universal as subject, existential in object position?
 > iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
 > iOrd ord = unhandled "iOrd" ord
 
+% Fool highlighting: $
+
 \subsection{Numerals}
 
 > iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
@@ -522,11 +534,26 @@ FIXME: they should be unique
 \subsection{Adjectival Phrases}
 
 > iAP :: GAP -> I (Exp -> Prop)
+
+Complementation of a two-place adjective, e.g. ``equivalent to a dog''.
+
 > iAP (GComplA2 a2 np) = iA2 a2 <*> iNP np
+
+Adjectival phrase conjunction.
+
 > iAP (GConjAP conj aps)   = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iConj conj   <*> iListAP aps
 > iAP (GDConjAP dconj aps) = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iDConj dconj <*> iListAP aps
+
+Positive form of an adjective, e.g. ``big''.
+
 > iAP (GPositA a) = iA a
+
+Comparative form of an adjective, e.g. ``bigger''.
+
 > iAP (GComparA a np) = iA_comparative a <*> iNP np
+
+Reflexive use of a two-place adjective, e.g. ``equivalent to itself''.
+
 > iAP (GReflA2 a2) = pure (\ia x -> ia (\u -> u x) x) <*> iA2 a2
 > iAP ap = unhandled "iAP" ap
 
@@ -564,38 +591,60 @@ Adv modifying S
 
 \subsection{Lexical Categories}
 
+Nouns, e.g. ``dog''.
+
 > iN :: GN -> I (Exp -> Prop)
 > iN n = pure (\x -> Pred (symbol n) [x])
+
+Two-place nouns, e.g. ``owner of ...''.
 
 > iN2 :: GN2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iN2 (GComplN3 n3 np) = iN3 n3 <*> iNP np
 > iN2 n2 = pure (\o x -> o (\y -> Pred (symbol n2) [x,y]))
 
+Three-place nouns, e.g. ``distance from ... to ...''.
+
 > iN3 :: GN3 -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iN3 n3 = pure (\u v x -> u (\y -> v (\z -> Pred (symbol n3) [x,y,z])))
 
+Proper names, e.g. ``John''.
+
 > iPN :: GPN -> I Exp
 > iPN pn = pure (Const (symbol pn))
+
+Adjectives, e.g. ``big''.
 
 > iA :: GA -> I (Exp -> Prop)
 > iA (GUseA2 a2) = pure (\i x -> thereIs (\y -> i (\v -> v y) x)) <*> iA2 a2
 > iA a = pure (\x -> Pred (symbol a) [x])
 
+Adjectives when used comparatively. FIXME: weird.
+
 > iA_comparative :: GA -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iA_comparative a@(GUseA2 _) = unhandled "iA_comparative" a
 > iA_comparative a = pure (\o x -> o (\y -> Pred (comparativeSymbol a) [x,y]))
 
+Two-place adjectives, e.g. ``equivalent to ...''
+
 > iA2 :: GA2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iA2 a2 = pure (\o x -> o (\y -> Pred (symbol a2) [x,y]))
+
+Intransitive verbs, e.g. ``sleep''.
 
 > iV :: GV -> I (Exp -> Prop)
 > iV v = pure (\x -> Pred (symbol v) [x])
 
+Transitive verbs, e.g. ``kill''.
+
 > iV2 :: GV2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iV2 v2 = pure (\u x -> u (\y -> Pred (symbol v2) [x,y]))
 
+Ditransitive verbs, e.g. ``give''.
+
 > iV3 :: GV3 -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iV3 v3 = pure (\u v x -> u (\y -> v (\z -> Pred (symbol v3) [x,y,z])))
+
+Prepositions, e.g. ``in''.
 
 > iPrep :: GPrep -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
