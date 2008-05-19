@@ -24,6 +24,9 @@ concrete English of EnglishAbs =
   LexiconEng [N3, distance_N3, 
 	      VQ, wonder_VQ, 
 	      V2A, paint_V2A, 
+	      V2Q, ask_V2Q,
+	      V2V, beg_V2V,
+	      V2S, answer_V2S,
 	      VA, become_VA],
   BigLexEng,
   FraCaSLexiconEng
