@@ -21,6 +21,8 @@ fun nobody_NP : NP ;
 
 fun anybody_NP : NP ;
 
+fun nothing_NP : NP ;
+
 fun no_Det : Det ;
 
 fun both_Det : Det ;

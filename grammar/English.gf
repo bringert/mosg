@@ -50,6 +50,8 @@ lin
 
     anybody_NP = variants { regNP "anybody" Sg; regNP "anyone" Sg };
 
+    nothing_NP = regNP "nothing" Sg;
+
     no_Det = variants { mkDeterminer Sg "no"; mkDeterminer Pl "no" } ;
 
     both_Det = mkDeterminer Pl "both";
