@@ -11,6 +11,10 @@
 %format &&&          = "\land"
 %format |||          = "\lor"
 %format ==>          = "\Rightarrow"
+%format ===          = "="
+%format =/=          = "\neq"
+% FIXME: need better <=*=> symbol
+%format <=*=>        = "\longleftrightarrow\hspace{-1.5em}\varoast\hspace{1em}"
 %format thereIs      = "\exists"
 %format forAll       = "\forall"
 %format neg          = "\lnot"
