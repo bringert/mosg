@@ -371,25 +371,20 @@ A proper name used as a noun phrase, e.g. ``John''.
 
 > iNP (GUsePN pn) = pure (\i u -> u i) <*> iPN pn
 
-``everybody''
+``everybody'', ``everything''
 
 > iNP Geverybody_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
-
-``everything''
-
 > iNP Geverything_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
 
-``somebody''
+``somebody'', ``something''
 
 > iNP Gsomebody_NP = cont (\c -> thereIs (\x -> c (\u -> u x)))
-
-``something''
-
 > iNP Gsomething_NP = cont (\c -> thereIs (\x -> c (\u -> u x)))
 
-``nobody''
+``nobody'', ``nothing''
 
 > iNP Gnobody_NP = cont (\c -> neg (thereIs (\x -> c (\u -> u x))))
+
 > iNP np = unhandled "iNP" np
 
 > iListNP :: GListNP -> I [(Exp -> Prop) -> Prop]
