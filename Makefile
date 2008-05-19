@@ -3,7 +3,7 @@ GHCFLAGS = -package gf-embed -package folkung
 
 INSTALL_DIR = $(HOME)/public_html/mosg
 
-.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas test Union.gfcc GSyntax.hs install clean distclean
+.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas test Union.gfcc GSyntax.hs showpdf install clean distclean
 
 mosg.fcgi: Sem.hs
 	ghc $(GHCFLAGS) -package fastcgi --make -o $@ MainFastCGI.hs
@@ -26,6 +26,9 @@ Sem.hs: Sem.tex.lhs
 Sem.pdf: Sem.tex.lhs
 	lhs2tex Sem.tex.lhs > Sem.tex
 	pdflatex Sem.tex
+
+showpdf: Sem.pdf
+	acroread $^
 
 Union.gfcc GSyntax.hs:
 	gfc --make -haskell grammar/UnionEng.gf # grammar/UnionSwe.gf grammar/UnionNor.gf grammar/UnionGer.gf
