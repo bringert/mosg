@@ -64,20 +64,29 @@ for the Grammatical Framework resource grammar library.
 > iText (GTFullStop  phr text) = pure twoStatements <*> iPhr phr <*> iText text
 > iText (GTQuestMark phr GTEmpty) = pure toYNQuest <*> iPhr phr
 > iText GTEmpty = pure (Statement true)
+
+%if unhandled
 > iText text = unhandled "iText" text
+%endif
 
 \subsection{Phr: Phrases}
 
 > iPhr :: GPhr -> [Input]
 > iPhr (GPhrUtt GNoPConj utt GNoVoc) = iUtt utt 
+
+%if unhandled
 > iPhr phr = unhandled "iPhr" phr
+%endif
 
 \subsection{Utt: Utterances}
 
 > iUtt :: GUtt -> [Input]
 > iUtt (GUttS s) = pure Statement <*> retrieve (iS s)
 > iUtt (GUttQS qs) = iQS qs
+
+%if unhandled
 > iUtt utt = unhandled "iUtt" utt
+%endif
 
 \subsection{QS: Questions}
 
@@ -111,7 +120,10 @@ Uncontracted negated question clause (English only).
 ``which houses are there''
 
 > iQCl (GExistIP ip)          = pure ($ (\x -> true)) <*> iIP ip
+
+%if unhandled
 > iQCl qcl = unhandled "iQcl" qcl
+%endif
 
 % Fool highlighting: $
 
@@ -124,15 +136,20 @@ Uncontracted negated question clause (English only).
 > iIP (GIDetCN idet GNoNum GNoOrd cn) = pure (iIDet idet) <*> retrieveFun (iCN cn)
 > iIP GwhatSg_IP = pure (\u -> WhQuest u)
 > iIP GwhoSg_IP  = pure (\u -> WhQuest u)
+
+%if unhandled
 > iIP ip = unhandled "iIP" ip
+%endif
 
 \subsection{IDet: Interrogative Determiners}
 
 > iIDet :: GIDet -> (Exp -> Prop) -> (Exp -> Prop) -> Input
 > iIDet Ghow8many_IDet = (\u v -> CountQuest (\x -> u x &&& v x))
 > iIDet GwhichSg_IDet  = (\u v -> WhQuest (\x -> u x &&& v x))
-> iIDet idet = unhandled "iIDet" idet
 
+%if unhandled
+> iIDet idet = unhandled "iIDet" idet
+%endif
 
 \subsection{S: Declarative Sentences}
 
@@ -181,7 +198,10 @@ Cleft constructions, e.g. ``it is John who sleeps''.
 Existential (FIXME: what is this construction called) e.g. ``there is a house''.
 
 > iCl (GExistNP np) = iNP np <*> pure (\x -> true)
+
+%if unhandled
 > iCl cl = unhandled "iCl" cl
+%endif
 
 \subsection{Pol: Polarity}
 
@@ -226,7 +246,10 @@ Relative clause with realtive pronoun and verb phrase, e.g. ``that
 sleeps''.
 
 > iRCl (GRelVP rp vp) = iRP rp <*> iVP vp
+
+%if unhandled
 > iRCl rcl = unhandled "iRCl" rcl
+%endif
 
 \subsection{RP: Relative Pronouns}
 
@@ -262,8 +285,10 @@ Clause missing NP, S/NP in GPSG.
 
 > iSlash (GSlashV2 np v2) = pure (\ni vi x -> ni (vi (\u -> u x)))
 >                              <*> iNP np <*> iV2 v2
-> iSlash slash = unhandled "iSlash" slash
 
+%if unhandled
+> iSlash slash = unhandled "iSlash" slash
+%endif
 
 \subsection{Conj, DConj: Conjunctions}
 
@@ -328,8 +353,10 @@ Two-part conjuctions.
 ``is sleeping''
 
 > iVP (GProgrVP vp) = iVP vp
-> iVP vp = unhandled "iVP" vp
 
+%if unhandled
+> iVP vp = unhandled "iVP" vp
+%endif
 
 \subsection{Comp: Complement of Copula}
 
@@ -398,7 +425,9 @@ A proper name used as a noun phrase, e.g. ``John''.
 > iNP Gnobody_NP = cont (\c -> neg (thereIs (\x -> c (\u -> u x))))
 > iNP Gnothing_NP = cont (\c -> neg (thereIs (\x -> c (\u -> u x))))
 
+%if unhandled
 > iNP np = unhandled "iNP" np
+%endif
 
 > iListNP :: GListNP -> I [(Exp -> Prop) -> Prop]
 > iListNP (GListNP nps) = traverse iNP nps
@@ -447,7 +476,10 @@ The interpretation below is rather silly. For example,
 party.
 
 > iCN (GCompoundCN cn1 cn2) = pure (\ci1 ci2 x -> ci1 x &&& ci2 x) <*> iCN cn1 <*> iCN cn2
+
+%if unhandled
 > iCN cn = unhandled "iCN" cn
+%endif
 
 \subsection{Determiners}
 
@@ -482,7 +514,10 @@ FIXME: does this mean more than one?
 ``neither''
 
 > iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
+
+%if unhandled
 > iDet det = unhandled "iDet" det
+%endif
 
 > iQuant_Pl :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
 > iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
@@ -490,7 +525,10 @@ FIXME: does this mean more than one?
 FIXME: universal as subject, existential in object position?
 
 > iQuant_Pl GMassDet = pure (\u v n -> n (\x -> u x &&& v x))
+
+%if unhandled
 > iQuant_Pl quant = unhandled "iQuant_Pl" quant
+%endif
 
 > iQuant_Sg :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
 > iQuant_Sg GDefArt = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> u x &&& v x &&& (u y ==> y === x)))))
@@ -503,14 +541,20 @@ FIXME: Should this really allow more than one? Now ``john's dog'' allows john to
 FIXME: universal as subject, existential in object position?
 
 > iQuant_Sg GMassDet = cont (\c -> forAll (\x -> c (\u v -> u x &&& v x)))
+
+%if unhandled
 > iQuant_Sg quant = unhandled "iQuant_Sg" quant
+%endif
 
 > iOrd :: GOrd -> I ((Exp -> Prop) -> (Exp -> Prop))
 > iOrd GNoOrd = pure id
 > iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
-> iOrd ord = unhandled "iOrd" ord
-
 % Fool highlighting: $
+
+%if unhandled
+> iOrd ord = unhandled "iOrd" ord
+%endif
+
 
 \subsection{Numerals}
 
@@ -522,7 +566,10 @@ FIXME: wrong, indef pl without num should be universal as subject, existential a
 > iNum (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
 > iNum (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
 > --iNum (GAdNum adn num) = iAdN adn <*> iNum num
+
+%if unhandled
 > iNum num = unhandled "iNum" num
+%endif
 
 FIXME: they should be unique
 
@@ -555,7 +602,10 @@ Comparative form of an adjective, e.g. ``bigger''.
 Reflexive use of a two-place adjective, e.g. ``equivalent to itself''.
 
 > iAP (GReflA2 a2) = pure (\ia x -> ia (\u -> u x) x) <*> iA2 a2
+
+%if unhandled
 > iAP ap = unhandled "iAP" ap
+%endif 
 
 > iListAP :: GListAP -> I [Exp -> Prop]
 > iListAP (GListAP aps) = traverse iAP aps
@@ -570,20 +620,29 @@ Adv modifying NP, CN, VP
 > iAdv (GDConjAdv dconj advs) = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iDConj dconj <*> iListAdv advs
 > iAdv (GPrepNP prep np) = pure (\pp u x -> u x &&& pp x) <*> (iPrep prep <*> iNP np)
 > iAdv (GSubjS subj s) = pure (\sui si u x -> sui si (u x)) <*> iSubj subj <*> iS s
+
+%if unhandled
 > iAdv adv = unhandled "iAdv" adv
-    
+%endif
+
 Adv modifying S
 
 > iAdv_S :: GAdv -> I (Prop -> Prop)
 > iAdv_S (GSubjS subj s) = iSubj subj <*> iS s
+
+%if unhandled
 > iAdv_S adv = unhandled "iAdv_S" adv
+%endif
 
 > iSubj :: GSubj -> I (Prop -> Prop -> Prop)
 > iSubj Galthough_Subj = pure (&&&)
 > iSubj Gbecause_Subj = pure ((==>))
 > iSubj Gif_Subj = pure (==>)
 > iSubj Gwhen_Subj = pure (==>)
+
+%if unhandled
 > iSubj subj = unhandled "iSubj" subj
+%endif
 
 > iListAdv :: GListAdv -> I [(Exp -> Prop) -> (Exp -> Prop)]
 > iListAdv (GListAdv advs) = traverse iAdv advs
