@@ -56,6 +56,8 @@ for the Grammatical Framework resource grammar library.
 
 \section{Interpretation Rules}
 
+\subsection{Text: Texts}
+
 > iText :: GText -> [Input]
 > iText (GTNoPunct phr)        = iPhr phr
 > iText (GTExclMark  phr text) = pure twoStatements <*> iPhr phr <*> iText text
@@ -64,16 +66,20 @@ for the Grammatical Framework resource grammar library.
 > iText GTEmpty = pure (Statement true)
 > iText text = unhandled "iText" text
 
+\subsection{Phr: Phrases}
+
 > iPhr :: GPhr -> [Input]
 > iPhr (GPhrUtt GNoPConj utt GNoVoc) = iUtt utt 
 > iPhr phr = unhandled "iPhr" phr
+
+\subsection{Utt: Utterances}
 
 > iUtt :: GUtt -> [Input]
 > iUtt (GUttS s) = pure Statement <*> retrieve (iS s)
 > iUtt (GUttQS qs) = iQS qs
 > iUtt utt = unhandled "iUtt" utt
 
-\subsection{Questions}
+\subsection{QS: Questions}
 
 Ignores tense and anteriority for now.
 
@@ -84,6 +90,8 @@ Ignores tense and anteriority for now.
 Uncontracted negated question clause (English only).
 
 > iQS (GUncNegQCl tense ant qcl) = pure negInput <*> iQCl qcl
+
+\subsection{QCl: Question clauses}
 
 > iQCl :: GQCl -> [Input]
 
@@ -107,6 +115,8 @@ Uncontracted negated question clause (English only).
 
 % Fool highlighting: $
 
+\subsection{IP: Interrogative Pronouns}
+
 > iIP :: GIP -> [(Exp -> Prop) -> Input]
 
 ``which man''
@@ -115,6 +125,8 @@ Uncontracted negated question clause (English only).
 > iIP GwhatSg_IP = pure (\u -> WhQuest u)
 > iIP GwhoSg_IP  = pure (\u -> WhQuest u)
 > iIP ip = unhandled "iIP" ip
+
+\subsection{IDet: Interrogative Determiners}
 
 > iIDet :: GIDet -> (Exp -> Prop) -> (Exp -> Prop) -> Input
 > iIDet Ghow8many_IDet = (\u v -> CountQuest (\x -> u x &&& v x))
@@ -236,7 +248,7 @@ Relative pronoun for animates (English only), ``who''.
 > iRP Gwho_RP = pure (\u -> u)
 
 
-\subsection{Slash}
+\subsection{Slash: Clauses Missing NP}
 
 Clause missing NP, S/NP in GPSG.
 
@@ -253,7 +265,7 @@ Clause missing NP, S/NP in GPSG.
 > iSlash slash = unhandled "iSlash" slash
 
 
-\subsection{Conjunctions}
+\subsection{Conj, DConj: Conjunctions}
 
 Conjuctions are used in several places in the grammar, for example
 on noun phrases, adjectival phrases and sentences.
@@ -281,7 +293,7 @@ Two-part conjuctions.
 > iDConj Geither7or_DConj = pure (\p q -> (p &&& neg q) ||| (neg p &&& q))
 
 
-\subsection{Verb Phrases}
+\subsection{VP: Verb Phrases}
 
 > iVP :: GVP -> I (Exp -> Prop)
 
@@ -319,7 +331,7 @@ Two-part conjuctions.
 > iVP vp = unhandled "iVP" vp
 
 
-\subsection{Complement of Copula}
+\subsection{Comp: Complement of Copula}
 
 Complement of copula.
 
@@ -337,7 +349,7 @@ Noun phrase complemented, e.g. in ``(John is) a man''.
 
 > iComp (GCompNP np) = pure (\ni x -> ni (\y -> x === y)) <*> iNP np
 
-\subsection{Noun Phrases}
+\subsection{NP: Noun Phrases}
 
 > iNP :: GNP -> I ((Exp -> Prop) -> Prop)
 
@@ -391,7 +403,7 @@ A proper name used as a noun phrase, e.g. ``John''.
 > iListNP :: GListNP -> I [(Exp -> Prop) -> Prop]
 > iListNP (GListNP nps) = traverse iNP nps
 
-\subsection{Common Nouns}
+\subsection{CN: Common Nouns}
 
 > iCN :: GCN -> I (Exp -> Prop)
 
@@ -403,21 +415,35 @@ A proper name used as a noun phrase, e.g. ``John''.
 
 > iCN (GAdvCN cn adv) = iAdv adv <*> iCN cn
 
-FIXME: weird: ``a woman Paris''
+e.g. ``king John''. This produces some unlikely sounding 
+constructions.
 
 > iCN (GApposCN cn np) = pure (\ni ci x -> ni (x ===) &&& ci x) <*> iNP np <*> iCN cn
+
+Complementation of a two-place noun, e.g. ``owner of a dog''.
+
 > iCN (GComplN2 n2 np) = iN2 n2 <*> iNP np
 
+Common noun modified by a relative clause, e.g. ``man who sleeps''.
 Relative clauses are scope islands
 
 > iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> resetFun (iRS rs)
 
+A noun used as a common noun, e.g. ``dog''.
+
 > iCN (GUseN n) = iN n
+
+A two-place noun used without a complement, e.g. ``owner''.
+
 > iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni (\u -> u y) x)) <*> iN2 n2
+
+A three-place noun used without a complement, e.g. ``distance''.
+
 > iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
 
-FIXME: this produces some odd predicates, 
-e.g. ``labour mp'' is interpreted as $labour(X) \land mp(X)$, but the person is not the
+Compound common noun, e.g. ``Labour MP''.
+The interpretation below is rather silly. For example,
+``Labour MP'' is interpreted as $labour(X) \land mp(X)$, but the person is not the
 party.
 
 > iCN (GCompoundCN cn1 cn2) = pure (\ci1 ci2 x -> ci1 x &&& ci2 x) <*> iCN cn1 <*> iCN cn2
