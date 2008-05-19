@@ -30,6 +30,8 @@ unhandled:
 Sem.pdf: Sem.tex.lhs
 	lhs2tex Sem.tex.lhs > Sem.tex
 	pdflatex Sem.tex
+	pdflatex Sem.tex
+	pdflatex Sem.tex
 
 showpdf: Sem.pdf
 	acroread $^

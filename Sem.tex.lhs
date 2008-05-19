@@ -2,6 +2,8 @@
 
 \documentclass{article}
 
+\usepackage[pdftex,bookmarks,unicode]{hyperref}
+
 %include polycode.fmt
 
 %if style /= newcode
