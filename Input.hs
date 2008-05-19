@@ -21,9 +21,6 @@ instance Eq Input where
 instance Ord Input where
     compare x y = compare (show x) (show y)
 
-negInput :: Input -> Input
-negInput = mapInput neg
-
 mapInput :: (Prop -> Prop) -> Input -> Input
 mapInput f (Statement p)  = Statement (f p)
 mapInput f (YNQuest p)    = YNQuest (f p)

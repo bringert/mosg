@@ -95,12 +95,11 @@ for the Grammatical Framework resource grammar library.
 Ignores tense and anteriority for now.
 
 > iQS :: GQS -> [Input]
-> iQS (GUseQCl tense ant GPPos qcl) = iQCl qcl
-> iQS (GUseQCl tense ant GPNeg qcl) = pure negInput <*> iQCl qcl
+> iQS (GUseQCl tense ant pol qcl) = pure (\p c -> mapInput p c) <*> iPol pol <*> iQCl qcl
 
 Uncontracted negated question clause (English only).
 
-> iQS (GUncNegQCl tense ant qcl) = pure negInput <*> iQCl qcl
+> iQS (GUncNegQCl tense ant qcl) = pure (mapInput neg) <*> iQCl qcl
 
 \subsection{QCl: Question clauses}
 
@@ -210,7 +209,7 @@ Existential (FIXME: what is this construction called) e.g. ``there is a house''.
 Polarity is straightforwardly interpreted as a function over
 propositions.
 
-> iPol :: GPol -> I (Prop -> Prop)
+> iPol :: Applicative f => GPol -> f (Prop -> Prop)
 > iPol GPPos = pure id
 > iPol GPNeg = pure neg
 
