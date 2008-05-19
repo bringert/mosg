@@ -483,7 +483,7 @@ party.
 > iCN cn = unhandled "iCN" cn
 %endif
 
-\subsection{Determiners}
+\subsection{Det: Determiners}
 
 
 > iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
@@ -548,6 +548,8 @@ FIXME: universal as subject, existential in object position?
 > iQuant_Sg quant = unhandled "iQuant_Sg" quant
 %endif
 
+\subsection{Ord: Ordinal Number}
+
 > iOrd :: GOrd -> I ((Exp -> Prop) -> (Exp -> Prop))
 > iOrd GNoOrd = pure id
 > iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
@@ -557,8 +559,7 @@ FIXME: universal as subject, existential in object position?
 > iOrd ord = unhandled "iOrd" ord
 %endif
 
-
-\subsection{Numerals}
+\subsection{Num: Cardinal Number}
 
 > iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
@@ -573,14 +574,7 @@ FIXME: wrong, indef pl without num should be universal as subject, existential a
 > iNum num = unhandled "iNum" num
 %endif
 
-FIXME: they should be unique
-
-> iInt :: Int -> I ((((Exp -> Prop) -> Prop) -> Prop) -> Prop)
-> iInt 0 = pure (\q -> q (\p -> true))
-> iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
-
-
-\subsection{Adjectival Phrases}
+\subsection{AP: Adjectival Phrases}
 
 > iAP :: GAP -> I (Exp -> Prop)
 
@@ -613,7 +607,7 @@ Reflexive use of a two-place adjective, e.g. ``equivalent to itself''.
 > iListAP (GListAP aps) = traverse iAP aps
 
 
-\subsection{Adverbs}
+\subsection{Adv: Adverbial Phrases}
 
 Adv modifying NP, CN, VP
 
@@ -627,6 +621,9 @@ Adv modifying NP, CN, VP
 > iAdv adv = unhandled "iAdv" adv
 %endif
 
+> iListAdv :: GListAdv -> I [(Exp -> Prop) -> (Exp -> Prop)]
+> iListAdv (GListAdv advs) = traverse iAdv advs
+
 Adv modifying S
 
 > iAdv_S :: GAdv -> I (Prop -> Prop)
@@ -635,6 +632,8 @@ Adv modifying S
 %if unhandled
 > iAdv_S adv = unhandled "iAdv_S" adv
 %endif
+
+\subsection{Subj: Subjunctions}
 
 > iSubj :: GSubj -> I (Prop -> Prop -> Prop)
 > iSubj Galthough_Subj = pure (&&&)
@@ -645,9 +644,6 @@ Adv modifying S
 %if unhandled
 > iSubj subj = unhandled "iSubj" subj
 %endif
-
-> iListAdv :: GListAdv -> I [(Exp -> Prop) -> (Exp -> Prop)]
-> iListAdv (GListAdv advs) = traverse iAdv advs
 
 
 \subsection{Lexical Categories}
@@ -710,7 +706,7 @@ Prepositions, e.g. ``in''.
 > iPrep :: GPrep -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
 
-\subsection{Numbers (merge with above?)}
+\subsection{Digits: Cardinals and Ordinals in Digits}
 
 > iDigits :: GDigits -> Int
 > iDigits = f 0
@@ -728,6 +724,10 @@ Prepositions, e.g. ``in''.
 > iDig GD_7 = 7
 > iDig GD_8 = 8
 > iDig GD_9 = 9
+
+\subsection{Numeral: Cardinals and Ordinals in Words}
+
+Numerals are interpreted as integers, and then handled by |iInt|.
 
 > iNumeral :: GNumeral -> Int
 > iNumeral (Gnum m) = iSub1000000 m
@@ -763,6 +763,14 @@ Prepositions, e.g. ``in''.
 > iDigit Gn7 = 7
 > iDigit Gn8 = 8
 > iDigit Gn9 = 9
+
+\subsection{Int: Internal Integers}
+
+Integer interpretation. Used above for letter and digit numerals.
+
+> iInt :: Int -> I ((((Exp -> Prop) -> Prop) -> Prop) -> Prop)
+> iInt 0 = pure (\q -> q (\p -> true))
+> iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
 
 \subsection{Utilities}
 
