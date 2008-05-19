@@ -1,4 +1,4 @@
-module Inter (I, (<=*=>), cont, retrieve, retrieveFun) where
+module Inter (I, (<=*=>), cont, retrieve, retrieveFun, reset, resetFun) where
 
 import FOL
 import Input
@@ -42,3 +42,12 @@ retrieveFun (I xs) = [\e -> runCont x ($ e) | x <- xs]
 
 --shift :: ((a -> Cont Prop) -> Cont Prop) -> Cont a
 --shift h = Cont (\c -> runCont (h (\v -> Cont (\c' -> c' (c v)))) id)
+
+--reset :: Cont Prop -> Cont Prop
+--reset (Cont m) = Cont $ \c -> c (m id)
+
+reset :: I Prop -> I Prop
+reset (I xs) = I [Cont ($ runCont x id) | x <- xs]
+
+resetFun :: I (Exp -> Prop) -> I (Exp -> Prop)
+resetFun (I xs) = I [Cont ($ \e -> runCont x ($ e)) | x <- xs]

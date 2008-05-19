@@ -125,7 +125,8 @@ iS (GAdvS adv s) = iAdv_S adv <*> iS s
 iS (GUncNegCl _ _ cl) = fmap neg (iCl cl)
 
 iListS :: GListS -> I [Prop]
-iListS (GListS ss) = traverse iS ss
+-- each sentence in a list is a scope island
+iListS (GListS ss) = traverse (reset . iS) ss
 
 iCl :: GCl -> I Prop
 -- Either the NP or the VP can have scope priority
@@ -252,8 +253,8 @@ iCN (GAdvCN cn adv) = iAdv adv <*> iCN cn
 -- FIXME: weird: a woman Paris
 iCN (GApposCN cn np) = pure (\ni ci x -> ni (x ===) &&& ci x) <*> iNP np <*> iCN cn
 iCN (GComplN2 n2 np) = iN2 n2 <*> iNP np
--- Quantifiers in a relative clause cannot outscope those outside the relative clause.
-iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> iRS rs
+-- Relative clauses are scope islands
+iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> resetFun (iRS rs)
 iCN (GUseN n) = iN n
 iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni (\u -> u y) x)) <*> iN2 n2
 iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
