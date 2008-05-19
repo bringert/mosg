@@ -173,6 +173,9 @@ Existential (FIXME: what is this construction called) e.g. ``there is a house''.
 
 \subsection{Pol: Polarity}
 
+Polarity is straightforwardly interpreted as a function over
+propositions.
+
 > iPol :: GPol -> I (Prop -> Prop)
 > iPol GPPos = pure id
 > iPol GPNeg = pure neg
@@ -277,6 +280,7 @@ Two-part conjuctions.
 
 > iDConj Geither7or_DConj = pure (\p q -> (p &&& neg q) ||| (neg p &&& q))
 
+
 \subsection{Verb Phrases}
 
 > iVP :: GVP -> I (Exp -> Prop)
@@ -301,7 +305,7 @@ Two-part conjuctions.
 
 > iVP (GReflV2 v2) = pure (\i x -> i (\u -> u x) x) <*> iV2 v2
 
-``is beautiful
+``is beautiful''
 
 > iVP (GUseComp comp) = iComp comp
 
@@ -336,10 +340,22 @@ Noun phrase complemented, e.g. in ``(John is) a man''.
 \subsection{Noun Phrases}
 
 > iNP :: GNP -> I ((Exp -> Prop) -> Prop)
+
+Noun phrase modified by a prepositional phrase.
+
 > iNP (GAdvNP np adv) = pure (.) <*> iNP np <*> iAdv adv
+
+Noun phrase conjunction.
 
 > iNP (GConjNP conj nps)   = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iConj conj   <*> iListNP nps
 > iNP (GDConjNP dconj nps) = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iDConj dconj <*> iListNP nps
+
+Noun phrase formation from determiner and common noun.
+Note that there is no storage or anything like that here.
+Instead the determiners use control operators to move
+the quantifiers to the top level of the nearest enclosing scope
+island. 
+
 > iNP (GDetCN det cn) = iDet det <*> iCN cn
 
 ``all men''. FIXME: what should we do about predet + plural?
@@ -348,12 +364,31 @@ Noun phrase complemented, e.g. in ``(John is) a man''.
 
 ``a woman killed''
 
-> iNP (GPPartNP np v2) = pure (\ni vi u -> ni (\x -> u x &&& thereIs (\y -> vi (\v -> v x) y))) <*> iNP np <*> iV2 v2
+> iNP (GPPartNP np v2) = pure (\ni vi u -> ni (\x -> u x &&& thereIs
+>                                (\y -> vi (\v -> v x) y))) <*> iNP np <*> iV2 v2
+
+A proper name used as a noun phrase, e.g. ``John''.
+
 > iNP (GUsePN pn) = pure (\i u -> u i) <*> iPN pn
+
+``everybody''
+
 > iNP Geverybody_NP = pure (\u -> forAll (\x -> u x))
+
+``everything''
+
 > iNP Geverything_NP = pure (\u -> forAll (\x -> u x))
+
+``somebody''
+
 > iNP Gsomebody_NP = pure (\u -> thereIs (\x -> u x))
+
+``something''
+
 > iNP Gsomething_NP = pure (\u -> thereIs (\x -> u x))
+
+``nobody''
+
 > iNP Gnobody_NP = pure (\u -> neg (thereIs (\x -> u x)))
 > iNP np = unhandled "iNP" np
 
