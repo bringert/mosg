@@ -5,23 +5,26 @@ INSTALL_DIR = $(HOME)/public_html/mosg
 
 .PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas test Union.gfcc GSyntax.hs install clean distclean
 
-mosg.fcgi:
+mosg.fcgi: Sem.hs
 	ghc $(GHCFLAGS) -package fastcgi --make -o $@ MainFastCGI.hs
 
-mosg.cgi:
+mosg.cgi: Sem.hs
 	ghc $(GHCFLAGS) --make -o $@ MainCGI.hs
 
-mosg:
+mosg: Sem.hs
 	ghc $(GHCFLAGS) --make -o $@ Main.hs
 
-mosg-fracas:
+mosg-fracas: Sem.hs
 	ghc $(GHCFLAGS) -package HaXml-1.13.3 --make -o $@ MainFraCaS.hs
 
 test:
 	ghc $(GHCFLAGS) -i../embedded-gf/src --make -o $@ test.hs
 
-Sem.pdf: Sem.lhs
-	lhs2tex Sem.lhs > Sem.tex
+Sem.hs: Sem.tex.lhs
+	lhs2tex --newcode Sem.tex.lhs > Sem.hs
+
+Sem.pdf: Sem.tex.lhs
+	lhs2tex Sem.tex.lhs > Sem.tex
 	pdflatex Sem.tex
 
 Union.gfcc GSyntax.hs:
