@@ -465,11 +465,12 @@ FIXME: wrong, indef pl should be universal as subject, existential as object
 
 -- FIXME: does this mean more than one?
 
-> iDet GsomePl_Det = pure (\u v -> thereIs (\x -> u x &&& v x))
+> iDet GsomePl_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
 Same as |IndefArt|.
 
 > iDet GsomeSg_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+
 > iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 > iDet det = unhandled "iDet" det
 
