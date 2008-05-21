@@ -365,7 +365,7 @@ Complement of copula.
 
 > iComp :: GComp -> I (Exp -> Prop)
 
-Ajdectival phrase complement, e.g. in ``(John is) very warm''.
+Adjectival phrase complement, e.g. in ``(John is) very warm''.
 
 > iComp (GCompAP ap) = iAP ap
 
@@ -385,16 +385,18 @@ where they are all the same individual.
 
 > iNP :: GNP -> I ((Exp -> Prop) -> Prop)
 
-Noun phrase modified by a prepositional phrase.
+Noun phrase modified by an adverbial phrase,
+e.g. ``Paris at midnight''.
 
 > iNP (GAdvNP np adv) = pure (.) <*> iNP np <*> iAdv adv
 
-Noun phrase conjunction.
+Noun phrase conjunction, e.g. ``John and a man''.
 
 > iNP (GConjNP conj nps)   = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iConj conj   <*> iListNP nps
 > iNP (GDConjNP dconj nps) = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iDConj dconj <*> iListNP nps
 
-Noun phrase formation from determiner and common noun.
+Noun phrase formation from determiner and common noun,
+e.g. ``every man''.
 Note that there is no storage or anything like that here.
 Instead the determiners use control operators to move
 the quantifiers to the top level of the nearest enclosing scope
@@ -402,11 +404,12 @@ island.
 
 > iNP (GDetCN det cn) = iDet det <*> iCN cn
 
-``all men''. FIXME: what should we do about predet + plural?
+``only the men''. FIXME: what should we do about predet + plural?
 
 > -- iNP (GPredetNP predet np) = (iPredet predet) (iNP np)
 
-``a woman killed''
+A noun phrase modified by a passive voice transitive verb, 
+e.g. ``a woman killed''.
 
 > iNP (GPPartNP np v2) = pure (\ni vi u -> ni (\x -> u x &&& thereIs
 >                                (\y -> vi (\v -> v x) y))) <*> iNP np <*> iV2 v2
@@ -441,14 +444,15 @@ A proper name used as a noun phrase, e.g. ``John''.
 
 > iCN :: GCN -> I (Exp -> Prop)
 
-``beautiful woman''
+Common noun modified by an adjectival phrase, e.g. ``beautiful woman''.
 
 > iCN (GAdjCN ap cn) = pure (\ai ci x -> ai x &&& ci x) <*> iAP ap <*> iCN cn
 
-``woman with a dog''
+Common noun modified by an adverbial phrase, e.g. ``woman with a dog''.
 
 > iCN (GAdvCN cn adv) = iAdv adv <*> iCN cn
 
+Apposition of a common noun and a noun phrase,
 e.g. ``king John''. This produces some unlikely sounding 
 constructions.
 
@@ -459,7 +463,7 @@ Complementation of a two-place noun, e.g. ``owner of a dog''.
 > iCN (GComplN2 n2 np) = iN2 n2 <*> iNP np
 
 Common noun modified by a relative clause, e.g. ``man who sleeps''.
-Relative clauses are scope islands
+Relative clauses are scope islands.
 
 > iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> resetFun (iRS rs)
 
@@ -491,10 +495,15 @@ party.
 
 > iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
+A plural determiner, with a quantifier, a cardinal number
+and an ordinal, e.g. ``the two best''.
 FIXME: does this mean more than one?
 FIXME: wrong, indef pl should be universal as subject, existential as object
 
 > iDet (GDetPl quant num ord) = pure (\qi ni oi u v -> ni (qi (oi u) v) (oi u) v) <*> iQuant_Pl quant <*> iNum num <*> iOrd ord
+
+A singular determiner with a quantifier and an ordinal, e.g.
+``the second''.
 
 > iDet (GDetSg quant ord) = pure (.) <*> iQuant_Sg quant <*> iOrd ord
 
@@ -502,7 +511,7 @@ FIXME: wrong, indef pl should be universal as subject, existential as object
 
 > iDet Gevery_Det = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
 
-``no''
+Negated existential quantifier, ``no''.
 
 > iDet Gno_Det = cont (\c -> neg (thereIs (\x -> c (\u v -> u x &&& v x))))
 
@@ -516,7 +525,9 @@ FIXME: does this mean more than one?
 
 > iDet GsomeSg_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
-``neither''
+``neither''. This is interpreted as meaning that there are exactly
+two individuals with the first property, and they both lack 
+the second property.
 
 > iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 
@@ -524,7 +535,12 @@ FIXME: does this mean more than one?
 > iDet det = unhandled "iDet" det
 %endif
 
+Interpretation of quantifiers in plural positions.
+
 > iQuant_Pl :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
+
+``(men)''.
+
 > iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
 
 FIXME: universal as subject, existential in object position?
@@ -535,15 +551,25 @@ FIXME: universal as subject, existential in object position?
 > iQuant_Pl quant = unhandled "iQuant_Pl" quant
 %endif
 
+Interpretation of quantifiers in singular positions.
+
 > iQuant_Sg :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+
+``the (man)''
+
 > iQuant_Sg GDefArt = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> u x &&& v x &&& (u y ==> y === x)))))
+
+``a (man''
+
 > iQuant_Sg GIndefArt = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+
+``John's (dog)''.
 
 FIXME: Should this really allow more than one? Now ``john's dog'' allows john to have several dogs.
 
 > iQuant_Sg (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
 
-FIXME: universal as subject, existential in object position?
+``water'' FIXME: universal as subject, existential in object position?
 
 > iQuant_Sg GMassDet = cont (\c -> forAll (\x -> c (\u v -> u x &&& v x)))
 
@@ -553,8 +579,16 @@ FIXME: universal as subject, existential in object position?
 
 \subsection{Ord: Ordinal Number}
 
+Ordinals and superlatives.
+
 > iOrd :: GOrd -> I ((Exp -> Prop) -> (Exp -> Prop))
+
+No ordinal or superlative.
+
 > iOrd GNoOrd = pure id
+
+Superlative adjective, e.g. ``largest''.
+
 > iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
 % Fool highlighting: $
 
@@ -564,13 +598,26 @@ FIXME: universal as subject, existential in object position?
 
 \subsection{Num: Cardinal Number}
 
+Cardinal numbers.
+
 > iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+
+No cardinality.
 
 FIXME: wrong, indef pl without num should be universal as subject, existential as object
 
 > iNum GNoNum = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
+
+Cardinal number with digits.
+
 > iNum (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
+
+Cardinal number with words.
+
 > iNum (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
+
+Cardinal modified by a numeral-modifying adjective, e.g. ``almost five''.
+
 > --iNum (GAdNum adn num) = iAdN adn <*> iNum num
 
 %if unhandled
@@ -578,6 +625,8 @@ FIXME: wrong, indef pl without num should be universal as subject, existential a
 %endif
 
 \subsection{AP: Adjectival Phrases}
+
+Adjectival phrases are interpreted as one-place predicates.
 
 > iAP :: GAP -> I (Exp -> Prop)
 
@@ -612,12 +661,21 @@ Reflexive use of a two-place adjective, e.g. ``equivalent to itself''.
 
 \subsection{Adv: Adverbial Phrases}
 
-Adv modifying NP, CN, VP
+Adverbial phrases that can modify NP, CN, VP.
 
 > iAdv :: GAdv -> I ((Exp -> Prop) -> (Exp -> Prop))
+
+Adverbial phrase conjunction.
+
 > iAdv (GConjAdv conj advs)   = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iConj conj   <*> iListAdv advs
 > iAdv (GDConjAdv dconj advs) = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iDConj dconj <*> iListAdv advs
+
+Prepositional phrase.
+
 > iAdv (GPrepNP prep np) = pure (\pp u x -> u x &&& pp x) <*> (iPrep prep <*> iNP np)
+
+Subjunctive phrase.
+
 > iAdv (GSubjS subj s) = pure (\sui si u x -> sui si (u x)) <*> iSubj subj <*> iS s
 
 %if unhandled
@@ -627,7 +685,7 @@ Adv modifying NP, CN, VP
 > iListAdv :: GListAdv -> I [(Exp -> Prop) -> (Exp -> Prop)]
 > iListAdv (GListAdv advs) = traverse iAdv advs
 
-Adv modifying S
+Interpretation of sentence-modifying adverbial phrases.
 
 > iAdv_S :: GAdv -> I (Prop -> Prop)
 > iAdv_S (GSubjS subj s) = iSubj subj <*> iS s
@@ -640,7 +698,7 @@ Adv modifying S
 
 > iSubj :: GSubj -> I (Prop -> Prop -> Prop)
 > iSubj Galthough_Subj = pure (&&&)
-> iSubj Gbecause_Subj = pure ((==>))
+> iSubj Gbecause_Subj = pure (==>)
 > iSubj Gif_Subj = pure (==>)
 > iSubj Gwhen_Subj = pure (==>)
 
@@ -775,6 +833,8 @@ Integer interpretation. Used above for letter and digit numerals.
 > iInt 0 = pure (\q -> q (\p -> true))
 > iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
 
+%if style == newcode
+
 \subsection{Utilities}
 
 
@@ -805,6 +865,8 @@ Integer interpretation. Used above for letter and digit numerals.
 
 > unhandled :: Show a => String -> a -> b
 > unhandled f x = error $ "Missing case in " ++ f ++ ": " ++ head (words (show x))
+
+%endif
 
 
 \end{document}
