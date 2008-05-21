@@ -21,14 +21,14 @@ test:
 	ghc $(GHCFLAGS) -i../embedded-gf/src --make -o $@ test.hs
 
 Sem.hs: Sem.tex.lhs
-	lhs2tex --newcode -sunhandled Sem.tex.lhs > Sem.hs
+	lhs2TeX --newcode -sunhandled Sem.tex.lhs > Sem.hs
 
 unhandled:
-	lhs2tex --newcode Sem.tex.lhs > unhandled.hs
+	lhs2TeX --newcode Sem.tex.lhs > unhandled.hs
 	echo | ghci unhandled.hs
 
 Sem.pdf: Sem.tex.lhs
-	lhs2tex Sem.tex.lhs > Sem.tex
+	lhs2TeX Sem.tex.lhs > Sem.tex
 	pdflatex Sem.tex
 	pdflatex Sem.tex
 	pdflatex Sem.tex
