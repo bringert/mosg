@@ -8,7 +8,7 @@ import Text.XML.HaXml.Parse
 import Text.XML.HaXml.Types
 import Text.XML.HaXml.Xml2Haskell
 
-import qualified FraCaSProblemsDTD as DTD
+import qualified FraCaSProblemsDtd as DTD
 import Problem
 
 

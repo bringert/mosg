@@ -1,4 +1,4 @@
-module FraCaSProblemsDTD where
+module FraCaSProblemsDtd where
 
 import Text.XML.HaXml.Xml2Haskell
 import Text.XML.HaXml.OneOfN
