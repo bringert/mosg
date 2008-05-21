@@ -1,4 +1,4 @@
-module Mosg (Theory, Result(..), Output(..), Answer(..), Input(..), Grammar, 
+module Mosg (Theory, Mode(..), Result(..), Output(..), Answer(..), Input(..), Grammar, 
              loadGrammar, grammarModificationTime, handleText) where
 
 import GSyntax
@@ -17,6 +17,9 @@ import Prelude hiding (catch)
 import System.Directory
 import System.IO
 import System.Time
+
+data Mode = Pessimistic | Optimistic
+  deriving (Show, Read, Eq, Ord)
 
 type Grammar = MultiGrammar
 
@@ -112,8 +115,8 @@ filterConsistent th = filterM (\p -> debug ("Checking consistency: " ++ show p) 
 filterInformative :: Theory -> [Prop] -> IO [Prop]
 filterInformative th = filterM (\p -> debug ("Checking informativity: " ++ show p) >> liftM (==Yes) (isInformative th p))
 
-handleText :: Grammar -> Theory -> String -> IO Result
-handleText gr th i = 
+handleText :: Mode -> Grammar -> Theory -> String -> IO Result
+handleText mode gr th i = 
     do debug $ "Input: " ++ show i
        trees <- parseInput gr i
        treesAndInterpretations <- interpretTrees trees
@@ -147,8 +150,8 @@ handleText gr th i =
              StatementType 
                  | null consistent  -> return NoConsistent
                  | null informative -> return NoInformative
-                 | otherwise        -> liftM AcceptedStatement (ambiguousStatement informative)
-             QuestionType  -> answerQuestion th qs
+                 | otherwise        -> liftM AcceptedStatement (ambiguousStatement mode informative)
+             QuestionType  -> answerQuestion mode th qs
        return $ Result {
                     resInputText = i,
                     resInterpretations = treesAndInterpretations,
@@ -159,14 +162,14 @@ handleText gr th i =
                     resOutput = output
                   }
 
-answerQuestion :: Theory -> [Input] -> IO Output
-answerQuestion th qs = 
+answerQuestion :: Mode -> Theory -> [Input] -> IO Output
+answerQuestion mode th qs = 
     do debug $ unlines $ map show qs
        let ynq = [p | YNQuest p <- qs]
            whq = [p | WhQuest p <- qs]
            cnt = [p | CountQuest p <- qs]
        case (ynq,whq,cnt) of
-         (_,[],[])   -> do q <- ambiguousQuestion ynq
+         (_,[],[])   -> do q <- ambiguousQuestion mode ynq
                            answer <- isTrue th q
                            return (YNQAnswer answer)
          ([],[q],[]) -> do answer <- answerWhQuest th q
@@ -174,17 +177,23 @@ answerQuestion th qs =
          ([],[],[q]) -> do answer <- answerWhQuest th q
                            return (CountAnswer (length (nub answer)))
 
-ambiguousStatement :: [Prop] -> IO Prop
-ambiguousStatement [p] = return p
-ambiguousStatement ps = 
-    do debug $ "Ambiguous statement, using disjunction."
+ambiguousStatement :: Mode -> [Prop] -> IO Prop
+ambiguousStatement _ [p] = return p
+ambiguousStatement Pessimistic ps = 
+    do debug $ "Ambiguous statement, pessimistically using disjunction."
        return $ ors ps
-
-ambiguousQuestion :: [Prop] -> IO Prop
-ambiguousQuestion [p] = return p
-ambiguousQuestion ps =     
-    do debug $ "Ambiguous question, using conjunction."
+ambiguousStatement Optimistic ps = 
+    do debug $ "Ambiguous statement, optimistically using conjunction."
        return $ ands ps
+
+ambiguousQuestion :: Mode -> [Prop] -> IO Prop
+ambiguousQuestion _ [p] = return p
+ambiguousQuestion Pessimistic ps =     
+    do debug $ "Ambiguous question, pessimistically using conjunction."
+       return $ ands ps
+ambiguousQuestion Optimistic ps =     
+    do debug $ "Ambiguous question, optimistically using disjunction."
+       return $ ors ps
 
 nubEquivalent :: Theory -> [Prop] -> IO [Prop]
 nubEquivalent th = nubByM (\p q -> liftM (==Yes) $ areEquivalent th p q)

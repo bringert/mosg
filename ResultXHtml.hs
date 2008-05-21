@@ -72,20 +72,22 @@ mkOutputDir =
        return dir
 
 
-writeOutput :: [ProblemResult] -> IO ()
-writeOutput rs = 
+writeOutput :: Mode -> [ProblemResult] -> IO ()
+writeOutput mode rs = 
     do dir <- mkOutputDir
        let htmlFile = dir </> "index.html"
        copyFile "style.css" (dir </> "style.css")
        copyFile "ui.js" (dir </> "ui.js")
-       writeFile htmlFile $ renderHtml $ resultsPage rs
+       writeFile htmlFile $ renderHtml $ resultsPage mode rs
        printf "Output written to %s\n" htmlFile
 
-resultsPage :: [ProblemResult] -> Html
-resultsPage rs = header << [thetitle << "MOSG results", 
+resultsPage :: Mode -> [ProblemResult] -> Html
+resultsPage mode rs = 
+                 header << [thetitle << "MOSG results", 
                             cssLink "style.css",
                             javascriptLink "ui.js"]
                  +++ body << [h1 << "MOSG Output", 
+                              p << ("Mode: " +++ show mode),
                               h2 << "Overall statistics",
                               statsHtml (statistics rs), 
                               h2 << "Problems",

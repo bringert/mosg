@@ -13,12 +13,12 @@ import Text.Printf
 putRule = putStrLn "----------------------------------------------------------------------"
 
 
-testProblem :: Grammar -> Problem -> IO ProblemResult
-testProblem gr p = 
+testProblem :: Mode -> Grammar -> Problem -> IO ProblemResult
+testProblem mode gr p = 
     do putRule
        putStrLn $ "FraCaS problem " ++ problemId p
        (prs,th) <- addPremises [] (problemPremises p)
-       qr <- handleText gr th (problemQuestion p)
+       qr <- handleText mode gr th (problemQuestion p)
        return $ ProblemResult { 
                     problem = p,
                     premiseResults = prs,
@@ -33,15 +33,15 @@ testProblem gr p =
 
     addPremise :: Theory -> String -> IO (Result,Theory)
     addPremise th s = 
-        do res <- handleText gr th s
+        do res <- handleText mode gr th s
            let th' = case resOutput res of
                        AcceptedStatement p -> th ++ [p]
                        _                   -> th
            return (res, th')
 
-testProblems :: Grammar -> [Problem] -> IO [ProblemResult]
-testProblems gr ps = 
-    do rs <- mapM (testProblem gr) ps
+testProblems :: Mode -> Grammar -> [Problem] -> IO [ProblemResult]
+testProblems mode gr ps = 
+    do rs <- mapM (testProblem mode gr) ps
        let statLine (s,xs) = s ++ (if null xs then "" else ": " ++ unwords (map (problemId) xs))
        mapM_ (putStrLn . statLine) (statistics rs)
        return rs
@@ -50,7 +50,8 @@ main :: IO ()
 main = do args <- getArgs
           let keepProblem p | null args = True
                             | otherwise = dropWhile (=='0') (problemId p) `elem` args
+          let mode = Pessimistic
           gr <- loadGrammar
           problems <- liftM (filter keepProblem) $ readFraCaS "fracas/fracas.xml"
-          rs <- testProblems gr problems
-          writeOutput rs
+          rs <- testProblems mode gr problems
+          writeOutput mode rs
