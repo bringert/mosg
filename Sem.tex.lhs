@@ -374,8 +374,12 @@ Prepositional phrase complement, e.g. in ``(John is) in Paris''.
 > iComp (GCompAdv adv) = iAdv adv <*> pure (\x -> true)
 
 Noun phrase complemented, e.g. in ``(John is) a man''.
+The complement is a scope island, to get rid of the
+reading of sentences such as ``every dog is an animal'' 
+where they are all the same individual.
 
-> iComp (GCompNP np) = pure (\ni x -> ni (\y -> x === y)) <*> iNP np
+> iComp (GCompNP np) = resetFun (pure (\ni x -> ni (\y -> x === y)) <*> iNP np)
+
 
 \subsection{NP: Noun Phrases}
 
