@@ -225,11 +225,11 @@ Relative clases are interpreted as predicates.
 For now we ignore the tense and anteriority.
 
 > iRS :: GRS -> I (Exp -> Prop)
-> iRS (GUseRCl tense ant pol rcl) = pure (\p ri -> p . ri) <*> iPol pol <*> iRCl rcl
+> iRS (GUseRCl tense ant pol rcl) = pure (.) <*> iPol pol <*> iRCl rcl
 
 Uncontracted negated relative clause (English only), e.g. ``that does not sleep''.
 
-> iRS (GUncNegRCl tense ant rcl) = pure (\i x -> neg (i x)) <*> iRCl rcl
+> iRS (GUncNegRCl tense ant rcl) = pure (neg .) <*> iRCl rcl
 
 \subsection{RCl: Relative Clauses}
 
