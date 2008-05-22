@@ -1,4 +1,6 @@
 
+NAME = Sem
+
 GHCFLAGS = -package gf-embed -package folkung
 
 INSTALL_DIR = $(HOME)/public_html/mosg
@@ -27,13 +29,16 @@ unhandled:
 	lhs2TeX --newcode Sem.tex.lhs > unhandled.hs
 	echo | ghci unhandled.hs
 
-Sem.pdf: Sem.tex.lhs
-	lhs2TeX Sem.tex.lhs > Sem.tex
-	pdflatex Sem.tex
-	pdflatex Sem.tex
-	pdflatex Sem.tex
+%.tex: %.tex.lhs
+	lhs2TeX $^ > $@
 
-showpdf: Sem.pdf
+$(NAME).pdf: $(NAME).tex
+	pdflatex $(NAME).tex
+	bibtex $(NAME)
+	pdflatex $(NAME).tex
+	pdflatex $(NAME).tex
+
+showpdf: $(NAME).pdf
 	acroread $^
 
 Union.gfcc GSyntax.hs:
@@ -45,6 +50,8 @@ install:
 	cp mosg.cgi Union.gfcc $(INSTALL_DIR)
 
 clean:
+	-rm -f *.aux *.dvi *.log *.blg *.bbl *.toc *.rel *.ptb
+	-rm -f $(NAME).pdf
 	-rm -f *.o *.hi grammar/*.gfc grammar/*.gfr grammar/*.gfo
 	-rm -f mosg.cgi mosg.fcgi mosg mosg-fracas
 

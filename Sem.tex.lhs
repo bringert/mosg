@@ -931,11 +931,7 @@ Integer interpretation. Used above for letter and digit numerals.
 %endif
 
 
-%if phd
 \bibliographystyle{plainnat}
-%else
-\bibliographystyle{splncs}
-%endif
 \bibliography{bringert-bibliography.bib}
 
 %if not phd
