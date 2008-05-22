@@ -1,8 +1,10 @@
 % -*- Mode: LaTeX; coding:utf-8 -*-
 
+%if not phd
 \documentclass{article}
 
 \usepackage[pdftex,bookmarks,unicode]{hyperref}
+%endif
 
 %include polycode.fmt
 
@@ -31,10 +33,17 @@ Grammatical Framework Resource Grammar Library}
   Chalmers University of Technology and University of Gothenburg\\
   \texttt{bringert{\char64}cs.chalmers.se}}
 
+%if phd
+
+\makepapertitle
+
+%else
+
 \begin{document}
 
 \maketitle
 
+%endif
 
 \begin{abstract}
 We present a compositional first-order logic semantics
@@ -922,4 +931,13 @@ Integer interpretation. Used above for letter and digit numerals.
 %endif
 
 
+%if phd
+\bibliographystyle{plainnat}
+%else
+\bibliographystyle{splncs}
+%endif
+\bibliography{bringert-bibliography.bib}
+
+%if not phd
 \end{document}
+%endif
