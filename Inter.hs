@@ -15,7 +15,7 @@ instance Functor Cont where
 
 instance Applicative Cont where
     pure a   = Cont ($ a)
-    x <*> y  = Cont $ \c -> runCont x $ \f -> runCont y $ \a -> (c (f a))
+    x <*> y  = Cont $ \c -> runCont x $ \f -> runCont y $ \a -> c (f a)
 
 newtype I a = I [Cont a]
 
