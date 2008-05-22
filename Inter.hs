@@ -8,9 +8,6 @@ import Control.Monad
 import Data.List
 import Data.Monoid
 
---import Data.Foldable
---import Data.Traversable
-
 newtype Cont a = Cont { runCont :: (a -> Prop) -> Prop }
 
 instance Functor Cont where
@@ -40,17 +37,16 @@ instance Monoid (I a) where
 (<=*=>) :: Alternative f => f (a -> b) -> f a -> f b
 x <=*=> y = x <*> y <|> y <**> x
 
+-- A version of the shift operator which takes a pure function.
 cont :: ((a -> Prop) -> Prop) -> I a
 cont f = I [Cont f]
 
 retrieve :: Run a => I a -> [a]
 retrieve (I xs) = map run xs
 
---shift :: ((a -> Cont Prop) -> Cont Prop) -> Cont a
---shift h = Cont (\c -> runCont (h (\v -> Cont (\c' -> c' (c v)))) id)
+reset :: Run a => I a -> I a
+reset = I . map pure . retrieve
 
---reset :: Cont Prop -> Cont Prop
---reset (Cont m) = Cont $ \c -> c (m id)
 
 class Run a where
     run :: Cont a -> a
@@ -60,15 +56,13 @@ instance Run Prop where
 
 instance Run b => Run (a -> b) where
     run x = \e -> run (fmap ($ e) x)
-{-
---    run = lift' run
 
-lift' :: Functor m => (m a -> a) -> (m (b -> a) -> (b -> a))
-lift' f x = \e -> f (fmap ($ e) x)
+-- Unused
+-- It seems hard to write a real shift for I
 
-lift'' :: (Traversable f, Applicative g) => (f a -> a) -> f (g a) -> g a
-lift'' f x = fmap f (sequenceA x)
--}
+shiftC :: ((a -> Cont Prop) -> Cont Prop) -> Cont a
+shiftC h = Cont (\c -> runCont (h (pure . c)) id)
+-- shiftC h = Cont (\c -> runCont (h (\v -> Cont (\c' -> c' (c v)))) id)
 
-reset :: Run a => I a -> I a
-reset = I . map pure . retrieve
+resetC :: Run a => Cont a -> Cont a
+resetC = pure . run
