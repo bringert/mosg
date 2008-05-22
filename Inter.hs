@@ -43,9 +43,6 @@ cont f = I [Cont f]
 retrieve :: Run a => I a -> [a]
 retrieve (I xs) = map run xs
 
-retrieveFun :: I (a -> Prop) -> [a -> Prop]
-retrieveFun = retrieve
-
 --shift :: ((a -> Cont Prop) -> Cont Prop) -> Cont a
 --shift h = Cont (\c -> runCont (h (\v -> Cont (\c' -> c' (c v)))) id)
 
@@ -63,6 +60,3 @@ instance Run b => Run (a -> b) where
 
 reset :: Run a => I a -> I a
 reset = I . map pure . retrieve
-
-resetFun :: I (Exp -> Prop) -> I (Exp -> Prop)
-resetFun = reset
