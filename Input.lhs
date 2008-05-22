@@ -1,3 +1,6 @@
+
+%if style == newcode
+\begin{code}
 module Input where
 
 import FOL
@@ -5,16 +8,19 @@ import FOL
 import Control.Monad
 import Text.ParserCombinators.ReadP hiding (get)
 import Text.PrettyPrint.HughesPJ hiding (char)
+\end{code}
+%endif
 
---
--- * External interface
---
 
+\begin{code}
 data Input = Statement Prop
            | YNQuest Prop
            | WhQuest (Exp -> Prop)
            | CountQuest (Exp -> Prop)
+\end{code}
 
+%if style == newcode
+\begin{code}
 instance Eq Input where
     x == y = show x == show y
 
@@ -98,3 +104,5 @@ readWrappedFun s = do skipSpaces
                       p <- readProp 0
                       string ")"
                       return (abstract v p)
+\end{code}
+%endif
