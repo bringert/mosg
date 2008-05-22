@@ -8,6 +8,9 @@ import Control.Monad
 import Data.List
 import Data.Monoid
 
+--import Data.Foldable
+--import Data.Traversable
+
 newtype Cont a = Cont { runCont :: (a -> Prop) -> Prop }
 
 instance Functor Cont where
@@ -56,7 +59,16 @@ instance Run Prop where
     run x = runCont x id
 
 instance Run b => Run (a -> b) where
-    run x = \e -> run (x <*> pure e)
+    run x = \e -> run (fmap ($ e) x)
+{-
+--    run = lift' run
+
+lift' :: Functor m => (m a -> a) -> (m (b -> a) -> (b -> a))
+lift' f x = \e -> f (fmap ($ e) x)
+
+lift'' :: (Traversable f, Applicative g) => (f a -> a) -> f (g a) -> g a
+lift'' f x = fmap f (sequenceA x)
+-}
 
 reset :: Run a => I a -> I a
 reset = I . map pure . retrieve
