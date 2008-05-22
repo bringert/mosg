@@ -14,11 +14,13 @@
 %format ===          = "="
 %format =/=          = "\neq"
 % FIXME: need better <=*=> symbol
-%format <=*=>        = "\longleftrightarrow\hspace{-1.5em}\varoast\hspace{1em}"
+%format <=*=>        = "\bothways"
 %format thereIs      = "\exists"
 %format forAll       = "\forall"
 %format neg          = "\lnot"
 %endif
+
+\newcommand{\bothways}{\ensuremath{\mathaccent\varoast\longleftrightarrow}} 
 
 \title{First-order Logic Semantics for the 
 Grammatical Framework Resource Grammar Library}
