@@ -43,6 +43,39 @@ for the Grammatical Framework resource grammar library.
 
 \section{Introduction}
 
+\subsection{Grammatical Framework}
+
+Grammatical Framework (GF)~\cite{ranta04:gf} is a type-theoretical 
+grammar formalism. GF makes a distinction between abstract and concrete syntax.
+GF supports grammar libraries.
+
+\subsection{GF Resource Library}
+
+The GF Resource Library~\cite{ranta08:resource-library} implements
+a large fragment of the syntax and complete morphologies for
+(currently) eleven languages. The grammars for all languages
+have a common abstract syntax, though there are also some
+language-specific extensions.
+
+\subsection{Applications}
+
+This semantics was originally created as part of a natural language question
+answering system. The system accepts natural language statements and can
+answer natural language questions based on these statements.
+An overview of the system architecture is shown in Figure~\ref{fig:qa-overview}.
+The system accepts string input from the user.
+This is parsed with a GF resource grammar.
+The resulting abstract syntax term(s) are fed to the semantic
+interpretation component, which constructs zero or more
+formulas for each abstract syntax term.
+Note that since the semantics is incomplete, some abstract
+syntax term are not assigned a meaning.
+
+\begin{figure}
+FIXME: put overview picture here
+\caption{Overview of the question answering system.}
+\label{fig:qa-overview}
+\end{figure}
 
 
 %if style == newcode
@@ -62,7 +95,21 @@ for the Grammatical Framework resource grammar library.
 
 %endif
 
+
 \section{Interpretation Rules}
+
+\section{Overview}
+
+\subsection{Output Language}
+
+The target of the interpretation is lambda calculus over 
+first-order logic, with some annotations that indicate the 
+type of utterance.
+
+%if style /= newcode
+%include Input.lhs
+%endif
+
 
 \subsection{Text: Texts}
 
