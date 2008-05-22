@@ -62,7 +62,7 @@ data N2 = Owner
 iUtt :: Utt -> [Input]
 iUtt (DeclCl cl) = map Statement $ retrieve $ iCl cl
 iUtt (QuestCl cl) = map YNQuest $ retrieve $ iCl cl
-iUtt (QuestVP ip vp) = map WhQuest $ retrieveFun $ iIP ip <*> iVP vp
+iUtt (QuestVP ip vp) = map WhQuest $ retrieve $ iIP ip <*> iVP vp
 
 iIP :: IP -> I ((Exp -> Prop) -> (Exp -> Prop))
 iIP Who = pure id

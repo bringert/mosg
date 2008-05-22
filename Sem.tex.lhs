@@ -117,12 +117,12 @@ Uncontracted negated question clause (English only).
 
 ``whom does John love''
 
-> iQCl (GQuestSlash ip slash) = pure ($) <*> iIP ip <*> retrieveFun (iSlash slash)
+> iQCl (GQuestSlash ip slash) = pure ($) <*> iIP ip <*> retrieve (iSlash slash)
 
 % Fool highlighting: $
 ``who walks''
 
-> iQCl (GQuestVP ip vp)       = pure ($) <*> iIP ip <*> retrieveFun (iVP vp)
+> iQCl (GQuestVP ip vp)       = pure ($) <*> iIP ip <*> retrieve (iVP vp)
 
 ``which houses are there''
 
@@ -140,7 +140,7 @@ Uncontracted negated question clause (English only).
 
 ``which man''
 
-> iIP (GIDetCN idet GNoNum GNoOrd cn) = pure (iIDet idet) <*> retrieveFun (iCN cn)
+> iIP (GIDetCN idet GNoNum GNoOrd cn) = pure (iIDet idet) <*> retrieve (iCN cn)
 > iIP GwhatSg_IP = pure (\u -> WhQuest u)
 > iIP GwhoSg_IP  = pure (\u -> WhQuest u)
 
@@ -384,7 +384,7 @@ The complement is a scope island, to get rid of the
 reading of sentences such as ``every dog is an animal'' 
 where they are all the same individual.
 
-> iComp (GCompNP np) = resetFun (pure (\ni x -> ni (\y -> x === y)) <*> iNP np)
+> iComp (GCompNP np) = reset (pure (\ni x -> ni (\y -> x === y)) <*> iNP np)
 
 
 \subsection{NP: Noun Phrases}
@@ -471,7 +471,7 @@ Complementation of a two-place noun, e.g. ``owner of a dog''.
 Common noun modified by a relative clause, e.g. ``man who sleeps''.
 Relative clauses are scope islands.
 
-> iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> resetFun (iRS rs)
+> iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> reset (iRS rs)
 
 A noun used as a common noun, e.g. ``dog''.
 

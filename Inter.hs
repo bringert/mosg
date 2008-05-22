@@ -1,4 +1,4 @@
-module Inter (I, (<=*=>), cont, retrieve, retrieveFun, reset, resetFun) where
+module Inter (I, (<=*=>), cont, retrieve, reset) where
 
 import FOL
 import Input
@@ -10,15 +10,21 @@ import Data.Monoid
 
 newtype Cont a = Cont { runCont :: (a -> Prop) -> Prop }
 
+instance Functor Cont where
+    fmap f x = pure f <*> x
+
+instance Applicative Cont where
+    pure a   = Cont ($ a)
+    x <*> y  = Cont $ \c -> runCont x $ \f -> runCont y $ \a -> (c (f a))
+
 newtype I a = I [Cont a]
 
 instance Functor I where
     fmap f x = pure f <*> x
 
 instance Applicative I where
-    pure a         = I [Cont ($ a)]
-    I xs <*> I ys  = I [Cont $ \c -> runCont x $ \f -> runCont y $ \a -> (c (f a))
-                        | x <- xs, y <- ys]
+    pure a         = I [pure a]
+    I xs <*> I ys  = I [x <*> y | x <- xs, y <- ys]
 
 instance Alternative I where
     empty          = I []
@@ -34,11 +40,11 @@ x <=*=> y = x <*> y <|> y <**> x
 cont :: ((a -> Prop) -> Prop) -> I a
 cont f = I [Cont f]
 
-retrieve :: I Prop -> [Prop]
-retrieve (I xs) = [runCont x id | x <- xs]
+retrieve :: Run a => I a -> [a]
+retrieve (I xs) = map run xs
 
 retrieveFun :: I (a -> Prop) -> [a -> Prop]
-retrieveFun (I xs) = [\e -> runCont x ($ e) | x <- xs]
+retrieveFun = retrieve
 
 --shift :: ((a -> Cont Prop) -> Cont Prop) -> Cont a
 --shift h = Cont (\c -> runCont (h (\v -> Cont (\c' -> c' (c v)))) id)
@@ -46,8 +52,17 @@ retrieveFun (I xs) = [\e -> runCont x ($ e) | x <- xs]
 --reset :: Cont Prop -> Cont Prop
 --reset (Cont m) = Cont $ \c -> c (m id)
 
-reset :: I Prop -> I Prop
-reset (I xs) = I [Cont ($ runCont x id) | x <- xs]
+class Run a where
+    run :: Cont a -> a
+
+instance Run Prop where
+    run x = runCont x id
+
+instance Run b => Run (a -> b) where
+    run x = \e -> run (x <*> pure e)
+
+reset :: Run a => I a -> I a
+reset = I . map pure . retrieve
 
 resetFun :: I (Exp -> Prop) -> I (Exp -> Prop)
-resetFun (I xs) = I [Cont ($ \e -> runCont x ($ e)) | x <- xs]
+resetFun = reset
