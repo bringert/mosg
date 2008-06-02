@@ -5,7 +5,7 @@ GHCFLAGS = -package gf-embed -package folkung
 
 INSTALL_DIR = $(HOME)/public_html/mosg
 
-.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas test Union.gfcc GSyntax.hs showpdf install clean distclean
+.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas test Union.pgf GSyntax.hs showpdf install clean distclean
 
 mosg.fcgi: Sem.hs
 	ghc $(GHCFLAGS) -package fastcgi --make -o $@ MainFastCGI.hs
@@ -41,13 +41,13 @@ $(NAME).pdf: $(NAME).tex
 showpdf: $(NAME).pdf
 	acroread $^
 
-Union.gfcc GSyntax.hs:
-	gfc --make -haskell grammar/UnionEng.gf # grammar/UnionSwe.gf grammar/UnionNor.gf grammar/UnionGer.gf
+Union.pgf GSyntax.hs:
+	gfc --make --output-format=haskell grammar/UnionEng.gf # grammar/UnionSwe.gf grammar/UnionNor.gf grammar/UnionGer.gf
 
 install:
 	mkdir -p $(INSTALL_DIR)
 	chmod a+w $(INSTALL_DIR)
-	cp mosg.cgi Union.gfcc $(INSTALL_DIR)
+	cp mosg.cgi Union.pgf $(INSTALL_DIR)
 
 clean:
 	-rm -f *.aux *.dvi *.log *.blg *.bbl *.toc *.rel *.ptb
@@ -56,4 +56,4 @@ clean:
 	-rm -f mosg.cgi mosg.fcgi mosg mosg-fracas
 
 distclean: clean
-	-rm -f Union.gfcc GSyntax.hs
+	-rm -f Union.pgf GSyntax.hs
