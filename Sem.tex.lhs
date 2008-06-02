@@ -92,7 +92,7 @@ FIXME: put overview picture here
 > {-# OPTIONS_GHC -fwarn-incomplete-patterns -fwarn-overlapping-patterns #-}
 > module Sem where
 
-> import GSyntax
+> import Syntax
 > import FOL
 > import Inter
 > import Input

@@ -1,6 +1,6 @@
 module ResultXHtml (statistics, writeOutput) where
 
-import GSyntax
+import Syntax
 import Mosg
 import Problem
 import Input_XHtml

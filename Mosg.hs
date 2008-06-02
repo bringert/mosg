@@ -1,12 +1,12 @@
 module Mosg (Theory, Mode(..), Result(..), Output(..), Answer(..), Input(..), Grammar, 
              loadGrammar, grammarModificationTime, handleText) where
 
-import GSyntax
+import Syntax
 import FOL
 import ReasonFolkung
 import Input
 import Sem
-import GF.GFCC.API
+import PGF
 import Otter
 
 import Control.Exception
@@ -21,7 +21,7 @@ import System.Time
 data Mode = Pessimistic | Optimistic
   deriving (Show, Read, Eq, Ord)
 
-type Grammar = MultiGrammar
+type Grammar = PGF
 
 type Error = String
 
@@ -63,7 +63,7 @@ grammarFile :: FilePath
 grammarFile = "Union.pgf"
 
 loadGrammar :: IO Grammar
-loadGrammar = file2grammar grammarFile
+loadGrammar = readPGF grammarFile
 
 grammarModificationTime :: IO ClockTime
 grammarModificationTime = getModificationTime grammarFile
