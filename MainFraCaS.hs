@@ -7,18 +7,25 @@ import Control.Exception
 import Control.Monad
 import Data.List
 import Data.Maybe
+import System.Console.GetOpt
 import System.Environment
 import Text.Printf
+
+
+data Options = Options {
+      optProblems :: [String],
+      optMode :: Mode
+    }
 
 putRule = putStrLn "----------------------------------------------------------------------"
 
 
-testProblem :: Mode -> Grammar -> Problem -> IO ProblemResult
-testProblem mode gr p = 
+testProblem :: Options -> Grammar -> Problem -> IO ProblemResult
+testProblem opts gr p = 
     do putRule
        putStrLn $ "FraCaS problem " ++ problemId p
        (prs,th) <- addPremises [] (problemPremises p)
-       qr <- handleText mode gr th (problemQuestion p)
+       qr <- handleText (optMode opts) gr th (problemQuestion p)
        return $ ProblemResult { 
                     problem = p,
                     premiseResults = prs,
@@ -33,25 +40,53 @@ testProblem mode gr p =
 
     addPremise :: Theory -> String -> IO (Result,Theory)
     addPremise th s = 
-        do res <- handleText mode gr th s
+        do res <- handleText (optMode opts) gr th s
            let th' = case resOutput res of
                        AcceptedStatement p -> th ++ [p]
                        _                   -> th
            return (res, th')
 
-testProblems :: Mode -> Grammar -> [Problem] -> IO [ProblemResult]
-testProblems mode gr ps = 
-    do rs <- mapM (testProblem mode gr) ps
+testProblems :: Options -> Grammar -> [Problem] -> IO [ProblemResult]
+testProblems opts gr ps = 
+    do rs <- mapM (testProblem opts gr) ps
        let statLine (s,xs) = s ++ (if null xs then "" else ": " ++ unwords (map (problemId) xs))
        mapM_ (putStrLn . statLine) (statistics rs)
        return rs
 
+readProblems :: Options -> IO [Problem]
+readProblems opts = 
+    do let keepProblem p | null (optProblems opts) = True
+                         | otherwise = dropWhile (=='0') (problemId p) `elem` optProblems opts
+       liftM (filter keepProblem) $ readFraCaS "fracas/fracas.xml"
+
 main :: IO ()
 main = do args <- getArgs
-          let keepProblem p | null args = True
-                            | otherwise = dropWhile (=='0') (problemId p) `elem` args
-          let mode = Pessimistic
+          opts <- parseOptions args
           gr <- loadGrammar
-          problems <- liftM (filter keepProblem) $ readFraCaS "fracas/fracas.xml"
-          rs <- testProblems mode gr problems
-          writeOutput mode rs
+          problems <- readProblems opts
+          rs <- testProblems opts gr problems
+          writeOutput (optMode opts) rs
+
+defaultOptions :: Options
+defaultOptions = Options {
+                   optProblems = [],
+                   optMode = Pessimistic
+                 }
+
+parseOptions :: [String] -> IO Options
+parseOptions args = 
+    do let (flags, probs, errs) = getOpt RequireOrder optDescrs args
+       when (not (null errs)) $ fail $ unlines errs
+       liftM (foldr ($) defaultOptions) $ sequence flags
+
+optDescrs :: [OptDescr (IO (Options -> Options))]
+optDescrs = [Option ['m'] ["mode"] (ReqArg setMode "MODE") "Use MODE, where MODE = Optimistic | Pessimistic"]
+  where
+    setMode x = readM x >>= \m -> return $ \o -> o { optMode = m }
+
+
+readM :: (Read a, Monad m) => String -> m a
+readM s = case reads s of
+                [(x,"")] -> return x
+                _        -> fail $ "read failed: " ++ show s
+

@@ -64,17 +64,18 @@ statistics rs =
                      | otherwise = 100 * fromIntegral x / fromIntegral t
 
 
-mkOutputDir :: IO FilePath
-mkOutputDir = 
+mkOutputDir :: Mode -> IO FilePath
+mkOutputDir mode = 
     do t <- getZonedTime
        let dir = formatTime defaultTimeLocale "output-%Y%m%d-%H%M%S" t
+                 ++ "-" ++ show mode
        createDirectory dir
        return dir
 
 
 writeOutput :: Mode -> [ProblemResult] -> IO ()
 writeOutput mode rs = 
-    do dir <- mkOutputDir
+    do dir <- mkOutputDir mode
        let htmlFile = dir </> "index.html"
        copyFile "style.css" (dir </> "style.css")
        copyFile "ui.js" (dir </> "ui.js")
