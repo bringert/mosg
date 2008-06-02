@@ -60,7 +60,7 @@ instance Show Output where
     show (CountAnswer n) = "The answer is: " ++ show n
 
 grammarFile :: FilePath
-grammarFile = "Union.pgf"
+grammarFile = "Syntax.pgf"
 
 loadGrammar :: IO Grammar
 loadGrammar = readPGF grammarFile
