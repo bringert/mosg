@@ -77,7 +77,7 @@ parseOptions :: [String] -> IO Options
 parseOptions args = 
     do let (flags, probs, errs) = getOpt RequireOrder optDescrs args
        when (not (null errs)) $ fail $ unlines errs
-       liftM (foldr ($) defaultOptions) $ sequence flags
+       liftM (foldr ($) (defaultOptions { optProblems = probs })) $ sequence flags
 
 optDescrs :: [OptDescr (IO (Options -> Options))]
 optDescrs = [Option ['m'] ["mode"] (ReqArg setMode "MODE") "Use MODE, where MODE = Optimistic | Pessimistic"]
