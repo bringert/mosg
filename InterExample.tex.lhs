@@ -9,24 +9,18 @@
 %subst conid a     = "\mathsf{" a "}"
 
 %format <*>          = "\varoast"
-%format <|>         = "\ \langle|\rangle\ "
 %format &&&          = "\land"
 %format |||          = "\lor"
 %format ==>          = "\Rightarrow"
 %format <=>          = "\Leftrightarrow"
 %format ===          = "="
 %format =/=          = "\neq"
-% FIXME: need better <=*=> symbol
-%format <=*=>        = "\bothways"
 %format thereIs      = "\exists"
 %format forAll       = "\forall"
 %format neg          = "\lnot"
 
 %format I            = "\mathcal{I}"
 %endif
-
-%\newcommand{\bothways}{\ensuremath{\mathaccent\varoast\longleftrightarrow}} 
-\newcommand{\bothways}{\ensuremath{\varoast\!\!\varoast}} 
 
 \title{Delimited Continuations, Applicative Functors and Natural Language Semantics}
 
