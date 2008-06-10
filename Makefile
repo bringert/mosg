@@ -32,14 +32,20 @@ unhandled:
 %.tex: %.tex.lhs
 	lhs2TeX $^ > $@
 
-$(NAME).pdf: $(NAME).tex
-	pdflatex $(NAME).tex
-	bibtex $(NAME)
-	pdflatex $(NAME).tex
-	pdflatex $(NAME).tex
+Sem.pdf: Sem.tex
+	pdflatex Sem.tex
+	bibtex Sem
+	pdflatex Sem.tex
+	pdflatex Sem.tex
 
-showpdf: $(NAME).pdf
+showpdf: Sem.pdf
 	acroread $^
+
+InterExample.hs: InterExample.tex.lhs
+	lhs2TeX --newcode $^ > $@
+
+InterExample.pdf: InterExample.tex
+	pdflatex InterExample.tex
 
 Syntax.pgf Syntax.hs:
 	gfc --make --output-format=haskell --name=Syntax grammar/UnionEng.gf # grammar/UnionSwe.gf grammar/UnionNor.gf grammar/UnionGer.gf
