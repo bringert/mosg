@@ -127,36 +127,6 @@
 
 \subsection{Applicative Continuation Functor}
 
-%if False
-
-> newtype Cont a = Cont { runCont :: (a -> Prop) -> Prop }
-
-> newtype I a = I [Cont a]
-
-> instance Functor I where
->   fmap f x = pure f <*> x
-
-> instance Applicative I where
->   pure a         = I [Cont (\c -> c a)]
->   I xs <*> I ys  = I $ map Cont $ concat
->                        [[  \c -> runCont x  (\f  -> runCont y (\a -> (c (f a)))),
->                            \c -> runCont y  (\a  -> runCont x (\f -> (c (f a))))]
->                          | x <- xs, y <- ys]
-
-> (<|>) :: I a -> I a -> I a
-> I xs <|> I ys  = I (xs++ys)
-
-> (<=*=>) :: I (a -> b) -> I a -> I b
-> x <=*=> y = (x <*> y) <|> (pure (flip ($)) <*> y <*> x)
-
-> cont :: ((a -> Prop) -> Prop) -> I a
-> cont f = I [Cont f]
-
-> retrieve :: I Prop -> [Prop]
-> retrieve (I xs) = map (\x -> runCont x id) xs
-
-%else
-
 > data Cont a = Pure a | Cont ((a -> Prop) -> Prop)
 
 > runCont :: Cont a -> ((a -> Prop) -> Prop)
@@ -205,7 +175,6 @@ in the implementation of |<*>| for |I|.
 > instance Run b => Run (a -> b) where
 >   run x = \e -> run (fmap (\f -> f e) x)
 
-%endif
 
 \section{FOL}
 
