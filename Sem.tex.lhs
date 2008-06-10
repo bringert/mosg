@@ -485,6 +485,11 @@ A proper name used as a noun phrase, e.g. ``John''.
 > iNP Geverybody_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
 > iNP Geverything_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
 
+``anybody'', ``anything''. Interpreted just like ``everybody'', ``everything''.
+
+> iNP Ganybody_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Ganything_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
+
 ``somebody'', ``something''
 
 > iNP Gsomebody_NP = cont (\c -> thereIs (\x -> c (\u -> u x)))
@@ -593,6 +598,23 @@ the second property.
 
 > iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 
+``both''
+
+> iDet Gboth_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& v x &&& u y &&& v y &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
+
+``either'', interpreted as ``there are at least two, and at least one of them does it''
+
+> iDet Geither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> c (\u v -> u x &&& u y &&& x =/= y &&& (v x ||| v y)))))
+
+``many'', ``several'', ``few'', ``a few'', ``most''. FIXME: cheating, we them as existentials
+
+> iDet Gmany_Det     = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Gseveral_Det  = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Ga8few_Det    = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Gfew_Det      = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Gmost_Det    = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+
+
 %if unhandled
 > iDet det = unhandled "iDet" det
 %endif
@@ -604,6 +626,11 @@ Interpretation of quantifiers in plural positions.
 ``(men)''.
 
 > iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
+
+``the (men)''
+
+> iQuant_Pl GDefArt = pure (\u v n -> n (\x -> u x &&& v x))
+
 
 FIXME: universal as subject, existential in object position?
 
@@ -679,8 +706,9 @@ Cardinal number with words.
 > iNum (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
 
 Cardinal modified by a numeral-modifying adjective, e.g. ``almost five''.
+FIXME: cheating, we ignore the adjective
 
-> --iNum (GAdNum adn num) = iAdN adn <*> iNum num
+> iNum (GAdNum adn num) = iNum num
 
 %if unhandled
 > iNum num = unhandled "iNum" num
@@ -712,6 +740,11 @@ Comparative form of an adjective, e.g. ``bigger''.
 Reflexive use of a two-place adjective, e.g. ``equivalent to itself''.
 
 > iAP (GReflA2 a2) = pure (\ia x -> ia (\u -> u x) x) <*> iA2 a2
+
+Adverb modifying an adjectival phrase.
+FIXME: we are cheating by ignoring the adverb
+
+> iAP (GAdAP ada ap) = iAP ap
 
 %if unhandled
 > iAP ap = unhandled "iAP" ap
