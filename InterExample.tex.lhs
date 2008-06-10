@@ -64,13 +64,9 @@
 >   deriving Show
 %endif
 
-%if False
-
 > data RS = RelVP VP 
 %if style == newcode
 >   deriving Show
-%endif
-
 %endif
 
 > data VP  = ComplV2 V2 NP | UseV V
@@ -89,14 +85,8 @@
 %endif
 
 > data CN  = UseN N
-
-%if False
-
 >          | ComplN2 N2 NP 
 >          | RelCN CN RS
-
-%endif
-
 %if style == newcode
 >   deriving Show
 %endif
@@ -116,13 +106,9 @@
 >   deriving Show
 %endif
 
-%if False
-
 > data N2 = Owner
 %if style == newcode
 >   deriving Show
-%endif
-
 %endif
 
 
@@ -130,13 +116,18 @@
 
 \subsection{Applicative Functors}
 
+> infixl 4 <*>, <**>
+
 > class Functor f => Applicative f where
 >   pure :: a -> f a
 >   (<*>) :: f (a -> b) -> f a -> f b
 
+> (<**>) :: Applicative f => f a -> f (a -> b) -> f b
+> x <**> y = pure (flip ($)) <*> x <*> y
 
 \subsection{Applicative Continuation Functor}
 
+%if False
 
 > newtype Cont a = Cont { runCont :: (a -> Prop) -> Prop }
 
@@ -164,6 +155,58 @@
 > retrieve :: I Prop -> [Prop]
 > retrieve (I xs) = map (\x -> runCont x id) xs
 
+%else
+
+> data Cont a = Pure a | Cont ((a -> Prop) -> Prop)
+
+> runCont :: Cont a -> ((a -> Prop) -> Prop)
+> runCont (Pure x) = \c -> c x
+> runCont (Cont r) = r
+
+> instance Functor Cont where
+>   fmap f x = pure f <*> x
+
+We have a special case for |Pure f <*> Pure x| to avoid redundant copies
+in the implementation of |<*>| for |I|.
+
+> instance Applicative Cont where
+>   pure a = Pure a
+>   Pure f <*> Pure x  = Pure (f x)
+>   x <*> y = Cont $ \c -> runCont x $ \f -> runCont y $ \a -> c (f a)
+
+> newtype I a = I [Cont a]
+
+> instance Functor I where
+>   fmap f x = pure f <*> x
+
+> instance Applicative I where
+>   pure a             = I [Pure a]
+>   I xs <*> I ys      = I [z | x <- xs, y <- ys, z <- app x y]
+>     where
+>       app :: Cont (a -> b) -> Cont a -> [Cont b]
+>       app x@(Cont _) y@(Cont _)  = [x <*> y, y <**> x]
+>       app x y                    = [x <*> y]
+
+> cont :: ((a -> Prop) -> Prop) -> I a
+> cont f = I [Cont f]
+
+> reset :: Run a => I a -> I a
+> reset x = I [pure y | y <- retrieve x]
+
+> retrieve :: Run a => I a -> [a]
+> retrieve (I xs) = map run xs
+
+> class Run a where
+>   run :: Cont a -> a
+
+> instance Run Prop where
+>   run x = runCont x id
+
+> instance Run b => Run (a -> b) where
+>   run x = \e -> run (fmap (\f -> f e) x)
+
+%endif
+
 \section{FOL}
 
 \begin{spec}
@@ -186,32 +229,21 @@ data Exp = Const String | Var String
 
 \section{Semantics}
 
-% In the verb phrase predication rule
-% we need to allow quantifiers from either child to have priority.
-
 > iS :: S -> I Prop
-> iS (PredVP np vp) = iNP np <=*=> iVP vp
-
-%if False
+> iS (PredVP np vp) = iNP np <*> iVP vp
 
 Relative clauses are scope islands, and thus use |reset|.
 
 > iRS :: RS -> I (Exp -> Prop)
 > iRS (RelVP vp) = reset (iVP vp)
 
-%endif
-
 > iVP :: VP -> I (Exp -> Prop)
-> iVP (ComplV2 v2 np) = iV2 v2 <=*=> iNP np
+> iVP (ComplV2 v2 np) = iV2 v2 <*> iNP np
 > iVP (UseV v) = iV v
 
-% Here, we allow either quantifiers from the determiner,
-% or quantifiers from the common noun, e.g.~from
-% arguments of an N2, to take priority.
-
 > iNP :: NP -> I ((Exp -> Prop) -> Prop)
-> iNP (DetCN det cn) = iDet det <=*=> iCN cn
-> iNP Everyone  = cont (\c -> forAll  (\x -> c (\u -> u x)))
+> iNP (DetCN det cn) = iDet det <*> iCN cn
+> iNP Everyone  = cont (\c -> forAll (\x -> c (\u -> u x)))
 > iNP Someone   = cont (\c -> thereIs (\x -> c (\u -> u x)))
 > iNP John      = pure (\f -> f (Const "john"))
 
@@ -222,12 +254,10 @@ Relative clauses are scope islands, and thus use |reset|.
 > iCN :: CN -> I (Exp -> Prop)
 > iCN (UseN n) = iN n
 
-%if False
+Is this a scope island?
 
 > iCN (ComplN2 n2 np) = iN2 n2 <*> iNP np
 > iCN (RelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> iRS rs
-
-%endif
 
 > iV :: V -> I (Exp -> Prop)
 > iV Sleep = pure (\x -> Pred "sleep" [x])
@@ -240,21 +270,17 @@ Relative clauses are scope islands, and thus use |reset|.
 > iN Woman  = pure (\x -> Pred "woman" [x])
 > iN Shake  = pure (\x -> Pred "shake" [x])
 
-%if False
-
 > iN2 :: N2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iN2 Owner = pure (\o x -> o (\y -> Pred "owner" [x,y]))
-
-%endif
 
 
 % \section{Testing}
 
 %if style == newcode
 
-> utt1 = PredVP (DetCN Every (UseN Man)) (ComplV2 Love (DetCN A (UseN Woman)))
+> utt0 = PredVP (DetCN Every (UseN Man)) (UseV Sleep)
 
-%if False
+> utt1 = PredVP (DetCN Every (UseN Man)) (ComplV2 Love (DetCN A (UseN Woman)))
 
 > utt2 = PredVP (DetCN A (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Shake)))))) (UseV Sleep)
 
@@ -266,9 +292,7 @@ Relative clauses are scope islands, and thus use |reset|.
 >                  (ComplV2 Love 
 >                   (DetCN A (RelCN (UseN Woman) (RelVP (ComplV2 Love (DetCN A (UseN Shake)))))))
 
-%endif
-
-> test = mapM_ print . nub . retrieve . iS
+> test = mapM_ print . {- nub . -} retrieve . iS
 
 %endif
 
