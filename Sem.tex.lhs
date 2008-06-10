@@ -9,20 +9,22 @@
 %include polycode.fmt
 
 %if style /= newcode
+% Use sans-serif font for constructors 
+%subst conid a     = "\mathsf{" a "}"
+
 %format <*>          = "\varoast"
 %format &&&          = "\land"
 %format |||          = "\lor"
 %format ==>          = "\Rightarrow"
+%format <=>          = "\Leftrightarrow"
 %format ===          = "="
 %format =/=          = "\neq"
-% FIXME: need better <=*=> symbol
-%format <=*=>        = "\bothways"
 %format thereIs      = "\exists"
 %format forAll       = "\forall"
 %format neg          = "\lnot"
-%endif
 
-\newcommand{\bothways}{\ensuremath{\mathaccent\varoast\longleftrightarrow}} 
+%format I            = "\mathcal{I}"
+%endif
 
 \title{First-order Logic Semantics for the 
 Grammatical Framework Resource Grammar Library}
@@ -250,9 +252,8 @@ Declarative clauses are interpreted as propositions.
 > iCl :: GCl -> I Prop
 
 Verb phrase predication, e.g. ``John sleeps''.
-Either the NP or the VP can have scope priority
 
-> iCl (GPredVP np vp) = iNP np <=*=> iVP vp
+> iCl (GPredVP np vp) = iNP np <*> iVP vp
 
 Cleft constructions, e.g. ``it is John who sleeps''.
 
