@@ -11,7 +11,7 @@ import Text.XHtml
 
 cgiMain :: Grammar -> CGI CGIResult
 cgiMain gr = 
-    do mode <- fmap (fromMaybe Pessimistic) $ readInput "mode"
+    do mode <- fmap (fromMaybe Interactive) $ readInput "mode"
        mit <- getInput "input_text"
        thi <- getMultiInput "theory"
        let th = map read thi
@@ -53,7 +53,7 @@ inputForm defmode th mis = form ! [method "post"] << fs
         textInput = textfield "input_text" ! [size "60"] +++ focus "input_text"
         selectInput is = ordList [label << [radio "input_text" (show i), toHtml i] | i <- is ]
         mode = "Mode: " +++ [label << (radio "mode" (show m) ! (if m == defmode then [checked] else []) +++ show m)
-             | m <- [Optimistic,Pessimistic]]
+             | m <- [Optimistic,Pessimistic,Interactive]]
 
 knowledgeSection :: Theory -> Html
 knowledgeSection th = toHtml

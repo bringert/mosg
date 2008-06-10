@@ -18,7 +18,7 @@ import System.Directory
 import System.IO
 import System.Time
 
-data Mode = Pessimistic | Optimistic
+data Mode = Pessimistic | Optimistic | Interactive
   deriving (Show, Read, Eq, Ord)
 
 type Grammar = PGF
@@ -150,7 +150,7 @@ handleText mode gr th i =
              StatementType 
                  | null consistent  -> return NoConsistent
                  | null informative -> return NoInformative
-                 | otherwise        -> liftM AcceptedStatement (ambiguousStatement mode informative)
+                 | otherwise        -> ambiguousStatement mode informative
              QuestionType  -> answerQuestion mode th qs
        return $ Result {
                     resInputText = i,
@@ -169,31 +169,34 @@ answerQuestion mode th qs =
            whq = [p | WhQuest p <- qs]
            cnt = [p | CountQuest p <- qs]
        case (ynq,whq,cnt) of
-         (_,[],[])   -> do q <- ambiguousQuestion mode ynq
-                           answer <- isTrue th q
-                           return (YNQAnswer answer)
+         (_,[],[])   -> do mq <- ambiguousQuestion mode ynq
+                           case mq of
+                             Nothing -> return Ambiguous
+                             Just q  -> liftM YNQAnswer $ isTrue th q
          ([],[q],[]) -> do answer <- answerWhQuest th q
                            return (WhAnswer answer)
          ([],[],[q]) -> do answer <- answerWhQuest th q
                            return (CountAnswer (length (nub answer)))
 
-ambiguousStatement :: Mode -> [Prop] -> IO Prop
-ambiguousStatement _ [p] = return p
+ambiguousStatement :: Mode -> [Prop] -> IO Output
+ambiguousStatement _ [p] = return $ AcceptedStatement p
 ambiguousStatement Pessimistic ps = 
     do debug $ "Ambiguous statement, pessimistically using disjunction."
-       return $ ors ps
+       return $ AcceptedStatement $ ors ps
 ambiguousStatement Optimistic ps = 
     do debug $ "Ambiguous statement, optimistically using conjunction."
-       return $ ands ps
+       return $ AcceptedStatement $ ands ps
+ambiguousStatement Interactive ps = return Ambiguous
 
-ambiguousQuestion :: Mode -> [Prop] -> IO Prop
-ambiguousQuestion _ [p] = return p
+ambiguousQuestion :: Mode -> [Prop] -> IO (Maybe Prop)
+ambiguousQuestion _ [p] = return $ Just p
 ambiguousQuestion Pessimistic ps =     
     do debug $ "Ambiguous question, pessimistically using conjunction."
-       return $ ands ps
+       return $ Just $ ands ps
 ambiguousQuestion Optimistic ps =     
     do debug $ "Ambiguous question, optimistically using disjunction."
-       return $ ors ps
+       return $ Just $ ors ps
+ambiguousQuestion Interactive ps = return Nothing
 
 nubEquivalent :: Theory -> [Prop] -> IO [Prop]
 nubEquivalent th = nubByM (\p q -> liftM (==Yes) $ areEquivalent th p q)
