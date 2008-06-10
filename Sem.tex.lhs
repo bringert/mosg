@@ -109,8 +109,6 @@ FIXME: put overview picture here
 
 \section{Interpretation Rules}
 
-\section{Overview}
-
 \subsection{Output Language}
 
 The target of the interpretation is lambda calculus over 
