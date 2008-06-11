@@ -33,7 +33,7 @@ Grammatical Framework Resource Grammar Library}
   Bj\"{o}rn Bringert \\
   Department of Computer Science and Engineering \\
   Chalmers University of Technology and University of Gothenburg\\
-  \texttt{bringert{\char64}cs.chalmers.se}}
+  \texttt{bringert{\char64}chalmers.se}}
 
 %if phd
 
