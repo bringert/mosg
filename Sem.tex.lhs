@@ -173,7 +173,7 @@ Uncontracted negated question clause (English only).
 
 ``whom does John love''
 
-> iQCl (GQuestSlash ip slash) = pure ($) <*> iIP ip <*> retrieve (iSlash slash)
+%> iQCl (GQuestSlash ip slash) = pure ($) <*> iIP ip <*> retrieve (iSlash slash)
 
 % Fool highlighting: $
 ``who walks''
@@ -194,9 +194,9 @@ Uncontracted negated question clause (English only).
 
 > iIP :: GIP -> [(Exp -> Prop) -> Input]
 
-``which man''
+``who''
 
-> iIP (GIDetCN idet GNoNum GNoOrd cn) = pure (iIDet idet) <*> retrieve (iCN cn)
+> iIP (GIdetCN idet cn) = pure (iIDet idet) <*> retrieve (iCN cn)
 > iIP GwhatSg_IP = pure (\u -> WhQuest u)
 > iIP GwhoSg_IP  = pure (\u -> WhQuest u)
 
@@ -206,9 +206,10 @@ Uncontracted negated question clause (English only).
 
 \subsection{IDet: Interrogative Determiners}
 
+``which man''
+
 > iIDet :: GIDet -> (Exp -> Prop) -> (Exp -> Prop) -> Input
 > iIDet Ghow8many_IDet = (\u v -> CountQuest (\x -> u x &&& v x))
-> iIDet GwhichSg_IDet  = (\u v -> WhQuest (\x -> u x &&& v x))
 
 %if unhandled
 > iIDet idet = unhandled "iIDet" idet
@@ -220,7 +221,6 @@ Declarative sentences are interpreted as propositions.
 
 > iS :: GS -> I Prop
 > iS (GConjS conj ss) = pure foldr1 <*> iConj conj <*> iListS ss
-> iS (GDConjS dconj ss) = pure foldr1 <*> iDConj dconj <*> iListS ss
 
 Ignores tense and anteriority for now.
 
@@ -236,6 +236,10 @@ Adverbial phrase modifying a sentence.
 This uses a special |iAdv| version.
 
 > iS (GAdvS adv s) = iAdv_S adv <*> iS s
+
+%if unhandled
+> iS s = unhandled "iS" s
+%endif
 
 A list of sentences is interpreted as a list of propositions.
 Each sentence is a scope island.
@@ -302,7 +306,7 @@ in the relative clause.
 Forms a relative clause from a relative pronoun and a clause missing
 a noun phrase, e.g. ``which a woman loves''.
 
-> iRCl (GRelSlash rp slash) = iRP rp <*> iSlash slash
+%> iRCl (GRelSlash rp slash) = iRP rp <*> iSlash slash
 
 Relative clause with realtive pronoun and verb phrase, e.g. ``that
 sleeps''.
@@ -328,31 +332,27 @@ Relative pronoun, ``that'', ``which'', ``whose''.
 
 > iRP GIdRP = pure (\u -> u)
 
-Relative pronoun for animates (English only), ``who''.
-
-> iRP Gwho_RP = pure (\u -> u)
-
 
 \subsection{Slash: Clauses Missing NP}
 
 Clause missing NP, S/NP in GPSG.
 
-> iSlash :: GSlash -> I (Exp -> Prop)
-
-``(which) a woman kills in Paris''
-
-> iSlash (GAdvSlash slash adv) = iAdv adv <*> iSlash slash
-
-``(which) a woman kills''
-
-> iSlash (GSlashV2 np v2) = pure (\ni vi x -> ni (vi (\u -> u x)))
->                              <*> iNP np <*> iV2 v2
+%> iSlash :: GSlash -> I (Exp -> Prop)
+%
+%``(which) a woman kills in Paris''
+%
+%> iSlash (GAdvSlash slash adv) = iAdv adv <*> iSlash slash
+%
+%``(which) a woman kills''
+%
+%> iSlash (GSlashV2 np v2) = pure (\ni vi x -> ni (vi (\u -> u x)))
+%>                              <*> iNP np <*> iV2 v2
 
 %if unhandled
-> iSlash slash = unhandled "iSlash" slash
+%> iSlash slash = unhandled "iSlash" slash
 %endif
 
-\subsection{Conj, DConj: Conjunctions}
+\subsection{Conj: Conjunctions}
 
 Conjuctions are used in several places in the grammar, for example
 on noun phrases, adjectival phrases and sentences.
@@ -367,17 +367,13 @@ on noun phrases, adjectival phrases and sentences.
 
 > iConj Gor_Conj = pure (|||)
 
-Two-part conjuctions.
-
-> iDConj :: GDConj -> I (Prop -> Prop -> Prop)
-
 ``both ... and ...'', intepreted as and.
 
-> iDConj Gboth7and_DConj = pure (&&&)
+> iConj Gboth7and_DConj = pure (&&&)
 
 ``either ... or ...'', interpreted as exclusive or.
 
-> iDConj Geither7or_DConj = pure (\p q -> (p &&& neg q) ||| (neg p &&& q))
+> iConj Geither7or_DConj = pure (\p q -> (p &&& neg q) ||| (neg p &&& q))
 
 
 \subsection{VP: Verb Phrases}
@@ -388,13 +384,7 @@ Two-part conjuctions.
 
 > iVP (GAdvVP vp adv) = iAdv adv <*> iVP vp
 
-``kills John''
-
-> iVP (GComplV2 v2 np) = iV2 v2 <*> iNP np
-
-``gives a dog to Mary''
-
-> iVP (GComplV3 v3 np1 np2) = iV3 v3 <*> iNP np1 <*> iNP np2
+> iVP (GComplSlash vpslash np) = iVPSlash vpslash <*> iNP np
 
 ``is killed''
 
@@ -402,7 +392,7 @@ Two-part conjuctions.
 
 ``kills itself''
 
-> iVP (GReflV2 v2) = pure (\i x -> i (\u -> u x) x) <*> iV2 v2
+> iVP (GReflVP vpslash) = pure (\i x -> i (\u -> u x) x) <*> iVPSlash vpslash
 
 ``is beautiful''
 
@@ -418,6 +408,22 @@ Two-part conjuctions.
 
 %if unhandled
 > iVP vp = unhandled "iVP" vp
+%endif
+
+\subsection{VPSlash: VP/NP}
+
+> iVPSlash :: GVPSlash -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+
+``kills (John)''
+
+> iVPSlash (GSlashV2a v2) = iV2 v2
+
+``gives a dog (to Mary)''
+
+> iVPSlash (GSlash2V3 v3 np) = iV3 v3 <*> iNP np
+
+%if unhandled
+> iVPSlash vpslash = unhandled "iVPSlash" vpslash
 %endif
 
 \subsection{Comp: Complement of Copula}
@@ -454,7 +460,6 @@ e.g. ``Paris at midnight''.
 Noun phrase conjunction, e.g. ``John and a man''.
 
 > iNP (GConjNP conj nps)   = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iConj conj   <*> iListNP nps
-> iNP (GDConjNP dconj nps) = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iDConj dconj <*> iListNP nps
 
 Noun phrase formation from determiner and common noun,
 e.g. ``every man''.
@@ -464,6 +469,22 @@ the quantifiers to the top level of the nearest enclosing scope
 island. 
 
 > iNP (GDetCN det cn) = iDet det <*> iCN cn
+
+``the man''
+
+> iNP (GDetArtSg art cn) = iArt art <*> iCN cn
+
+``the men''
+FIXME: more than one
+FIXME: plurals: universial vs existential
+
+> iNP (GDetArtPl art cn) = iArt art <*> iCN cn
+
+Mass expressions.
+FIXME: universal as subject, existential in object position?
+FIXME: use cont?
+
+> iNP (GMassNP cn) = pure (\u v -> forAll (\x -> u x &&& v x)) <*> iCN cn
 
 ``only the men''. FIXME: what should we do about predet + plural?
 
@@ -541,9 +562,9 @@ A two-place noun used without a complement, e.g. ``owner''.
 
 > iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni (\u -> u y) x)) <*> iN2 n2
 
-A three-place noun used without a complement, e.g. ``distance''.
+% A three-place noun used without a complement, e.g. ``distance''.
 
-> iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
+% > iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
 
 Compound common noun, e.g. ``Labour MP''.
 The interpretation below is rather silly. For example,
@@ -561,17 +582,27 @@ party.
 
 > iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
-A plural determiner, with a quantifier, a cardinal number
-and an ordinal, e.g. ``the two best''.
-FIXME: does this mean more than one?
-FIXME: wrong, indef pl should be universal as subject, existential as object
+A determiner, with a quantifier, a cardinal number
+and an ordinal, e.g. ``these five best''.
 
-> iDet (GDetPl quant num ord) = pure (\qi ni oi u v -> ni (qi (oi u) v) (oi u) v) <*> iQuant_Pl quant <*> iNum num <*> iOrd ord
+> iDet (GDetQuantOrd quant num ord) = pure (\qi ni oi u v -> ni (qi (oi u) v) (oi u) v) <*> iQuant quant <*> iNum num <*> iOrd ord
 
-A singular determiner with a quantifier and an ordinal, e.g.
-``the second''.
+A determiner with a quantifier with a cardinal number,
+but no ordinal, e.g. ``these five''.
 
-> iDet (GDetSg quant ord) = pure (.) <*> iQuant_Sg quant <*> iOrd ord
+> iDet (GDetQuant quant num) = pure (\qi ni u v -> ni (qi u v) u v) <*> iQuant quant <*> iNum num
+
+%``the five best''
+
+%FIXME: wrong, indef pl should be universal as subject, existential as object
+
+%> iDet (GDetArtOrd art num ord) = iArt art <*> iNum num <*> iOrd ord
+
+% ``the five''
+
+% ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+
+%> iDet (GDetArtCard art card) = pure (\ai ci u v -> ci (\q -> ai u v) u v) <*> iArt art <*> iCard card
 
 ``every''
 
@@ -618,62 +649,48 @@ the second property.
 > iDet det = unhandled "iDet" det
 %endif
 
-Interpretation of quantifiers in plural positions.
+\subsection{Art: Articles}
 
-> iQuant_Pl :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
+> iArt :: GArt -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
-``(men)''.
+Indefinite article, ``a (man)'', or ``(men)''.
+FIXME: treat singulars and plurals differently
 
-> iQuant_Pl GIndefArt = pure (\u v n -> n (\x -> u x &&& v x))
+> iArt GIndefArt = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
-``the (men)''
+Definite article, ``the (man)'', or ``the (men)''.
+FIXME: treat singulars and plurals differently
 
-> iQuant_Pl GDefArt = pure (\u v n -> n (\x -> u x &&& v x))
-
-
-FIXME: universal as subject, existential in object position?
-
-> iQuant_Pl GMassDet = pure (\u v n -> n (\x -> u x &&& v x))
+> iArt GDefArt = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> u x &&& v x &&& (u y ==> y === x)))))
 
 %if unhandled
-> iQuant_Pl quant = unhandled "iQuant_Pl" quant
+> iArt art = unhandled "iArt" art
 %endif
 
-Interpretation of quantifiers in singular positions.
 
-> iQuant_Sg :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+\subsection{Quant: Quantifier}
 
-``the (man)''
+> iQuant :: GQuant ->  I ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
 
-> iQuant_Sg GDefArt = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> u x &&& v x &&& (u y ==> y === x)))))
+% > iQuant Gthat_Quant =
 
-``a (man''
-
-> iQuant_Sg GIndefArt = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+% > iQuant Gthis_Quant =
 
 ``John's (dog)''.
-
 FIXME: Should this really allow more than one? Now ``john's dog'' allows john to have several dogs.
 
-> iQuant_Sg (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
-
-``water'' FIXME: universal as subject, existential in object position?
-
-> iQuant_Sg GMassDet = cont (\c -> forAll (\x -> c (\u v -> u x &&& v x)))
+%> iQuant (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
 
 %if unhandled
-> iQuant_Sg quant = unhandled "iQuant_Sg" quant
+> iQuant quant = unhandled "iQuant" quant
 %endif
+
 
 \subsection{Ord: Ordinal Number}
 
 Ordinals and superlatives.
 
 > iOrd :: GOrd -> I ((Exp -> Prop) -> (Exp -> Prop))
-
-No ordinal or superlative.
-
-> iOrd GNoOrd = pure id
 
 Superlative adjective, e.g. ``largest''.
 
@@ -684,30 +701,40 @@ Superlative adjective, e.g. ``largest''.
 > iOrd ord = unhandled "iOrd" ord
 %endif
 
-\subsection{Num: Cardinal Number}
+\subsection{Card: Cardinal Number}
 
 Cardinal numbers.
 
-> iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
-
-No cardinality.
-
-FIXME: wrong, indef pl without num should be universal as subject, existential as object
-
-> iNum GNoNum = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
+> iCard :: GCard -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
 Cardinal number with digits.
 
-> iNum (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
+> iCard (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
 
 Cardinal number with words.
 
-> iNum (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
+> iCard (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
 
 Cardinal modified by a numeral-modifying adjective, e.g. ``almost five''.
 FIXME: cheating, we ignore the adjective
 
-> iNum (GAdNum adn num) = iNum num
+> iCard (GAdNum adn card) = iCard card
+
+%if unhandled
+> iCard card = unhandled "iCard" card
+%endif
+
+\subsection{Num: Number determining element}
+
+> iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+
+> iNum GNumSg = pure (\q u v -> thereIs (\x -> q (\p -> p x)))
+
+> iNum GNumPl = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
+
+A fixed number of distinct objects, given by a cardinal number.
+
+> iNum (GNumCard card) = iCard card
 
 %if unhandled
 > iNum num = unhandled "iNum" num
@@ -726,7 +753,6 @@ Complementation of a two-place adjective, e.g. ``equivalent to a dog''.
 Adjectival phrase conjunction.
 
 > iAP (GConjAP conj aps)   = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iConj conj   <*> iListAP aps
-> iAP (GDConjAP dconj aps) = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iDConj dconj <*> iListAP aps
 
 Positive form of an adjective, e.g. ``big''.
 
@@ -762,7 +788,6 @@ Adverbial phrases that can modify NP, CN, VP.
 Adverbial phrase conjunction.
 
 > iAdv (GConjAdv conj advs)   = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iConj conj   <*> iListAdv advs
-> iAdv (GDConjAdv dconj advs) = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iDConj dconj <*> iListAdv advs
 
 Prepositional phrase.
 

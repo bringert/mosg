@@ -8,8 +8,8 @@ abstract Core =
     part_Prep, possess_Prep,
 -- Verb
     UseVS
-   ],
-   Time
+   ]{- ,
+   Time -}
 
 ** {
 

@@ -15,7 +15,7 @@ concrete English of EnglishAbs =
     every_Det, only_Predet
 ],
 
-  TimeEng,
+--  TimeEng,
 
   ExtraEng - [VPI, ListVPI, BaseVPI, ConsVPI, MkVPI, ConjVPI, ComplVPIVV],
 
@@ -36,14 +36,6 @@ concrete English of EnglishAbs =
 lin TNoPunct phr = { s = phr.s } ;
 
 lin
-    who_RP = {
-      s = table {
-        RC Gen => "whose" ; 
-        RC _   => "who" ;
-        RPrep  => "whom"
-        } ;
-      a = RNoAg
-      } ;
 
     either_Det = mkDeterminer Sg "either" ;
 
@@ -95,7 +87,7 @@ lin
 
     BareInfVS vs np vp = insertObj (\\_ => np.s!Acc ++ infVP True vp np.a) (predV vs) ;
 
-    VerbCN v cn = {s = \\n,c => v.s ! VPresPart ++ cn.s ! n ! c };
+    VerbCN v cn = {s = \\n,c => v.s ! VPresPart ++ cn.s ! n ! c; g = cn.g};
 
 {-
     NumOfNP num np = {
