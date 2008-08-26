@@ -859,7 +859,7 @@ Adjectives when used comparatively. FIXME: weird.
 
 > iA_comparative :: GA -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
 > iA_comparative a@(GUseA2 _) = unhandled "iA_comparative" a
-> iA_comparative a = pure (\o x -> o (\y -> Pred (comparativeSymbol a) [x,y]))
+> iA_comparative a = pure (\o x -> o (\y -> comparative_Pred a x y))
 
 Two-place adjectives, e.g. ``equivalent to ...''
 
@@ -970,10 +970,13 @@ Integer interpretation. Used above for letter and digit numerals.
 --
 
 > of_Pred :: Exp -> Exp -> Prop
-> of_Pred x y = Pred "special_of" [x,y]
+> of_Pred x y = special "of" [x,y]
 
-> comparativeSymbol :: GA -> String
-> comparativeSymbol = ("more_" ++) . symbol
+> comparative_Pred :: GA -> Exp -> Exp -> Prop
+> comparative_Pred a x y = special ("more_" ++ symbol a) [x,y]
+
+> special :: String -> [Exp] -> Prop
+> special x = Pred ("special_" ++ x) 
 
 --
 -- * Utilities
