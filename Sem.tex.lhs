@@ -173,7 +173,7 @@ Uncontracted negated question clause (English only).
 
 ``whom does John love''
 
-%> iQCl (GQuestSlash ip slash) = pure ($) <*> iIP ip <*> retrieve (iSlash slash)
+> iQCl (GQuestSlash ip clslash) = pure ($) <*> iIP ip <*> retrieve (iClSlash clslash)
 
 % Fool highlighting: $
 ``who walks''
@@ -306,7 +306,7 @@ in the relative clause.
 Forms a relative clause from a relative pronoun and a clause missing
 a noun phrase, e.g. ``which a woman loves''.
 
-%> iRCl (GRelSlash rp slash) = iRP rp <*> iSlash slash
+> iRCl (GRelSlash rp clslash) = iRP rp <*> iClSlash clslash
 
 Relative clause with realtive pronoun and verb phrase, e.g. ``that
 sleeps''.
@@ -337,19 +337,19 @@ Relative pronoun, ``that'', ``which'', ``whose''.
 
 Clause missing NP, S/NP in GPSG.
 
-%> iSlash :: GSlash -> I (Exp -> Prop)
-%
-%``(which) a woman kills in Paris''
-%
-%> iSlash (GAdvSlash slash adv) = iAdv adv <*> iSlash slash
-%
-%``(which) a woman kills''
-%
-%> iSlash (GSlashV2 np v2) = pure (\ni vi x -> ni (vi (\u -> u x)))
-%>                              <*> iNP np <*> iV2 v2
+> iClSlash :: GClSlash -> I (Exp -> Prop)
+
+``(which) a woman kills in Paris''
+
+> iClSlash (GAdvSlash clslash adv) = iAdv adv <*> iClSlash clslash
+
+``(which) a woman kills''
+
+> iClSlash (GSlashVP np vpslash) = 
+>    pure (\ni vi x -> ni (vi (\u -> u x))) <*> iNP np <*> iVPSlash vpslash
 
 %if unhandled
-%> iSlash slash = unhandled "iSlash" slash
+> iClSlash clslash = unhandled "iClSlash" clslash
 %endif
 
 \subsection{Conj: Conjunctions}
