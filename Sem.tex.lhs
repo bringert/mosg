@@ -737,9 +737,8 @@ Cardinal number with words.
 %> iCard (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
 
 Cardinal modified by a numeral-modifying adjective, e.g. ``almost five''.
-FIXME: cheating, we ignore the adjective
 
-%> iCard (GAdNum adn card) = iCard card
+> iCard (GAdNum adn card) = iAdN adn <*> iCard card
 
 %if unhandled
 > iCard card = unhandled "iCard" card
@@ -747,6 +746,16 @@ FIXME: cheating, we ignore the adjective
 
 Cardinal numbers. Takes three arguments, the interpretation of an article 
 or quantifier, the restriction and the sentence predicate.
+
+\subsection{AdN: Numeral-modifying adverb}
+
+> iAdN :: GAdN -> I ((((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop) -> (((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop))
+
+``at least (five men)''.
+
+> iAdN Gat8least_AdN = pure (\n -> n)
+
+> iAdN adn = unhandled "iAdN" adn
 
 \subsection{Num: Number determining element}
 
