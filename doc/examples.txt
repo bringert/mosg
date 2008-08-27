@@ -1,2 +1,13 @@
+== Complete interactions ==
+
+1. every woman sleeps.
+2. no man sleeps.
+3. John is either a man or a woman.
+4. John sleeps.
+5. is John a woman?
+
+== Random sentences ==
+
 John sees a cat which a woman loves
 every man loves a woman
+
