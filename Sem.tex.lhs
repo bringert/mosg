@@ -472,13 +472,13 @@ island.
 
 ``the man''
 
-> iNP (GDetArtSg art cn) = iArt art <*> iCN cn
+> iNP (GDetArtSg art cn) = iNum GNumSg <*> iArt art <*> iCN cn
 
 ``the men''
 FIXME: more than one
 FIXME: plurals: universial vs existential
 
-> iNP (GDetArtPl art cn) = iArt art <*> iCN cn
+> iNP (GDetArtPl art cn) = iNum GNumPl <*> iArt art <*> iCN cn
 
 Mass expressions.
 FIXME: universal as subject, existential in object position?
@@ -579,13 +579,16 @@ party.
 
 \subsection{Predet: Pre-determiners}
 
-% (\p -> p(John))
-
-% "only John sleeps" => sleep(John) & not (exist X. sleep(X) & not (X = John))
-
 > iPredet :: GPredet -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop))
 
-> iPredet only_Predet = pure (\np u -> np u &&& neg (thereIs (\x -> u x &&& np (\y -> x =/= y))))
+``only (John)''
+FIXME: doesn't work correctly with plurals
+
+> iPredet Gonly_Predet = pure (\np v -> np v &&& neg (thereIs (\x -> v x &&& np (\y -> x =/= y))))
+
+``all (the men)''
+
+> iPredet Gall_Predet = pure (\np -> np)
 
 > iPredet predet = unhandled "iPredet" predet
 
@@ -597,22 +600,22 @@ party.
 A determiner, with a quantifier, a cardinal number
 and an ordinal, e.g. ``these five best''.
 
-%> iDet (GDetQuantOrd quant num ord) = pure (\ni qi oi u v -> ni qi (oi u) v) <*> iNum num <*> iQuant quant <*> iOrd ord
+> iDet (GDetQuantOrd quant num ord) = pure (\ni qi oi u v -> ni (\p -> p) (qi (oi u)) v) <*> iNum num <*> iQuant quant <*> iOrd ord
 
 A determiner with a quantifier with a cardinal number,
 but no ordinal, e.g. ``these five''.
 
-%> iDet (GDetQuant quant num) = iNum num <*> iQuant quant
+> iDet (GDetQuant quant num) = pure (\ni qi u v -> ni (\p -> p) (qi u) v) <*> iNum num <*> iQuant quant
 
 %``the five best''
 
 %FIXME: wrong, indef pl should be universal as subject, existential as object
 
-%> iDet (GDetArtOrd art num ord) = pure (\ni ai oi u v -> ni ai (oi u) v) <*> iNum num <*> iArt art <*> iOrd ord
+> iDet (GDetArtOrd art num ord) = pure (\ni ai oi u v -> ni ai (oi u) v) <*> iNum num <*> iArt art <*> iOrd ord
 
 % ``the five''
 
-%> iDet (GDetArtCard art card) = iCard card <*> iArt art
+> iDet (GDetArtCard art card) = iCard card <*> iArt art
 
 ``every''
 
@@ -661,17 +664,17 @@ the second property.
 
 \subsection{Art: Articles}
 
-> iArt :: GArt -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+The article only decides definiteness, not number.
+
+> iArt :: GArt -> I ((Exp -> Prop) -> (Exp -> Prop))
 
 Indefinite article, ``a (man)'', or ``(men)''.
-FIXME: treat singulars and plurals differently
 
-> iArt GIndefArt = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iArt GIndefArt = pure (\u -> u)
 
 Definite article, ``the (man)'', or ``the (men)''.
-FIXME: treat singulars and plurals differently
 
-> iArt GDefArt = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> u x &&& v x &&& (u y ==> y === x)))))
+> iArt GDefArt = pure (\u x -> u x &&& forAll (\y -> u y ==> y === x))
 
 %if unhandled
 > iArt art = unhandled "iArt" art
@@ -680,20 +683,24 @@ FIXME: treat singulars and plurals differently
 
 \subsection{Quant: Quantifier}
 
-> iQuant :: GQuant ->  I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+Quantifiers are treated as adjectives.
 
-Demonstrative, ``that (man)''. Treated as definite.
+> iQuant :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop))
 
-> iQuant Gthat_Quant = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> special "that" [x] &&& u x &&& v x &&& (special "that" [x] &&& u y ==> y === x)))))
+Demonstrative, ``that (man)''.
+FIXME: should also make it definite
+
+> iQuant Gthat_Quant = pure (\u x -> u x &&& special "this" [x])
 
 Demonstrative,``this (man)''.
+FIXME: should also make it definite
 
-> iQuant Gthis_Quant = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> special "this" [x] &&& u x &&& v x &&& (special "this" [x] &&& u y ==> y === x)))))
+> iQuant Gthis_Quant = pure (\u x -> u x &&& special "that" [x])
 
 ``John's (dog)''.
 FIXME: Should this really allow more than one? Now ``john's dog'' allows john to have several dogs.
 
-> iQuant (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
+> iQuant (GGenNP np) = pure (\ni u x -> u x &&& ni (\y -> of_Pred y x)) <*> iNP np
 
 %if unhandled
 > iQuant quant = unhandled "iQuant" quant
@@ -719,7 +726,7 @@ Superlative adjective, e.g. ``largest''.
 Cardinal numbers. Takes three arguments, the interpretation of an article 
 or quantifier, the restriction and the sentence predicate.
 
-> iCard :: GCard -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+> iCard :: GCard -> I (((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
 Cardinal number with digits.
 
@@ -738,13 +745,23 @@ FIXME: cheating, we ignore the adjective
 > iCard card = unhandled "iCard" card
 %endif
 
+Cardinal numbers. Takes three arguments, the interpretation of an article 
+or quantifier, the restriction and the sentence predicate.
+
 \subsection{Num: Number determining element}
 
-> iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+> iNum :: GNum -> I (((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
-%> iNum GNumSg = pure (\q u v -> thereIs (\x -> q (\p -> p x)))
+> iNum GNumSg = cont (\c -> thereIs (\x -> c (\ai u v -> ai u x &&& v x)))
 
-%> iNum GNumPl = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
+Plural, interpreted as meaning ``at least two''.
+FIXME: causes inconsistency with definite article
+
+% men sleep / the men sleep
+% (?[A,B] : A != B & man(A) & man(B)) & (![C] : man(C) => sleep(C))
+% i.e. "at least two men" and "all men sleep"
+
+> iNum GNumPl = cont (\c -> thereIs (\x -> thereIs (\y -> x =/= y &&& c (\ai u v -> ai u x &&& v x &&& ai u y &&& v y))))
 
 A fixed number of distinct objects, given by a cardinal number.
 
