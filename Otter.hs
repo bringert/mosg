@@ -9,7 +9,7 @@ import System.IO
 import Text.PrettyPrint.HughesPJ hiding (char)
 import Text.Regex.Posix
 
-otterPath = "/Users/bjorn/bin/otter"
+otterPath = "/Users/bringert/bin/otter"
 
 --
 -- * Calling otter
