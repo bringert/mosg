@@ -488,7 +488,7 @@ FIXME: use cont?
 
 ``only the men''. FIXME: what should we do about predet + plural?
 
-> -- iNP (GPredetNP predet np) = (iPredet predet) (iNP np)
+> iNP (GPredetNP predet np) = iPredet predet <*> iNP np
 
 A noun phrase modified by a passive voice transitive verb, 
 e.g. ``a woman killed''.
@@ -576,6 +576,18 @@ party.
 %if unhandled
 > iCN cn = unhandled "iCN" cn
 %endif
+
+\subsection{Predet: Pre-determiners}
+
+% (\p -> p(John))
+
+% "only John sleeps" => sleep(John) & not (exist X. sleep(X) & not (X = John))
+
+> iPredet :: GPredet -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop))
+
+> iPredet only_Predet = pure (\np u -> np u &&& neg (thereIs (\x -> u x &&& np (\y -> x =/= y))))
+
+> iPredet predet = unhandled "iPredet" predet
 
 \subsection{Det: Determiners}
 
