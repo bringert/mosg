@@ -585,24 +585,22 @@ party.
 A determiner, with a quantifier, a cardinal number
 and an ordinal, e.g. ``these five best''.
 
-> iDet (GDetQuantOrd quant num ord) = pure (\qi ni oi u v -> ni (qi (oi u) v) (oi u) v) <*> iQuant quant <*> iNum num <*> iOrd ord
+%> iDet (GDetQuantOrd quant num ord) = pure (\ni qi oi u v -> ni qi (oi u) v) <*> iNum num <*> iQuant quant <*> iOrd ord
 
 A determiner with a quantifier with a cardinal number,
 but no ordinal, e.g. ``these five''.
 
-> iDet (GDetQuant quant num) = pure (\qi ni u v -> ni (qi u v) u v) <*> iQuant quant <*> iNum num
+%> iDet (GDetQuant quant num) = iNum num <*> iQuant quant
 
 %``the five best''
 
 %FIXME: wrong, indef pl should be universal as subject, existential as object
 
-%> iDet (GDetArtOrd art num ord) = iArt art <*> iNum num <*> iOrd ord
+%> iDet (GDetArtOrd art num ord) = pure (\ni ai oi u v -> ni ai (oi u) v) <*> iNum num <*> iArt art <*> iOrd ord
 
 % ``the five''
 
-% ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
-
-%> iDet (GDetArtCard art card) = pure (\ai ci u v -> ci (\q -> ai u v) u v) <*> iArt art <*> iCard card
+%> iDet (GDetArtCard art card) = iCard card <*> iArt art
 
 ``every''
 
@@ -670,16 +668,20 @@ FIXME: treat singulars and plurals differently
 
 \subsection{Quant: Quantifier}
 
-> iQuant :: GQuant ->  I ((Exp -> Prop) -> (Exp -> Prop) -> ((Exp -> Prop) -> Prop) -> Prop)
+> iQuant :: GQuant ->  I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
-% > iQuant Gthat_Quant =
+Demonstrative, ``that (man)''. Treated as definite.
 
-% > iQuant Gthis_Quant =
+> iQuant Gthat_Quant = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> special "that" [x] &&& u x &&& v x &&& (special "that" [x] &&& u y ==> y === x)))))
+
+Demonstrative,``this (man)''.
+
+> iQuant Gthis_Quant = cont (\c -> thereIs (\x -> forAll (\y -> c (\u v -> special "this" [x] &&& u x &&& v x &&& (special "this" [x] &&& u y ==> y === x)))))
 
 ``John's (dog)''.
 FIXME: Should this really allow more than one? Now ``john's dog'' allows john to have several dogs.
 
-%> iQuant (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
+> iQuant (GGenNP np) = cont (\c -> thereIs (\x -> c (\ni u v -> u x &&& v x &&& ni (\y -> of_Pred y x)))) <*> iNP np
 
 %if unhandled
 > iQuant quant = unhandled "iQuant" quant
@@ -694,8 +696,7 @@ Ordinals and superlatives.
 
 Superlative adjective, e.g. ``largest''.
 
-> iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp ($ y) x)) <*> iA_comparative a
-% Fool highlighting: $
+> iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp (\p -> p y) x)) <*> iA_comparative a
 
 %if unhandled
 > iOrd ord = unhandled "iOrd" ord
@@ -703,22 +704,23 @@ Superlative adjective, e.g. ``largest''.
 
 \subsection{Card: Cardinal Number}
 
-Cardinal numbers.
+Cardinal numbers. Takes three arguments, the interpretation of an article 
+or quantifier, the restriction and the sentence predicate.
 
 > iCard :: GCard -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
 Cardinal number with digits.
 
-> iCard (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
+%> iCard (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
 
 Cardinal number with words.
 
-> iCard (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
+%> iCard (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
 
 Cardinal modified by a numeral-modifying adjective, e.g. ``almost five''.
 FIXME: cheating, we ignore the adjective
 
-> iCard (GAdNum adn card) = iCard card
+%> iCard (GAdNum adn card) = iCard card
 
 %if unhandled
 > iCard card = unhandled "iCard" card
@@ -728,9 +730,9 @@ FIXME: cheating, we ignore the adjective
 
 > iNum :: GNum -> I ((((Exp -> Prop) -> Prop) -> Prop) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
-> iNum GNumSg = pure (\q u v -> thereIs (\x -> q (\p -> p x)))
+%> iNum GNumSg = pure (\q u v -> thereIs (\x -> q (\p -> p x)))
 
-> iNum GNumPl = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
+%> iNum GNumPl = pure (\q u v -> forAll (\x -> u x ==> v x) &&& thereIs (\x -> thereIs (\y -> x =/= y &&& q (\p -> p x &&& p y))))
 
 A fixed number of distinct objects, given by a cardinal number.
 
