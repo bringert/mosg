@@ -1,8 +1,0 @@
-abstract NorwegianAbs = 
-  Core,
-
-  Lexicon
-
- ** {
-
-}

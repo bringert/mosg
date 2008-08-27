@@ -48,7 +48,7 @@ InterExample.pdf: InterExample.tex
 	pdflatex InterExample.tex
 
 Syntax.pgf Syntax.hs:
-	gfc --make --output-format=haskell --name=Syntax grammar/UnionEng.gf # grammar/UnionSwe.gf grammar/UnionNor.gf grammar/UnionGer.gf
+	gfc --make --output-format=haskell --name=Syntax grammar/English.gf # grammar/Swedish.gf # grammar/Norwegian.gf grammar/German.gf
 
 install:
 	mkdir -p $(INSTALL_DIR)

@@ -1,15 +1,17 @@
-concrete Norwegian of NorwegianAbs = 
+concrete Norwegian of Abstract = 
 
   GrammarNor - 
    [
 -- Phrase
     UttImpSg, UttImpPl, UttImpPol,
-    UttIP, UttIAdv, UttNP, UttAdv, UttVP
--- Text
+    UttIP, UttIAdv, UttNP, UttAdv, UttVP,
+-- Structural
+    part_Prep, possess_Prep,
+-- Verb
+    UseVS,
+]
 
-],
-
-  LexiconNor
+  , LexiconNor
 
 ** open ResNor, MorphoNor in {
 

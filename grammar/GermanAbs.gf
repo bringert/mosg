@@ -1,8 +1,0 @@
-abstract GermanAbs = 
-  Core,
-
-  Lexicon
-
- ** {
-
-}

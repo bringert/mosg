@@ -1,5 +1,5 @@
 --# -path=.:alltenses:time
-concrete English of EnglishAbs = 
+concrete English of Abstract = 
 
   GrammarEng - 
    [
@@ -19,8 +19,8 @@ concrete English of EnglishAbs =
 
   ExtraEng - [VPI, ListVPI, BaseVPI, ConsVPI, MkVPI, ConjVPI, ComplVPIVV],
 
---  LexiconEng
-
+  LexiconEng
+{-
   LexiconEng [N3, distance_N3, 
 	      VQ, wonder_VQ, 
 	      V2A, paint_V2A, 
@@ -30,7 +30,7 @@ concrete English of EnglishAbs =
 	      VA, become_VA],
   BigLexEng,
   FraCaSLexiconEng
-
+-}
 ** open ResEng, MorphoEng, Prelude in {
 
 lin TNoPunct phr = { s = phr.s } ;

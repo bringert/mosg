@@ -1,1 +1,0 @@
-abstract Union = EnglishAbs {- , SwedishAbs, NorwegianAbs, GermanAbs -} ** {} 
