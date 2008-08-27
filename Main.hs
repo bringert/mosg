@@ -10,11 +10,11 @@ loop gr th =
        case minput of
          Nothing -> return th
          Just input -> do addHistory input
-                          out <- handleText gr th input
-                          let th' = case out of
+                          res <- handleText Pessimistic gr th input
+                          let th' = case resOutput res of
                                       AcceptedStatement p -> th ++ [p]
                                       _ -> th
-                          putStrLn $ show out
+                          putStrLn $ show res
                           loop gr th'
 
 main :: IO ()

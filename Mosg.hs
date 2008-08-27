@@ -34,8 +34,10 @@ data Result = Result {
       resConsistentInformative :: [Prop],
       resOutput :: Output
     }
+ deriving Show
 
 data InputType = StatementType | QuestionType | AmbiguousType
+ deriving Show
 
 data Output = NoParse
             | NoInterpretation
