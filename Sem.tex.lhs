@@ -384,6 +384,8 @@ on noun phrases, adjectival phrases and sentences.
 
 > iVP (GAdvVP vp adv) = iAdv adv <*> iVP vp
 
+> iVP (GAdVVP adv vp) = iAdV adv <*> iVP vp
+
 > iVP (GComplSlash vpslash np) = iVPSlash vpslash <*> iNP np
 
 ``is killed''
@@ -851,6 +853,14 @@ Interpretation of sentence-modifying adverbial phrases.
 
 %if unhandled
 > iAdv_S adv = unhandled "iAdv_S" adv
+%endif
+
+\subsection{AdV: Adverb directly attached to verb}
+
+> iAdV :: GAdV -> I ((Exp -> Prop) -> (Exp -> Prop))
+
+%if unhandled
+> iAdV adv = unhandled "iAdV" adv
 %endif
 
 \subsection{Subj: Subjunctions}
