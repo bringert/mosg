@@ -8,8 +8,8 @@ fun PredVP : NP -> VP -> S ;
 
 fun RelVP : VP -> RS ;
 
-fun ComplV2 : V2 -> NP -> VP ;
 fun UseV : V -> VP ;
+fun ComplV2 : V2 -> NP -> VP ;
 
 fun DetCN : Det -> CN -> NP ;
 fun Everyone : NP ;

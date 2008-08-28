@@ -7,8 +7,8 @@ lin PredVP np vp = { s = np.s ++ vp.s } ;
 
 lin RelVP vp = { s = "who" ++ vp.s } ;
 
-lin ComplV2 v2 np = { s = v2.s ++ np.s } ;
 lin UseV v = { s = v.s } ;
+lin ComplV2 v2 np = { s = v2.s ++ np.s } ;
 
 lin DetCN det cn = { s = det.s ++ cn.s } ;
 lin Everyone = { s = "everyone" } ;

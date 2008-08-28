@@ -1,7 +1,10 @@
 NAME=gf-reason
 
 LHS_INCLUDES= \
-  ../Sem.tex.lhs
+  ../Sem.tex.lhs \
+  examples/toy/Toy.gf.lhs \
+  examples/toy/ToyEng.gf.lhs \
+  examples/toy/SemToy.tex.lhs
 
 LHS2TEX_FLAGS= --path=..:
 
@@ -27,6 +30,12 @@ $(NAME).tex: $(LHS_INCLUDES)
 	cat gf-lhs-preamble.lhs > $@
 	grep -v '^--' $< >> $@
 	cat gf-lhs-postamble.lhs >> $@
+
+%.hs: %.tex.lhs
+	lhs2TeX --newcode $< > $@
+
+testtoy: examples/toy/SemToy.hs
+	ghci -i.. $<
 
 clean:
 	-rm -f $(NAME).tex

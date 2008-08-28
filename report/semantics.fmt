@@ -1,0 +1,20 @@
+%include polycode.fmt
+
+%if style /= newcode
+% Use sans-serif font for constructors 
+%subst conid a     = "\mathsf{" a "}"
+
+%format <*>          = "\varoast"
+%format &&&          = "\land"
+%format |||          = "\lor"
+%format ==>          = "\Rightarrow"
+%format <=>          = "\Leftrightarrow"
+%format ===          = "="
+%format =/=          = "\neq"
+%format thereIs      = "\exists"
+%format forAll       = "\forall"
+%format neg          = "\lnot"
+
+%format I            = "\mathcal{I}"
+%endif
+

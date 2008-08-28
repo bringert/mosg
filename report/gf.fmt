@@ -1,0 +1,41 @@
+%include polycode.fmt
+
+% GF keywords
+
+%format abstract = "\mathbf{abstract}"
+%format concrete = "\mathbf{concrete}"
+%format cat = "\mathbf{cat}"
+%format fun = "\mathbf{fun}"
+%format open = "\mathbf{open}"
+%format oper = "\mathbf{oper}"
+%format flags = "\mathbf{flags}"
+%format incomplete = "\mathbf{incomplete}"
+%format lincat = "\mathbf{lincat}"
+%format lin = "\mathbf{lin}"
+%format param = "\mathbf{param}"
+%format printname = "\mathbf{printname}"
+%format variants = "\mathbf{variants}"
+%format table = "\mathbf{table}"
+%format with = "\mathbf{with}"
+
+% GF flag names
+
+%format startcat = "\mathsf{startcat}"
+%format language = "\mathsf{language}"
+
+% Dot is not composition in GF
+%format . = "."
+
+% Use sans-serif font for constructors 
+%subst conid a     = "\mathsf{" a "}"
+
+%subst string a         = "\text{\textquotedblleft " a "\textquotedblright}"
+
+% add some space before braces
+%format { = "\hspace{1.5pt}\lbrace"
+
+% hack to allow GF pragmas
+%subst comment a = "\mbox{\onelinecomment\" a "}"
+
+% Allow linebreaks at spaces
+%subst space = "\protect\linebreak[1]\;"
