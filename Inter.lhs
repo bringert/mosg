@@ -1,7 +1,6 @@
 > module Inter (I, cont, retrieve, reset) where
 
 > import FOL
-> import Input
 
 > import Control.Applicative
 > import Control.Monad
