@@ -66,6 +66,8 @@ fun at8most_AdN : AdN ;
 
 fun at8least_AdN : AdN ;
 
+fun only_AdV : AdV ;
+
 --
 -- English-specific additions
 --

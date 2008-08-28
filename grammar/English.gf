@@ -31,7 +31,7 @@ concrete English of Abstract =
   BigLexEng,
   FraCaSLexiconEng
 -}
-** open ResEng, MorphoEng, Prelude in {
+** open ResEng, MorphoEng, ParadigmsEng, Prelude in {
 
 lin TNoPunct phr = { s = phr.s } ;
 
@@ -70,6 +70,8 @@ lin
     exactly_AdN = ss "exactly" ;
     at8least_AdN = ss ["at least"] ;
     at8most_AdN = ss ["at most"] ;
+
+    only_AdV = mkAdV "only" ;
 
     -- FIXME: many strange forms
     should_VV = {
