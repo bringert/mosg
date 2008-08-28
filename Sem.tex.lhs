@@ -393,6 +393,10 @@ e.g. ``Paris at midnight''.
 
 > iNP (GAdvNP np adv) = pure (.) <*> iNP np <*> iAdv adv
 
+Noun phrase modified by a relative sentence, e.g. ``Paris, which is a big city''
+
+> iNP (GRelNP np rs) = pure (\ni ri v -> ni (\x -> ri x &&& v x)) <*> iNP np <*> iRS rs
+
 Noun phrase conjunction, e.g. ``John and a man''.
 
 > iNP (GConjNP conj nps)   = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iConj conj   <*> iListNP nps
