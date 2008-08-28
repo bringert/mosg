@@ -100,9 +100,7 @@ Last update: %%mtime(%Y-%m-%d %H:%M)
 == Problems in the resource grammar ==
 
 - No possessive relative pronoun: "the man whose dog John beats"
-- English only has "itself", no "himself" and "herself"
-- Cannot combine an NP with a relative sentence, e.g. 
-  "everybody who sleeps". Relatives only combine with CN.
+- No restrictive pronouns, e.g. "those who sleep", "everyone who sleeps"
 - Reciprocal "john and mary met"
 - "john gambling is beautiful"
 - PN modifying a N: "nobel prize", "itel computer"
