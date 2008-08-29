@@ -324,7 +324,7 @@ on noun phrases, adjectival phrases and sentences.
 
 ``is killed''
 
-> iVP (GPassV2 v2) = pure (\i x -> thereIs (\y -> i (\u -> u x) y)) <*> iV2 v2
+> iVP (GPassV2 v2) = pure (\vi x -> thereIs (vi x)) <*> iV2 v2
 
 ``kills itself''
 
@@ -352,7 +352,7 @@ on noun phrases, adjectival phrases and sentences.
 
 ``kills (John)''
 
-> iVPSlash (GSlashV2a v2) = iV2 v2
+> iVPSlash (GSlashV2a v2) = pure (\vi ni x -> ni (vi x)) <*> iV2 v2
 
 ``gives a dog (to Mary)''
 
@@ -433,8 +433,7 @@ FIXME: use cont?
 A noun phrase modified by a passive voice transitive verb, 
 e.g. ``a woman killed''.
 
-> iNP (GPPartNP np v2) = pure (\ni vi u -> ni (\x -> u x &&& thereIs
->                                (\y -> vi (\v -> v x) y))) <*> iNP np <*> iV2 v2
+> iNP (GPPartNP np v2) = pure (\ni vi u -> ni (\x -> u x &&& thereIs (vi x))) <*> iNP np <*> iV2 v2
 
 A proper name used as a noun phrase, e.g. ``John''.
 
@@ -861,8 +860,8 @@ Intransitive verbs, e.g. ``sleep''.
 
 Transitive verbs, e.g. ``kill''.
 
-> iV2 :: GV2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
-> iV2 v2 = pure (\u x -> u (\y -> Pred (symbol v2) [x,y]))
+> iV2 :: GV2 -> I (Exp -> Exp -> Prop)
+> iV2 v2 = pure (\x y -> Pred (symbol v2) [x,y])
 
 Ditransitive verbs, e.g. ``give''.
 
