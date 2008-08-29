@@ -24,10 +24,11 @@ lin RelCN cn rs = { s = cn.s ++ rs.s} ;
 
 lin walk_V = { s = "walks" } ;
 lin love_V2 = { s = "loves" } ;
+lin eat_V2 = { s = "eats" } ;
 
 lin man_N = { s = "man" } ;
 lin woman_N = { s = "woman" } ;
-lin bar_N = { s = "bar" } ;
+lin burger_N = { s = "burger" } ;
 
 lin owner_N2 = { s = "owner" ++ "of" } ;
 

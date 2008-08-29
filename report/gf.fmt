@@ -1,5 +1,7 @@
 %include polycode.fmt
 
+%if style /= newcode
+
 % GF keywords
 
 %format abstract = "\mathbf{abstract}"
@@ -39,3 +41,5 @@
 
 % Allow linebreaks at spaces
 %subst space = "\protect\linebreak[1]\;"
+
+%endif

@@ -255,6 +255,11 @@ Is this a scope island?
 >                  (ComplV2 Love 
 >                   (DetCN A (RelCN (UseN Woman) (RelVP (ComplV2 Love (DetCN A (UseN Shake)))))))
 
+> utt6 = PredVP (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake)))) (UseV Sleep)
+
+> utt7 = PredVP (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake)))) 
+>               (ComplV2 Love (DetCN A (UseN Woman)))
+
 > test = mapM_ print . {- nub . -} retrieve . iS
 
 %endif

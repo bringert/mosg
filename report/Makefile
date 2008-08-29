@@ -34,8 +34,14 @@ $(NAME).tex: $(LHS_INCLUDES)
 %.hs: %.tex.lhs
 	lhs2TeX --newcode $< > $@
 
-testtoy: examples/toy/SemToy.hs
-	ghci -i.. $<
+examples/toy/Toy.hs examples/toy/Toy.pgf: examples/toy/ToyEng.gf
+	gfc --make --output-format=haskell $^
+
+examples/toy/SemToy1.hs: gf-reason.tex.lhs examples/toy/Toy.hs
+	lhs2TeX -ssem_toy_1_code --newcode $< > $@
+
+testtoy1: examples/toy/SemToy1.hs
+	ghci -i.. -iexamples/toy $<
 
 clean:
 	-rm -f $(NAME).tex

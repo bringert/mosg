@@ -23,11 +23,11 @@ fun UseN : N -> CN ;
 fun ComplN2 : N2 -> NP -> CN ;
 fun RelCN : CN -> RS -> CN ;
 
-fun walk_V : V ;
-fun love_V2 : V2 ;
-fun man_N, woman_N, bar_N : N ;
-fun owner_N2 : N2 ;
+fun Walk_V : V ;
+fun Love_V2 : V2 ;
+fun Man_N, Woman_N, Burger_N : N ;
+fun Owner_N2 : N2 ;
 
-fun john_PN, bill_PN, mary_PN : PN ;
+fun John_PN, Bill_PN, Mary_PN : PN ;
 
 }
