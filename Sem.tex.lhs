@@ -441,18 +441,18 @@ A proper name used as a noun phrase, e.g. ``John''.
 
 ``everybody'', ``everything''
 
-> iNP Geverybody_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
-> iNP Geverything_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Geverybody_NP   = cont (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Geverything_NP  = cont (\c -> forAll (\x -> c (\u -> u x)))
 
 ``anybody'', ``anything''. Interpreted just like ``everybody'', ``everything''.
 
-> iNP Ganybody_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
-> iNP Ganything_NP = cont (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Ganybody_NP   = cont (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Ganything_NP  = cont (\c -> forAll (\x -> c (\u -> u x)))
 
 ``somebody'', ``something''
 
-> iNP Gsomebody_NP = cont (\c -> thereIs (\x -> c (\u -> u x)))
-> iNP Gsomething_NP = cont (\c -> thereIs (\x -> c (\u -> u x)))
+> iNP Gsomebody_NP   = cont (\c -> thereIs (\x -> c (\u -> u x)))
+> iNP Gsomething_NP  = cont (\c -> thereIs (\x -> c (\u -> u x)))
 
 ``nobody'', ``nothing''
 
