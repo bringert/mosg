@@ -356,7 +356,11 @@ on noun phrases, adjectival phrases and sentences.
 
 ``gives a dog (to Mary)''
 
-> iVPSlash (GSlash2V3 v3 np) = iV3 v3 <*> iNP np
+> iVPSlash (GSlash2V3 v3 np) = pure (\vi ni1 ni2 x -> ni1 (\y -> ni2 (\z -> vi x y z))) <*> iV3 v3 <*> iNP np
+
+``gives (a dog) to Mary''
+
+> iVPSlash (GSlash3V3 v3 np) = pure (\vi ni1 ni2 x -> ni1 (\y -> ni2 (\z -> vi x z y))) <*> iV3 v3 <*> iNP np
 
 %if unhandled
 > iVPSlash vpslash = unhandled "iVPSlash" vpslash
@@ -865,8 +869,8 @@ Transitive verbs, e.g. ``kill''.
 
 Ditransitive verbs, e.g. ``give''.
 
-> iV3 :: GV3 -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
-> iV3 v3 = pure (\u v x -> u (\y -> v (\z -> Pred (symbol v3) [x,y,z])))
+> iV3 :: GV3 -> I (Exp -> Exp -> Exp -> Prop)
+> iV3 v3 = pure (\x y z -> Pred (symbol v3) [x,y,z])
 
 Prepositions, e.g. ``in''.
 
