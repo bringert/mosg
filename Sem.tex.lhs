@@ -490,7 +490,7 @@ constructions.
 
 Complementation of a two-place noun, e.g. ``owner of a dog''.
 
-> iCN (GComplN2 n2 np) = iN2 n2 <*> iNP np
+> iCN (GComplN2 n2 np) = pure (\n2i npi x -> npi (\y -> n2i x y)) <*> iN2 n2 <*> iNP np
 
 Common noun modified by a relative clause, e.g. ``man who sleeps''.
 Relative clauses are scope islands.
@@ -503,11 +503,7 @@ A noun used as a common noun, e.g. ``dog''.
 
 A two-place noun used without a complement, e.g. ``owner''.
 
-> iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni (\u -> u y) x)) <*> iN2 n2
-
-% A three-place noun used without a complement, e.g. ``distance''.
-
-% > iCN (GUseN3 n3) = pure (\ni x -> thereIs (\y -> (thereIs (\z -> ni (\u -> u y) (\v -> v z) x)))) <*> iN3 n3
+> iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni y x)) <*> iN2 n2
 
 Compound common noun, e.g. ``Labour MP''.
 The interpretation below is rather silly. For example,
@@ -826,14 +822,14 @@ Nouns, e.g. ``dog''.
 
 Two-place nouns, e.g. ``owner of ...''.
 
-> iN2 :: GN2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
-> iN2 (GComplN3 n3 np) = iN3 n3 <*> iNP np
-> iN2 n2 = pure (\o x -> o (\y -> Pred (symbol n2) [x,y]))
+> iN2 :: GN2 -> I (Exp -> Exp -> Prop)
+> iN2 (GComplN3 n3 np) = pure (\n3i npi x y -> npi (\z -> n3i x y z)) <*> iN3 n3 <*> iNP np
+> iN2 n2 = pure (\x y -> Pred (symbol n2) [x,y])
 
 Three-place nouns, e.g. ``distance from ... to ...''.
 
-> iN3 :: GN3 -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop) -> (Exp -> Prop))
-> iN3 n3 = pure (\u v x -> u (\y -> v (\z -> Pred (symbol n3) [x,y,z])))
+> iN3 :: GN3 -> I (Exp -> Exp -> Exp -> Prop)
+> iN3 n3 = pure (\x y z -> Pred (symbol n3) [x,y,z])
 
 Proper names, e.g. ``John''.
 
