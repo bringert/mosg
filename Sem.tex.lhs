@@ -824,6 +824,8 @@ Two-place nouns, e.g. ``owner of ...''.
 
 > iN2 :: GN2 -> I (Exp -> Exp -> Prop)
 > iN2 (GComplN3 n3 np) = pure (\n3i npi x y -> npi (\z -> n3i x y z)) <*> iN3 n3 <*> iNP np
+> iN2 (GUse2N3 n3) = pure (\n3i x y -> thereIs (\z -> n3i x y z)) <*> iN3 n3
+> iN2 (GUse3N3 n3) = pure (\n3i x y -> thereIs (\z -> n3i x z y)) <*> iN3 n3
 > iN2 n2 = pure (\x y -> Pred (symbol n2) [x,y])
 
 Three-place nouns, e.g. ``distance from ... to ...''.
