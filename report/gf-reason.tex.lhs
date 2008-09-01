@@ -221,7 +221,7 @@ quantifiers, as we would for example like the sentence ``everyone walks'' to
 have the interpretation $forall x. walk(x)$.
 Our previous type of NP interpretations, |Exp|, is insufficient
 since we need to be able to introduce the universial quantifier.
-Montague~\cite{FIXME} sovled this problem by changing the type 
+Montague~\cite{FIXME} solved this problem by changing the type 
 of NP interpretations to |(Exp -> Prop) -> Prop|.
 
 > iNP :: GNP -> ((Exp -> Prop) -> Prop)
