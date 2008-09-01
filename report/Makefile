@@ -43,6 +43,12 @@ examples/toy/SemToy1.hs: gf-reason.tex.lhs examples/toy/Toy.hs
 testtoy1: examples/toy/SemToy1.hs
 	ghci -i.. -iexamples/toy $<
 
+examples/toy/SemToy2.hs: gf-reason.tex.lhs examples/toy/Toy.hs
+	lhs2TeX -ssem_toy_2_code --newcode $< > $@
+
+testtoy2: examples/toy/SemToy2.hs
+	ghci -i.. -iexamples/toy $<
+
 clean:
 	-rm -f $(NAME).tex
 	-rm -f *.aux *.dvi *.log *.blg *.bbl *.toc *.rel *.ptb *.out

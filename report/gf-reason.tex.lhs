@@ -154,6 +154,14 @@ in Figure~\ref{fig:Toy-gf}.
 FIXME: do we really need to show the generate data types here?
 If so, how to include them automatically? And what about the G prefix?
 
+\subsection{Simplest fragment}
+
+The first fragment only contains transitive and intranstive verbs, and a single proper 
+name, along with the neccessary predication and complementation rules.
+The semantics is implemented as a Haskell~\citep{haskell98} program.
+
+%if sem_toy_1_code || style /= newcode
+
 %if style == newcode
 
 > import Toy
@@ -162,14 +170,6 @@ If so, how to include them automatically? And what about the G prefix?
 
 %endif
 
-\subsection{Simplest fragment}
-
-%if sem_toy_1_code || style /= newcode
-
-The first fragment only contains transitive and intranstive verbs, and a single proper 
-name, along with the neccessary predication and complementation rules.
-The semantics is implemented as a Haskell~\citep{haskell98} program.
-
 > iS :: GS -> Prop 
 > iS (GPredVP np vp) = (iVP vp) (iNP np)
 
@@ -177,8 +177,8 @@ The semantics is implemented as a Haskell~\citep{haskell98} program.
 > iNP (GUsePN pn) = iPN pn
 
 > iVP :: GVP -> (Exp -> Prop)
-> iVP (GUseV v) = iV v
-> iVP (GComplV2 v2 np) = (iV2 v2) (iNP np)
+> iVP (GUseV v)         = iV v
+> iVP (GComplV2 v2 np)  = (iV2 v2) (iNP np)
 
 > iPN :: GPN -> Exp
 > iPN GJohn_PN = Const "John"
@@ -199,6 +199,23 @@ $walk(John)$ and $love(John,John)$, respectively.
 
 %if sem_toy_2_code || style /= newcode
 
+%if style == newcode
+
+> import Toy
+> import FOL
+> import TestToy
+
+> iPN :: GPN -> Exp
+> iPN GJohn_PN = Const "John"
+
+> iV :: GV -> (Exp -> Prop)
+> iV GWalk_V = \x -> Pred "walk" [x]
+
+> iV2 :: GV2 -> (Exp -> Exp -> Prop)
+> iV2 GLove_V2 = \x y -> Pred "love" [x,y]
+
+%endif
+
 When we add determiners to our language fragment, we will need some way handling
 quantifiers, as we would for example like the sentence ``everyone walks'' to
 have the interpretation $forall x. walk(x)$.
@@ -207,24 +224,40 @@ since we need to be able to introduce the universial quantifier.
 Montague~\cite{FIXME} sovled this problem by changing the type 
 of NP interpretations to |(Exp -> Prop) -> Prop|.
 
-> iNP :: NP -> ((Exp -> Prop) -> Prop)
-> iNP Everyone    = \v -> forAll (\x -> v x)
-> iNP Someone     = \v -> thereIs (\x -> v x)
+> iNP :: GNP -> ((Exp -> Prop) -> Prop)
+> iNP GEveryone    = \v -> forAll (\x -> v x)
+> iNP GSomeone     = \v -> thereIs (\x -> v x)
 
 We also need to change the rule for |UsePN|, which lifts proper names 
 to noun phrases:
 
-> iNP (UsePN pn)  = \v -> v (iPN pn)
+> iNP (GUsePN pn)  = \v -> v (iPN pn)
 
 We can now also handle noun phrases consisting of a determiner and a common noun, 
 as in ``every man walks'',
 which we would like to interpret as $forAll x. man(x) \Rightarrow walk(x)$.
 
-> iNP (DetCN det cn) = (iDet det) (iCN cn)
+> iNP (GDetCN det cn) = (iDet det) (iCN cn)
 
-> iDet :: Det -> (Exp -> Prop) -> (Exp -> Prop) -> Prop
-> iDet Every  = \u v -> forAll (\x -> u x ==> v x)
-> iDet A      = \u v -> thereIs (\x -> u x &&& v x)
+> iDet :: GDet -> (Exp -> Prop) -> (Exp -> Prop) -> Prop
+> iDet GEvery  = \u v -> forAll (\x -> u x ==> v x)
+> iDet GA      = \u v -> thereIs (\x -> u x &&& v x)
+
+> iCN :: GCN -> (Exp -> Prop)
+> iCN (GUseN n)         = iN n
+> iCN (GComplN2 n2 np)  = \x -> (iNP np) ((iN2 n2) x)
+> iCN (GRelCN cn rs)    = \x -> (iCN cn) x &&& (iRS rs) x
+
+> iRS :: GRS -> (Exp -> Prop)
+> iRS (GRelVP vp) = iVP vp
+
+> iN :: GN -> (Exp -> Prop)
+> iN GMan_N     = \x -> Pred "man" [x]
+> iN GWoman_N   = \x -> Pred "woman" [x]
+> iN GBurger_N  = \x -> Pred "burger" [x]
+
+> iN2 :: GN2 -> (Exp -> Exp -> Prop)
+> iN2 GOwner_N2 = \x y -> Pred "owner" [x,y]
 
 Since we have changed the type of noun phrase interpretations,
 we also need to change the rules which make use of noun phrases.
@@ -233,16 +266,16 @@ order of application; all we do is to apply the noun phrase
 interpretation (|(Exp -> Prop) -> Prop|) to the verb phrase interpretation
 (|Exp -> Prop|) to get the final |Prop|).
 %
-> iS :: S -> Prop 
-> iS (PredVP np vp) = (iNP np) (iVP vp)
+> iS :: GS -> Prop 
+> iS (GPredVP np vp) = (iNP np) (iVP vp)
 
 We also need to change the rule for transitive verb complementation:
 %
-> iVP (ComplV2 v2 np) = \x -> (iNP np) ((iV2 v2) x)
+> iVP (GComplV2 v2 np) = \x -> (iNP np) ((iV2 v2) x)
 %
 or, equivalently,
 %
-> iVP (ComplV2 v2 np) = (iNP np) (iV2 v2)
+> iVP (GComplV2 v2 np) = (iNP np) . (iV2 v2)
 
 %endif
 
