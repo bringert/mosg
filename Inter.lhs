@@ -27,8 +27,8 @@ a |Cont| is easy:
 >   pure a = Pure a
 
 We have a special case for |Pure f <*> Pure x| that keeps the result
-pure, so that the implementation of |<*>| for |I| knows that it only
-needs 
+pure, so that the implementation of |<*>| for |I| knows that it
+doesn't both evaluation orders.
 
 >   Pure f <*> Pure x  = Pure (f x)
 
