@@ -154,7 +154,7 @@ in Figure~\ref{fig:Toy-gf}.
 FIXME: do we really need to show the generate data types here?
 If so, how to include them automatically? And what about the G prefix?
 
-\subsection{Simplest fragment}
+\subsection{Fragment 1: Basics}
 
 The first fragment only contains transitive and intranstive verbs, and a single proper 
 name, along with the neccessary predication and complementation rules.
@@ -195,7 +195,7 @@ $walk(John)$ and $love(John,John)$, respectively.
 
 %endif
 
-\subsection{Adding determiners}
+\subsection{Fragment 2: Adding determiners}
 
 %if sem_toy_2_code || style /= newcode
 
@@ -235,7 +235,7 @@ to noun phrases:
 
 We can now also handle noun phrases consisting of a determiner and a common noun, 
 as in ``every man walks'',
-which we would like to interpret as $forAll x. man(x) \Rightarrow walk(x)$.
+which we would like to interpret as $\forall x. man(x) \Rightarrow walk(x)$.
 
 > iNP (GDetCN det cn) = (iDet det) (iCN cn)
 
@@ -279,9 +279,7 @@ or, equivalently,
 
 %endif
 
-\subsection{Quantifier scope ambiguity}
-
-%if sem_toy_3_code || style /= newcode
+\subsection{Fragment 3: Quantifier scope ambiguity}
 
 Now, consider a sentence such as ``every man loves a woman''.
 The rules in the previous section would interpret this as
@@ -329,9 +327,77 @@ evaluation order. In this section, we show that an applicative functor is suffic
 the needs of a compositional natural language semantics, and that it can handle 
 quantifier scope ambiguities. 
 
+FIXME: first show simpler version which generates redundant interpretations?
+
+\subsubsection{Interpretation Functor}
+
+%if style /= newcode
+
+%include Inter.lhs
+
 %endif
 
-\subsection{Scope islands}
+\subsubsection{Semantics}
+
+%if sem_toy_3_code || style /= newcode
+
+%if style == newcode
+
+> import Toy
+> import FOL
+> import Inter
+> import TestToy
+
+> import Control.Applicative (pure, (<*>))
+
+%endif
+
+> iNP :: GNP -> I ((Exp -> Prop) -> Prop)
+> iNP GEveryone        = pure (\v -> forAll (\x -> v x))
+> iNP GSomeone         = pure (\v -> thereIs (\x -> v x))
+> iNP (GUsePN pn)      = pure (\x v -> v x) <*> (iPN pn)
+> iNP (GDetCN det cn)  = iDet det <*> iCN cn
+
+> iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+> iDet GEvery  = pure (\u v -> forAll (\x -> u x ==> v x))
+> iDet GA      = pure (\u v -> thereIs (\x -> u x &&& v x))
+
+> iCN :: GCN -> I (Exp -> Prop)
+> iCN (GUseN n)         = iN n
+> iCN (GComplN2 n2 np)  = pure (.) <*> iNP np <*> iN2 n2
+> iCN (GRelCN cn rs)    = pure (\cn' rs' x -> cn' x &&& rs' x) <*> iCN cn <*> iRS rs
+
+> iRS :: GRS -> I (Exp -> Prop)
+> iRS (GRelVP vp) = iVP vp
+
+> iVP :: GVP -> I (Exp -> Prop)
+> iVP (GUseV v)         = iV v
+> iVP (GComplV2 v2 np)  = pure (.) <*> iNP np <*> iV2 v2
+
+Finally, we need to lift the lexicon to use the interpretation functor.
+This is not strictly necessary, since we could instead wrap each call to
+interpretation functions for lexical categories in |pure|.
+
+> iN :: GN -> I (Exp -> Prop)
+> iN GMan_N     = pure (\x -> Pred "man" [x])
+> iN GWoman_N   = pure (\x -> Pred "woman" [x])
+> iN GBurger_N  = pure (\x -> Pred "burger" [x])
+
+> iN2 :: GN2 -> I (Exp -> Exp -> Prop)
+> iN2 GOwner_N2 = pure (\x y -> Pred "owner" [x,y])
+
+> iPN :: GPN -> I Exp
+> iPN GJohn_PN = pure (Const "John")
+
+> iV :: GV -> I (Exp -> Prop)
+> iV GWalk_V = pure (\x -> Pred "walk" [x])
+
+> iV2 :: GV2 -> I (Exp -> Exp -> Prop)
+> iV2 GLove_V2 = pure (\x y -> Pred "love" [x,y])
+
+%endif
+
+\subsection{Fragment 4: Scope islands}
 
 %if sem_toy_4_code || style /= newcode
 
