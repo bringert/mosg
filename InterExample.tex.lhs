@@ -110,14 +110,11 @@
 
 \subsection{Applicative Functors}
 
-> infixl 4 <*>, <**>
+> infixl 4 <*>
 
 > class Functor f => Applicative f where
 >   pure :: a -> f a
 >   (<*>) :: f (a -> b) -> f a -> f b
-
-> (<**>) :: Applicative f => f a -> f (a -> b) -> f b
-> x <**> y = pure (flip ($)) <*> x <*> y
 
 \subsection{Applicative Continuation Functor}
 
@@ -135,7 +132,7 @@ in the implementation of |<*>| for |I|.
 
 > instance Applicative Cont where
 >   pure a = Pure a
->   Pure f <*> Pure x  = Pure (f x)
+>   Pure f <*> Pure x = Pure (f x)
 >   x <*> y = Cont $ \c -> runCont x $ \f -> runCont y $ \a -> c (f a)
 
 > newtype I a = I [Cont a]
@@ -144,11 +141,11 @@ in the implementation of |<*>| for |I|.
 >   fmap f x = pure f <*> x
 
 > instance Applicative I where
->   pure a             = I [Pure a]
+>   pure a             = I [pure a]
 >   I xs <*> I ys      = I [z | x <- xs, y <- ys, z <- app x y]
 >     where
 >       app :: Cont (a -> b) -> Cont a -> [Cont b]
->       app x@(Cont _) y@(Cont _)  = [x <*> y, y <**> x]
+>       app x@(Cont _) y@(Cont _)  = [x <*> y, pure (\x' y' -> y' x') <*> y <*> x]
 >       app x y                    = [x <*> y]
 
 > cont :: ((a -> Prop) -> Prop) -> I a
