@@ -352,6 +352,16 @@ FIXME: first show simpler version which generates redundant interpretations?
 
 %endif
 
+%if style /= newcode
+
+The class of applicative functors:
+
+> class Functor f => Applicative f where
+>   pure :: a -> f a
+>   (<*>) :: f (a -> b) -> f a -> f b
+
+%endif
+
 > iNP :: GNP -> I ((Exp -> Prop) -> Prop)
 > iNP GEveryone        = pure (\v -> forAll (\x -> v x))
 > iNP GSomeone         = pure (\v -> thereIs (\x -> v x))

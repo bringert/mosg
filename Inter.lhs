@@ -4,10 +4,9 @@
 
 > import FOL
 
-> import Control.Applicative
+> import Control.Applicative (Applicative(..))
 > import Control.Monad
 > import Data.List
-> import Data.Monoid
 
 %endif
 
@@ -61,7 +60,7 @@ and combine them.
 When combining two non-pure sub-computations,
 we allow either left-to-right or right-to-left evaluation order.
 
->       app x@(Cont _) y@(Cont _)  = [x <*> y, y <**> x]
+>       app x@(Cont _) y@(Cont _)  = [x <*> y, pure (\x' y' -> y' x') <*> y <*> x]
 >       app x y                    = [x <*> y]
 
 Standard |Functor| instance for applicative functors:
@@ -93,7 +92,3 @@ results.
 
 > instance Run b => Run (a -> b) where
 >   run x = \e -> run (fmap (\f -> f e) x)
-
-> instance Alternative I where
->   empty          = I []
->   I xs <|> I ys  = I (xs++ys)
