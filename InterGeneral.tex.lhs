@@ -2,6 +2,7 @@
 > {-# LANGUAGE FlexibleInstances #-}
 
 > import FOL
+> import Control.Monad
 > import Data.List (nub)
 > import Text.PrettyPrint.HughesPJ hiding (char)
 
@@ -49,7 +50,6 @@
 > reset' :: Cont o (a -> o) -> Cont p (a -> o)
 > reset' x = Pure (eval' x)
 
-
 NOTE: this can be used to implemented generic eval and reset, 
 but it has the unfortunate side effect of making it hard to 
 make reset work on non-function types.
@@ -70,6 +70,19 @@ make reset work on non-function types.
 
 
 \section{Abstract syntax}
+
+> data Utt = UttQS QS | UttS S
+>   deriving Show
+
+> data QS = QuestVP IP VP
+>         | QuestS S
+>   deriving Show
+
+> data IP = Who | IDetCN IDet CN
+>   deriving Show
+
+> data IDet = Which | How_many
+>   deriving Show
 
 > data S = PredVP NP VP
 >   deriving Show
@@ -106,8 +119,45 @@ make reset work on non-function types.
 
 \section{Semantics}
 
+> data Input = WhQuest (Exp -> Prop)
+>            | CountQuest (Exp -> Prop)
+>            | YNQuest Prop
+>            | Statement Prop
+
+> instance Show Input where
+>     showsPrec n = showString . render . runVars . pprInput n
+
+> pprInput :: Int -> Input -> Vars Doc
+> pprInput n (Statement p) = wrapProp "stm" p
+> pprInput n (YNQuest p) = wrapProp "ynq" p
+> pprInput n (WhQuest u) = wrapFun "whq" u
+> pprInput n (CountQuest u) = wrapFun "countq" u
+
+> wrapProp :: String -> Prop -> Vars Doc
+> wrapProp s p = liftM ((text s <>) . parens) (pprProp 0 p)
+
+> wrapFun :: String -> (Exp -> Prop) -> Vars Doc
+> wrapFun o u = do v <- getUnique
+>                  p <- pprProp 0 (u (Var v))
+>                  return $ text o <> parens (text v <> text "," <> p)
+
 > type I a = Cont Prop a
 
+> iUtt :: Utt -> Cont Input Input
+> iUtt (UttQS qs) = iQS qs
+> iUtt (UttS s) = pure Statement <*> reset (iS s)
+
+> iQS :: QS -> Cont Input Input
+> iQS (QuestVP ip vp) = iIP ip <*> reset' (iVP vp)
+> iQS (QuestS s) = pure YNQuest <*> reset (iS s)
+
+> iIP :: IP -> Cont Input ((Exp -> Prop) -> Input)
+> iIP Who = pure (\u -> WhQuest u)
+> iIP (IDetCN idet cn) = iIDet idet <*> reset' (iCN cn)
+
+> iIDet :: IDet -> Cont Input ((Exp -> Prop) -> (Exp -> Prop) -> Input)
+> iIDet Which = pure (\ni u -> WhQuest (\x -> ni x &&& u x))
+> iIDet How_many = pure (\ni u -> CountQuest (\x -> ni x &&& u x))
 
 > iS :: S -> I Prop
 > iS (PredVP np vp) = iNP np <*> iVP vp
@@ -154,23 +204,27 @@ Is this a scope island?
 > iN2 Owner = pure (\o x -> o (\y -> Pred "owner" [x,y]))
 
 
-> utt0 = PredVP (DetCN Every (UseN Man)) (UseV Sleep)
+> utt0 = UttS (PredVP (DetCN Every (UseN Man)) (UseV Sleep))
 
-> utt1 = PredVP (DetCN Every (UseN Man)) (ComplV2 Love (DetCN A (UseN Woman)))
+> utt1 = UttS (PredVP (DetCN Every (UseN Man)) (ComplV2 Love (DetCN A (UseN Woman))))
 
-> utt2 = PredVP (DetCN A (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Shake)))))) (UseV Sleep)
+> utt2 = UttS (PredVP (DetCN A (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Shake)))))) (UseV Sleep))
 
-> utt3 = PredVP John (ComplV2 Love (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake)))))
+> utt3 = UttS (PredVP John (ComplV2 Love (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake))))))
 
-> utt4 = PredVP (DetCN Every (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Woman)))))) (UseV Sleep)
+> utt4 = UttS (PredVP (DetCN Every (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Woman)))))) (UseV Sleep))
 
-> utt5 = PredVP (DetCN A (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Shake)))))) 
+> utt5 = UttS (PredVP (DetCN A (RelCN (UseN Man) (RelVP (ComplV2 Love (DetCN A (UseN Shake)))))) 
 >                  (ComplV2 Love 
->                   (DetCN A (RelCN (UseN Woman) (RelVP (ComplV2 Love (DetCN A (UseN Shake)))))))
+>                   (DetCN A (RelCN (UseN Woman) (RelVP (ComplV2 Love (DetCN A (UseN Shake))))))))
 
-> utt6 = PredVP (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake)))) (UseV Sleep)
+> utt6 = UttS (PredVP (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake)))) (UseV Sleep))
 
-> utt7 = PredVP (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake)))) 
->               (ComplV2 Love (DetCN A (UseN Woman)))
+> utt7 = UttS (PredVP (DetCN Every (ComplN2 Owner (DetCN A (UseN Shake)))) 
+>               (ComplV2 Love (DetCN A (UseN Woman))))
 
-> test = mapM_ print . {- nub . -} eval . iS
+> utt8 = UttQS (QuestS (PredVP (DetCN Every (UseN Man)) (UseV Sleep)))
+
+> utt9 = UttQS (QuestVP Who (UseV Sleep))
+
+> test = mapM_ print . {- nub . -} eval . iUtt
