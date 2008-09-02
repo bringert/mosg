@@ -49,6 +49,18 @@ FIXME: put overview picture here
 
 An over view of the complete system is shown in Figure~\ref{fig:qa-overview}.
 
+Chapters:
+
+1. NL first-order semantics with non-deterministic continuation functor.
+
+2. How to implement a practical semantics in Haskell 98.
+
+3. Semantics for GF resource grammar API.
+
+4. Ambiguity and answers in reasoning.
+
+5. Complete system description.
+
 
 Innovations: 
 
@@ -504,6 +516,8 @@ default unknown.
 
 \section{Future Work}
 
+\subsection{Temporal Reasoning}
+
 \subsection{Background Knowledge}
 
 So far, we have only used the system with small sets of facts
@@ -513,10 +527,6 @@ background knowledge, for example by importing a
 knowledge base such as OpenCyc or ConceptNet.
 Lexical knowledge bases such as WordNet could also be used,
 as is done by Bos.
-
-\subsection{Robustness}
-
-The current system relies solely on GF's parsing 
 
 \subsection{Multilingual Reasoning}
 
