@@ -28,10 +28,10 @@
 > instance Applicative (Cont o) where
 >   pure a = Pure [a]
 >   Pure fs <*> Pure xs = Pure [f x | f <- fs, x <- xs]
->   xs@(Cont _) <*> ys@(Cont _) = Cont $ concat 
+>   Cont xs <*> Cont ys = Cont $ concat 
 >       [[\c -> x (\f -> y (\a -> c (f a))),
 >         \c -> y (\a -> x (\f -> c (f a)))]
->        | x <- runCont xs, y <- runCont ys]
+>        | x <- xs, y <- ys]
 >   xs <*> ys = Cont [\c -> x (\f -> y (\a -> c (f a))) | x <- runCont xs, y <- runCont ys]
 
 > eval :: Cont o o -> [o]
@@ -52,7 +52,7 @@
 
 NOTE: this can be used to implemented generic eval and reset, 
 but it has the unfortunate side effect of making it hard to 
-give reset work on non-function types.
+make reset work on non-function types.
 
 > class Run m where
 >   run :: ((m o -> o) -> o) -> m o
