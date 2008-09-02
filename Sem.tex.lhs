@@ -26,7 +26,7 @@ Grammatical Framework Resource Grammar Library}
 %if style == newcode
 
 > {-# OPTIONS_GHC -fwarn-incomplete-patterns -fwarn-overlapping-patterns #-}
-> module Sem where
+> module Sem (interpretText) where
 
 > import Syntax
 > import FOL
@@ -45,6 +45,11 @@ Grammatical Framework Resource Grammar Library}
 
 > type I a = Cont Prop a
 
+> type I' a = Cont Input a
+
+> interpretText :: GText -> [Input]
+> interpretText = eval . iText
+
 \subsection{Output Language}
 
 The target of the interpretation is lambda calculus over 
@@ -58,7 +63,7 @@ type of utterance.
 
 \subsection{Text: Texts}
 
-> iText :: GText -> [Input]
+> iText :: GText -> I' Input
 > iText (GTNoPunct phr)        = iPhr phr
 > iText (GTExclMark  phr text) = pure twoStatements <*> iPhr phr <*> iText text
 > iText (GTFullStop  phr text) = pure twoStatements <*> iPhr phr <*> iText text
@@ -71,7 +76,7 @@ type of utterance.
 
 \subsection{Phr: Phrases}
 
-> iPhr :: GPhr -> [Input]
+> iPhr :: GPhr -> I' Input
 > iPhr (GPhrUtt GNoPConj utt GNoVoc) = iUtt utt 
 
 %if unhandled
@@ -80,8 +85,8 @@ type of utterance.
 
 \subsection{Utt: Utterances}
 
-> iUtt :: GUtt -> [Input]
-> iUtt (GUttS s) = pure Statement <*> eval (iS s)
+> iUtt :: GUtt -> I' Input
+> iUtt (GUttS s) = pure Statement <*> reset (iS s)
 > iUtt (GUttQS qs) = iQS qs
 
 %if unhandled
@@ -92,7 +97,7 @@ type of utterance.
 
 Ignores tense and anteriority for now.
 
-> iQS :: GQS -> [Input]
+> iQS :: GQS -> I' Input
 > iQS (GUseQCl tense ant pol qcl) = pure (\p c -> mapInput p c) <*> iPol pol <*> iQCl qcl
 
 Uncontracted negated question clause (English only).
@@ -101,20 +106,20 @@ Uncontracted negated question clause (English only).
 
 \subsection{QCl: Question clauses}
 
-> iQCl :: GQCl -> [Input]
+> iQCl :: GQCl -> I' Input
 
 ``does John walk''
 
-> iQCl (GQuestCl cl)          = pure YNQuest <*> eval (iCl cl)
+> iQCl (GQuestCl cl)          = pure YNQuest <*> reset (iCl cl)
 
 ``whom does John love''
 
-> iQCl (GQuestSlash ip clslash) = pure ($) <*> iIP ip <*> eval' (iClSlash clslash)
+> iQCl (GQuestSlash ip clslash) = pure ($) <*> iIP ip <*> reset' (iClSlash clslash)
 
 % Fool highlighting: $
 ``who walks''
 
-> iQCl (GQuestVP ip vp)       = pure ($) <*> iIP ip <*> eval' (iVP vp)
+> iQCl (GQuestVP ip vp)       = pure ($) <*> iIP ip <*> reset' (iVP vp)
 
 ``which houses are there''
 
@@ -128,11 +133,11 @@ Uncontracted negated question clause (English only).
 
 \subsection{IP: Interrogative Pronouns}
 
-> iIP :: GIP -> [(Exp -> Prop) -> Input]
+> iIP :: GIP -> I' ((Exp -> Prop) -> Input)
 
 ``who''
 
-> iIP (GIdetCN idet cn) = pure (iIDet idet) <*> eval' (iCN cn)
+> iIP (GIdetCN idet cn) = iIDet idet <*> reset' (iCN cn)
 > iIP GwhatSg_IP = pure (\u -> WhQuest u)
 > iIP GwhoSg_IP  = pure (\u -> WhQuest u)
 
@@ -144,8 +149,8 @@ Uncontracted negated question clause (English only).
 
 ``which man''
 
-> iIDet :: GIDet -> (Exp -> Prop) -> (Exp -> Prop) -> Input
-> iIDet Ghow8many_IDet = (\u v -> CountQuest (\x -> u x &&& v x))
+> iIDet :: GIDet -> I' ((Exp -> Prop) -> (Exp -> Prop) -> Input)
+> iIDet Ghow8many_IDet = pure (\u v -> CountQuest (\x -> u x &&& v x))
 
 %if unhandled
 > iIDet idet = unhandled "iIDet" idet

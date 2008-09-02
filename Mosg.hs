@@ -109,7 +109,7 @@ parseInput gr i =
 
 interpretTrees :: Either Input [GText] -> IO (Either Input [(GText,Either Error [Input])])
 interpretTrees (Left i) = return (Left i)
-interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (tryInput . iText) ts
+interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (tryInput . interpretText) ts
 
 filterConsistent :: Theory -> [Prop] -> IO [Prop]
 filterConsistent th = filterM (\p -> debug ("Checking consistency: " ++ show p) >> liftM (==Yes) (isConsistent th p))
