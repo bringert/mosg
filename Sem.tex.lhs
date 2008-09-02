@@ -43,6 +43,8 @@ Grammatical Framework Resource Grammar Library}
 
 \section{Interpretation Rules}
 
+> type I a = Cont Prop a
+
 \subsection{Output Language}
 
 The target of the interpretation is lambda calculus over 
@@ -79,7 +81,7 @@ type of utterance.
 \subsection{Utt: Utterances}
 
 > iUtt :: GUtt -> [Input]
-> iUtt (GUttS s) = pure Statement <*> retrieve (iS s)
+> iUtt (GUttS s) = pure Statement <*> eval (iS s)
 > iUtt (GUttQS qs) = iQS qs
 
 %if unhandled
@@ -103,16 +105,16 @@ Uncontracted negated question clause (English only).
 
 ``does John walk''
 
-> iQCl (GQuestCl cl)          = pure YNQuest <*> retrieve (iCl cl)
+> iQCl (GQuestCl cl)          = pure YNQuest <*> eval (iCl cl)
 
 ``whom does John love''
 
-> iQCl (GQuestSlash ip clslash) = pure ($) <*> iIP ip <*> retrieve (iClSlash clslash)
+> iQCl (GQuestSlash ip clslash) = pure ($) <*> iIP ip <*> eval' (iClSlash clslash)
 
 % Fool highlighting: $
 ``who walks''
 
-> iQCl (GQuestVP ip vp)       = pure ($) <*> iIP ip <*> retrieve (iVP vp)
+> iQCl (GQuestVP ip vp)       = pure ($) <*> iIP ip <*> eval' (iVP vp)
 
 ``which houses are there''
 
@@ -130,7 +132,7 @@ Uncontracted negated question clause (English only).
 
 ``who''
 
-> iIP (GIdetCN idet cn) = pure (iIDet idet) <*> retrieve (iCN cn)
+> iIP (GIdetCN idet cn) = pure (iIDet idet) <*> eval' (iCN cn)
 > iIP GwhatSg_IP = pure (\u -> WhQuest u)
 > iIP GwhoSg_IP  = pure (\u -> WhQuest u)
 
@@ -385,7 +387,7 @@ The complement is a scope island, to get rid of the
 reading of sentences such as ``every dog is an animal'' 
 where they are all the same individual.
 
-> iComp (GCompNP np) = reset (pure (\ni x -> ni (\y -> x === y)) <*> iNP np)
+> iComp (GCompNP np) = reset' (pure (\ni x -> ni (\y -> x === y)) <*> iNP np)
 
 
 \subsection{NP: Noun Phrases}
@@ -426,7 +428,7 @@ FIXME: plurals: universial vs existential
 
 Mass expressions.
 FIXME: universal as subject, existential in object position?
-FIXME: use cont?
+FIXME: use shift?
 
 > iNP (GMassNP cn) = pure (\u v -> forAll (\x -> u x &&& v x)) <*> iCN cn
 
@@ -445,23 +447,23 @@ A proper name used as a noun phrase, e.g. ``John''.
 
 ``everybody'', ``everything''
 
-> iNP Geverybody_NP   = cont (\c -> forAll (\x -> c (\u -> u x)))
-> iNP Geverything_NP  = cont (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Geverybody_NP   = shift (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Geverything_NP  = shift (\c -> forAll (\x -> c (\u -> u x)))
 
 ``anybody'', ``anything''. Interpreted just like ``everybody'', ``everything''.
 
-> iNP Ganybody_NP   = cont (\c -> forAll (\x -> c (\u -> u x)))
-> iNP Ganything_NP  = cont (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Ganybody_NP   = shift (\c -> forAll (\x -> c (\u -> u x)))
+> iNP Ganything_NP  = shift (\c -> forAll (\x -> c (\u -> u x)))
 
 ``somebody'', ``something''
 
-> iNP Gsomebody_NP   = cont (\c -> thereIs (\x -> c (\u -> u x)))
-> iNP Gsomething_NP  = cont (\c -> thereIs (\x -> c (\u -> u x)))
+> iNP Gsomebody_NP   = shift (\c -> thereIs (\x -> c (\u -> u x)))
+> iNP Gsomething_NP  = shift (\c -> thereIs (\x -> c (\u -> u x)))
 
 ``nobody'', ``nothing''
 
-> iNP Gnobody_NP = cont (\c -> neg (thereIs (\x -> c (\u -> u x))))
-> iNP Gnothing_NP = cont (\c -> neg (thereIs (\x -> c (\u -> u x))))
+> iNP Gnobody_NP = shift (\c -> neg (thereIs (\x -> c (\u -> u x))))
+> iNP Gnothing_NP = shift (\c -> neg (thereIs (\x -> c (\u -> u x))))
 
 %if unhandled
 > iNP np = unhandled "iNP" np
@@ -495,7 +497,7 @@ Complementation of a two-place noun, e.g. ``owner of a dog''.
 Common noun modified by a relative clause, e.g. ``man who sleeps''.
 Relative clauses are scope islands.
 
-> iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> reset (iRS rs)
+> iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> reset' (iRS rs)
 
 A noun used as a common noun, e.g. ``dog''.
 
@@ -558,43 +560,43 @@ but no ordinal, e.g. ``these five''.
 
 ``every''
 
-> iDet Gevery_Det = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
+> iDet Gevery_Det = shift (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
 
 Negated existential quantifier, ``no''.
 
-> iDet Gno_Det = cont (\c -> neg (thereIs (\x -> c (\u v -> u x &&& v x))))
+> iDet Gno_Det = shift (\c -> neg (thereIs (\x -> c (\u v -> u x &&& v x))))
 
 FIXME: does this mean more than one?
 
 ``some'' + plural
 
-> iDet GsomePl_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet GsomePl_Det = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
 ``some'' + singular. Same as |IndefArt|.
 
-> iDet GsomeSg_Det = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet GsomeSg_Det = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
 ``neither''. This is interpreted as meaning that there are exactly
 two individuals with the first property, and they both lack 
 the second property.
 
-> iDet Gneither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
+> iDet Gneither_Det = shift (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 
 ``both''
 
-> iDet Gboth_Det = cont (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& v x &&& u y &&& v y &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
+> iDet Gboth_Det = shift (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& v x &&& u y &&& v y &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 
 ``either'', interpreted as ``there are at least two, and at least one of them does it''
 
-> iDet Geither_Det = cont (\c -> thereIs (\x -> thereIs (\y -> c (\u v -> u x &&& u y &&& x =/= y &&& (v x ||| v y)))))
+> iDet Geither_Det = shift (\c -> thereIs (\x -> thereIs (\y -> c (\u v -> u x &&& u y &&& x =/= y &&& (v x ||| v y)))))
 
 ``many'', ``several'', ``few'', ``a few'', ``most''. FIXME: cheating, we them as existentials
 
-> iDet Gmany_Det     = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
-> iDet Gseveral_Det  = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
-> iDet Ga8few_Det    = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
-> iDet Gfew_Det      = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
-> iDet Gmost_Det    = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Gmany_Det     = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Gseveral_Det  = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Ga8few_Det    = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Gfew_Det      = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Gmost_Det    = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
 
 %if unhandled
@@ -700,7 +702,7 @@ or quantifier, the restriction and the sentence predicate.
 
 > iNum :: GNum -> I (((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
 
-> iNum GNumSg = cont (\c -> thereIs (\x -> c (\ai u v -> ai u x &&& v x)))
+> iNum GNumSg = shift (\c -> thereIs (\x -> c (\ai u v -> ai u x &&& v x)))
 
 Plural, interpreted as meaning ``at least two''.
 FIXME: causes inconsistency with definite article
@@ -709,7 +711,7 @@ FIXME: causes inconsistency with definite article
 % (?[A,B] : A != B & man(A) & man(B)) & (![C] : man(C) => sleep(C))
 % i.e. "at least two men" and "all men sleep"
 
-> iNum GNumPl = cont (\c -> thereIs (\x -> thereIs (\y -> x =/= y &&& c (\ai u v -> ai u x &&& v x &&& ai u y &&& v y))))
+> iNum GNumPl = shift (\c -> thereIs (\x -> thereIs (\y -> x =/= y &&& c (\ai u v -> ai u x &&& v x &&& ai u y &&& v y))))
 
 A fixed number of distinct objects, given by a cardinal number.
 
