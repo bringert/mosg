@@ -24,7 +24,7 @@ abstract Toy = {
   fun RelCN : CN -> RS -> CN ;
       
   fun Walk_V : V ;
-  fun Love_V2 : V2 ;
+  fun Love_V2, Eat_V2 : V2 ;
   fun Man_N, Woman_N, Burger_N : N ;
   fun Owner_N2 : N2 ;
 

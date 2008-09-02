@@ -54,8 +54,19 @@ Innovations:
 
 First-order logic semantics for a substantial fraction of the 
 GF resource grammar API.
+\cite{ranta08:resource-library}
+
+Compositional semantics based on typed lambda calculus.
+\cite{montague73:ptq}
 
 Continuations for scope ambiguities.
+\cite{barker02:continuations-quantification}
+
+Delimited continuations~\cite{shan04:delimited-continuations} 
+for scope islands.
+
+Applicative functors~\cite{mcbride07:applicative} instead of 
+monads~\cite{shan01:monads-natural-language}.
 
 Handling of ambiguous inputs in reasoning.
 
@@ -68,6 +79,7 @@ Barber paradox, with several formulations.
 
 Consistency checking when adding facts not only helps reduce ambiguity, but 
 also saves us from having an inconsistent knowledge base.
+
 
 
 %{
@@ -187,7 +199,8 @@ The semantics is implemented as a Haskell~\citep{haskell98} program.
 > iV GWalk_V = \x -> Pred "walk" [x]
 
 > iV2 :: GV2 -> (Exp -> Exp -> Prop)
-> iV2 GLove_V2 = \x y -> Pred "love" [x,y]
+> iV2 GEat_V2   = \x y -> Pred "eat" [x,y]
+> iV2 GLove_V2  = \x y -> Pred "love" [x,y]
 
 This lets use handle the sentences ``John walks'' and ``John loves John'',
 which are assigned the first-order logic formulas
@@ -212,7 +225,8 @@ $walk(John)$ and $love(John,John)$, respectively.
 > iV GWalk_V = \x -> Pred "walk" [x]
 
 > iV2 :: GV2 -> (Exp -> Exp -> Prop)
-> iV2 GLove_V2 = \x y -> Pred "love" [x,y]
+> iV2 GEat_V2   = \x y -> Pred "eat" [x,y]
+> iV2 GLove_V2  = \x y -> Pred "love" [x,y]
 
 %endif
 
@@ -221,7 +235,7 @@ quantifiers, as we would for example like the sentence ``everyone walks'' to
 have the interpretation $forall x. walk(x)$.
 Our previous type of NP interpretations, |Exp|, is insufficient
 since we need to be able to introduce the universial quantifier.
-Montague~\cite{FIXME} solved this problem by changing the type 
+Montague~\cite{montague73:ptq} solved this problem by changing the type 
 of NP interpretations to |(Exp -> Prop) -> Prop|.
 
 > iNP :: GNP -> ((Exp -> Prop) -> Prop)
@@ -293,7 +307,7 @@ a nested noun phrase to escape to the top level of the formula.
 A number of approaches have been proposed to handle such
 \emph{quantifier scope ambiguity}, such as 
 Cooper storage~\cite{FIXME}, and its improved successor,
-Keller storage~\cite{FIXME}.
+Keller storage~\cite{keller88:nester-cooper-storage}.
 While it is possible to implement Keller storage in a typed
 lambda calculus, the result is not very elegant. Cooper storage
 seems difficult to implement in a typed way, because of the 
@@ -333,13 +347,19 @@ FIXME: first show simpler version which generates redundant interpretations?
 
 %if style /= newcode
 
+The class of applicative functors:
+
+> class Functor f => Applicative f where
+>   pure :: a -> f a
+>   (<*>) :: f (a -> b) -> f a -> f b
+
 %include Inter.lhs
 
 %endif
 
 \subsubsection{Semantics}
 
-%if sem_toy_3_code || style /= newcode
+%if sem_toy_3_code || sem_toy_4_code || style /= newcode
 
 %if style == newcode
 
@@ -350,39 +370,53 @@ FIXME: first show simpler version which generates redundant interpretations?
 
 > import Control.Applicative (pure, (<*>))
 
-%endif
-
-%if style /= newcode
-
-The class of applicative functors:
-
-> class Functor f => Applicative f where
->   pure :: a -> f a
->   (<*>) :: f (a -> b) -> f a -> f b
+> test1 = test (eval . iS) "a man who loves every woman eats a burger"
 
 %endif
+
+In this example, the outer return type is always |Prop|,
+so we use |I a| as a shorthand for |Cont Prop a|.
+
+> type I a = Cont Prop a
+
+We lift the entire semantics to our new continuation functor.
+
+> iS :: GS -> I Prop 
+> iS (GPredVP np vp) = iNP np <*> iVP vp
+
+|shift| is used here
 
 > iNP :: GNP -> I ((Exp -> Prop) -> Prop)
-> iNP GEveryone        = pure (\v -> forAll (\x -> v x))
-> iNP GSomeone         = pure (\v -> thereIs (\x -> v x))
+> iNP GEveryone        = shift (\c -> forAll (\x -> c (\v -> v x)))
+> iNP GSomeone         = shift (\c -> thereIs (\x -> c (\v -> v x)))
 > iNP (GUsePN pn)      = pure (\x v -> v x) <*> (iPN pn)
 > iNP (GDetCN det cn)  = iDet det <*> iCN cn
 
+|shift| is used here
+
 > iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-> iDet GEvery  = pure (\u v -> forAll (\x -> u x ==> v x))
-> iDet GA      = pure (\u v -> thereIs (\x -> u x &&& v x))
+> iDet GEvery  = shift (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
+> iDet GA      = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+
+> iVP :: GVP -> I (Exp -> Prop)
+> iVP (GUseV v)         = iV v
+> iVP (GComplV2 v2 np)  = pure (.) <*> iNP np <*> iV2 v2
 
 > iCN :: GCN -> I (Exp -> Prop)
 > iCN (GUseN n)         = iN n
 > iCN (GComplN2 n2 np)  = pure (.) <*> iNP np <*> iN2 n2
 > iCN (GRelCN cn rs)    = pure (\cn' rs' x -> cn' x &&& rs' x) <*> iCN cn <*> iRS rs
 
+%endif
+
+%if sem_toy_3_code || style /= newcode
+
 > iRS :: GRS -> I (Exp -> Prop)
 > iRS (GRelVP vp) = iVP vp
 
-> iVP :: GVP -> I (Exp -> Prop)
-> iVP (GUseV v)         = iV v
-> iVP (GComplV2 v2 np)  = pure (.) <*> iNP np <*> iV2 v2
+%endif 
+
+%if sem_toy_3_code || sem_toy_4_code || style /= newcode
 
 Finally, we need to lift the lexicon to use the interpretation functor.
 This is not strictly necessary, since we could instead wrap each call to
@@ -403,13 +437,12 @@ interpretation functions for lexical categories in |pure|.
 > iV GWalk_V = pure (\x -> Pred "walk" [x])
 
 > iV2 :: GV2 -> I (Exp -> Exp -> Prop)
-> iV2 GLove_V2 = pure (\x y -> Pred "love" [x,y])
+> iV2 GEat_V2   = pure (\x y -> Pred "eat" [x,y])
+> iV2 GLove_V2  = pure (\x y -> Pred "love" [x,y])
 
 %endif
 
 \subsection{Fragment 4: Scope islands}
-
-%if sem_toy_4_code || style /= newcode
 
 A sentence such as ``a man who loves every woman eats a burger'' may at first
 appear to have 6 readings since the 3 quantifiers can be ordered in $3! = 6$ ways.
@@ -417,26 +450,57 @@ However, we may not consider all of those readings to be sensible.
 
 \begin{enumerate}
 \item $\exists x. man(x) \land \forall y. woman(y) \land \exists z. burger(z) \land love(x,y) \land eat(x,z)$
-\item $\exists x. man(x) \land \exists z. burger(z) \land \forall y. woman(y) \land love(x,y) \land eat(x,z)$
-\item $\forall y. woman(y) \land \exists x. man(x) \land \exists z. burger(z) \land love(x,y) \land eat(x,z)$
-\item $\forall y. woman(y) \land \exists z. burger(z) \land \exists x. man(x) \land love(x,y) \land eat(x,z)$
-\item $\exists z. burger(z) \land \forall y. woman(y) \land \exists x. man(x) \land love(x,y) \land eat(x,z)$
+\item * $\exists x. man(x) \land \exists z. burger(z) \land \forall y. woman(y) \land love(x,y) \land eat(x,z)$
+\item * $\forall y. woman(y) \land \exists x. man(x) \land \exists z. burger(z) \land love(x,y) \land eat(x,z)$
+\item * $\forall y. woman(y) \land \exists z. burger(z) \land \exists x. man(x) \land love(x,y) \land eat(x,z)$
+\item * $\exists z. burger(z) \land \forall y. woman(y) \land \exists x. man(x) \land love(x,y) \land eat(x,z)$
 \item $\exists z. burger(z) \land \exists x. man(x) \land \forall y. woman(y) \land love(x,y) \land eat(x,z)$
 \end{enumerate}
 
-We can use \emph{delimited continuations} to handle scope islands.
-Shan~\cite{shan01:monads-natural-language} notes that 
-Barker's~\citep{barker02:continuations-quantification} treatment of scope 
-islands implicitly uses 
-|reset| (see \cite{barker02:continuations-quantification}, beginning of (41)).
+Readings 2 and 4 are not generated by our interpretation,
+in accordance with what Barker~\cite{barker01:integrity} calls the 
+\emph{syntactic constituent integrity} scoping constraint.
+
+Semantic theory (FIXME: reference!) has it that relative clauses 
+are \emph{scope islands}, that is, no quantifier in the relative 
+clause may take scope outside the relative clause.
+This disallows readings 3,4,5.
+But 3 and 5 are returned by our interpretation in Fragment 3.
+It appears that we need a way to implement scope islands.
+
+Shan~\cite{shan04:delimited-continuations} notes that 
+\emph{delimited continuations} are useful for modelling several
+natural language phenomena, and notes that 
+Barker's~\citep{barker02:continuations-quantification}
+treatment of scope islands implicitly uses |reset|.
+
+%if sem_toy_4_code || style /= newcode
+
+> iRS :: GRS -> I (Exp -> Prop)
+> iRS (GRelVP vp) = reset' (iVP vp)
 
 %endif
+
+With this addition, only readings 1 and 6 above are returned.
 
 %}
 
 \section{Ambiguity and Answers}
 
 \section{Evaluation}
+
+FraCaS semantic test suite \cite{cooper96:fracas-test-suite}.
+The test suite consists of a set of 346 problems, each of which has 1 to five
+premises and one question. The problems are annotated with ``yes'', ``no'',
+or ``don't know''.
+Some problems are degenerate, and some have complex answers.
+We used the machine readable version of the test suite as
+prepared by 
+Bill MacCartney\footnote{\url{http://nlp.stanford.edu/~wcmac/downloads/fracas.xml}}.
+
+Compare results to \cite{maccartney08:containment,maccartney07:WTEP}.
+They only use single-premise problems. Compare that, and that extended with 
+default unknown.
 
 \section{Future Work}
 

@@ -35,7 +35,7 @@ $(NAME).tex: $(LHS_INCLUDES)
 	lhs2TeX $(LHS2TEX_FLAGS) --newcode $< > $@
 
 examples/toy/Toy.hs examples/toy/Toy.pgf: examples/toy/ToyEng.gf
-	gfc --make --output-format=haskell $^
+	gfc --make --output-format=haskell -D examples/toy $^
 
 examples/toy/SemToy1.hs: gf-reason.tex.lhs examples/toy/Toy.hs
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_1_code --newcode $< > $@
@@ -54,6 +54,13 @@ examples/toy/SemToy3.hs: gf-reason.tex.lhs examples/toy/Toy.hs
 
 testtoy3: examples/toy/SemToy3.hs
 	ghci -i.. -iexamples/toy $<
+
+examples/toy/SemToy4.hs: gf-reason.tex.lhs examples/toy/Toy.hs
+	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_4_code --newcode $< > $@
+
+testtoy4: examples/toy/SemToy4.hs
+	ghci -i.. -iexamples/toy $<
+
 
 clean:
 	-rm -f $(NAME).tex

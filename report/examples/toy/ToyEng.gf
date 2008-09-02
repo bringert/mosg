@@ -22,18 +22,18 @@ concrete ToyEng of Toy = {
   lin ComplN2 n2 np = { s = n2.s ++ np.s } ;
   lin RelCN cn rs = { s = cn.s ++ rs.s} ;
       
-  lin walk_V = { s = "walks" } ;
-  lin love_V2 = { s = "loves" } ;
-  lin eat_V2 = { s = "eats" } ;
+  lin Walk_V = { s = "walks" } ;
+  lin Love_V2 = { s = "loves" } ;
+  lin Eat_V2 = { s = "eats" } ;
       
-  lin man_N = { s = "man" } ;
-  lin woman_N = { s = "woman" } ;
-  lin burger_N = { s = "burger" } ;
+  lin Man_N = { s = "man" } ;
+  lin Woman_N = { s = "woman" } ;
+  lin Burger_N = { s = "burger" } ;
 
-  lin owner_N2 = { s = "owner" ++ "of" } ;
+  lin Owner_N2 = { s = "owner" ++ "of" } ;
 
-  lin john_PN = { s = "John" } ;
-  lin bill_PN = { s = "Bill" } ;
-  lin mary_PN = { s = "Mary" } ;
+  lin John_PN = { s = "John" } ;
+  lin Bill_PN = { s = "Bill" } ;
+  lin Mary_PN = { s = "Mary" } ;
 
 }
