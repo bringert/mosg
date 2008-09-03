@@ -226,7 +226,7 @@ The first fragment only contains transitive and intranstive verbs, and a single 
 name, along with the neccessary predication and complementation rules.
 The semantics is implemented as a Haskell~\citep{haskell98} program.
 
-%if sem_toy_1_code || style /= newcode
+%if sem_toy_1_code || sem_toy_2_code || style /= newcode
 
 %if style == newcode
 
@@ -236,15 +236,7 @@ The semantics is implemented as a Haskell~\citep{haskell98} program.
 
 %endif
 
-> iS :: GS -> Prop 
-> iS (GPredVP np vp) = (iVP vp) (iNP np)
-
-> iNP :: GNP -> Ind
-> iNP (GUsePN pn) = iPN pn
-
-> iVP :: GVP -> (Ind -> Prop)
-> iVP (GUseV v)         = iV v
-> iVP (GComplV2 v2 np)  = (iV2 v2) (iNP np)
+We first provide straightforward semantics for the lexical items.
 
 > iPN :: GPN -> Ind
 > iPN GJohn = Const "John"
@@ -258,33 +250,38 @@ The semantics is implemented as a Haskell~\citep{haskell98} program.
 > iV2 GEat   = \x y -> Pred "eat" [x,y]
 > iV2 GLove  = \x y -> Pred "love" [x,y]
 
+> iN :: GN -> (Ind -> Prop)
+> iN GMan     = \x -> Pred "man" [x]
+> iN GWoman   = \x -> Pred "woman" [x]
+> iN GBurger  = \x -> Pred "burger" [x]
+
+> iN2 :: GN2 -> (Ind -> Ind -> Prop)
+> iN2 GOwner = \x y -> Pred "owner" [x,y]
+
+%endif
+
+%if sem_toy_1_code || style /= newcode
+
+> iS :: GS -> Prop 
+> iS (GPredVP np vp) = (iVP vp) (iNP np)
+
+> iNP :: GNP -> Ind
+> iNP (GUsePN pn) = iPN pn
+
+> iVP :: GVP -> (Ind -> Prop)
+> iVP (GUseV v)         = iV v
+> iVP (GComplV2 v2 np)  = (iV2 v2) (iNP np)
+
+%endif
+
 This lets use handle the sentences ``John walks'' and ``John loves John'',
 which are assigned the first-order logic formulas
 $walk(John)$ and $love(John,John)$, respectively.
 
-%endif
 
 \subsection{Fragment 2: Adding determiners}
 
 %if sem_toy_2_code || style /= newcode
-
-%if style == newcode
-
-> import Toy
-> import FOL
-> import TestToy
-
-> iPN :: GPN -> Ind
-> iPN GJohn_PN = Const "John"
-
-> iV :: GV -> (Ind -> Prop)
-> iV GWalk_V = \x -> Pred "walk" [x]
-
-> iV2 :: GV2 -> (Ind -> Ind -> Prop)
-> iV2 GEat_V2   = \x y -> Pred "eat" [x,y]
-> iV2 GLove_V2  = \x y -> Pred "love" [x,y]
-
-%endif
 
 When we add determiners to our language fragment, we will need some way handling
 quantifiers, as we would for example like the sentence ``everyone walks'' to
@@ -320,14 +317,6 @@ which we would like to interpret as $\forall x. man(x) \Rightarrow walk(x)$.
 
 > iRS :: GRS -> (Ind -> Prop)
 > iRS (GRelVP vp) = iVP vp
-
-> iN :: GN -> (Ind -> Prop)
-> iN GMan_N     = \x -> Pred "man" [x]
-> iN GWoman_N   = \x -> Pred "woman" [x]
-> iN GBurger_N  = \x -> Pred "burger" [x]
-
-> iN2 :: GN2 -> (Ind -> Ind -> Prop)
-> iN2 GOwner_N2 = \x y -> Pred "owner" [x,y]
 
 Since we have changed the type of noun phrase interpretations,
 we also need to change the rules which make use of noun phrases.
