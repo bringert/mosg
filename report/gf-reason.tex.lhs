@@ -3,6 +3,7 @@
 \documentclass[a4paper,twoside,openany]{report}
 \usepackage[pdftex,bookmarks,unicode]{hyperref}
 \usepackage{natbib}
+\usepackage[pdftex]{graphicx}
 
 %include polycode.fmt
 
@@ -28,66 +29,104 @@
 
 \end{abstract}
 
-\section{Introduction}
+\tableofcontents
 
-This report presents a natural language question answering system
-which combines Grammatical Framework grammars,
-compositional semantics and automated reasoning tools.
-We first define a first-order compositional semantics for a
-large fragment of the language-independent
-Grammatical Framework resource grammar API.
-This lets us assign meaning to sentences in any of the
+\chapter{Introduction}
+\label{chapter:introduction}
+
+This report presents a number of ideas about practical
+logic-based natural language semantics and reasoning.
+These ideas form the basis for a natural language
+reasoning system which we also describe and evaluate.
+
+The report is organized into a number of chapters:
+
+\begin{description}
+
+\item[Chapter~\ref{chapter:introduction}] 
+gives overview and background.
+
+\item[Chapter~\ref{chapter:semantics}]
+describes NL first-order semantics with non-deterministic continuation functor.
+Includes a section on Haskell implementation.
+
+\item[Chapter~\ref{chapter:resource-grammar-semantics}]
+defines the semantics of a significant fragment of the GF Resource Grammar API,
+which lets us assign meaning to many sentences in any of the
 (currently 11) languages in the resource grammar library.
-Existing automated reasoning tools for first-order logic
-are then used to combine facts and answer questions about them.
+
+\item[Chapter~\ref{chapter:ambiguity-answers}]
+describes an approach to dealing with ambiguity and
+wh-questions when answering natural language questions 
+using existing automated reasoning tools.
+
+\item[Chapter~\ref{chapter:system-description}]
+provides a detailed description on a complete question
+answering system based on the ideas presented in the earlier 
+chapters.
+
+\item[Chapter~\ref{chapter:evaluation}]
+discusses the results of running the system on the FraCaS semantic test suite.
+
+\end{description}
+
+\section{System overview}
+
+While the ideas presented in the first few chapters can be
+independently useful, it maybe helpful to picture them in the larger
+context in which the developed.
+Thus, we will first give a brief overview of 
+the complete question answering system which is
+the final product of this work. A more detailed system description
+can be found in Chapter~\ref{chapter:system-description}.
+The system accepts two kinds of inputs, facts and questions,
+both of which are expressed in natural language,
+and attempts to provide answers to any questions 
+based on the facts that it has been given.
+A high-level overview of the system is shown in 
+Figure~\ref{fig:qa-high-level-overview}.
 
 \begin{figure}
-FIXME: put overview picture here
-\caption{Overview of the question answering system.}
-\label{fig:qa-overview}
+\includegraphics[width=\textwidth]{figures/high-level-overview}
+\caption{High-level overview of the question answering system.}
+\label{fig:qa-high-level-overview}
 \end{figure}
 
-An over view of the complete system is shown in Figure~\ref{fig:qa-overview}.
+\section{Features}
 
-Chapters:
+This work combines a number of existing ideas in a novel way,
+ands adds a few new ones as well.
 
-1. NL first-order semantics with non-deterministic continuation functor.
+We have written a first-order logic semantics for a substantial fraction of the 
+GF resource grammar API~\cite{ranta08:resource-library}.
 
-2. How to implement a practical semantics in Haskell 98.
+This is a compositional semantics based on typed lambda calculus,
+in the Montague \citep{montague73:ptq} tradition.
 
-3. Semantics for GF resource grammar API.
+We use continuations for to handle scope 
+ambiguities~\cite{barker02:continuations-quantification},
+amd delimited continuations for scope islands
+\cite{shan04:delimited-continuations}.
 
-4. Ambiguity and answers in reasoning.
+To simplify the implementation, we use applicative 
+functors~\cite{mcbride07:applicative}. Shan~\cite{shan01:monads-natural-language}
+has used monads for a similiar effect, but this does not allow 
+the non-determinism that we want.
 
-5. Complete system description.
+We describe a novel way of handling ambiguous inputs in reasoning.
 
-
-Innovations: 
-
-First-order logic semantics for a substantial fraction of the 
-GF resource grammar API.
-\cite{ranta08:resource-library}
-
-Compositional semantics based on typed lambda calculus.
-\cite{montague73:ptq}
-
-Continuations for scope ambiguities.
-\cite{barker02:continuations-quantification}
-
-Delimited continuations~\cite{shan04:delimited-continuations} 
-for scope islands.
-
-Applicative functors~\cite{mcbride07:applicative} instead of 
-monads~\cite{shan01:monads-natural-language}.
-
-Handling of ambiguous inputs in reasoning.
-
-Use of answer predicates for extracting answers to wh-questions
+We use answer predicates for extracting answers to wh-questions
 from proofs.
 
-Example interactions:
+\subsection{Example interactions}
 
 Barber paradox, with several formulations.
+
+``the barber is a man who shaves only all men who do not shave themselves''
+
+``the barber shaves all and only those who do not shave themselves''
+
+``the barber shaves everyone, except those who shave themselves''
 
 Consistency checking when adding facts not only helps reduce ambiguity, but 
 also saves us from having an inconsistent knowledge base.
@@ -151,7 +190,8 @@ along with some minor extensions.
 %{
 %include semantics.fmt
 
-\section{Delimited Continuations, Applicative Functors and Natural Language Semantics}
+\chapter{Delimited Continuations, Applicative Functors and Natural Language Semantics}
+\label{chapter:semantics}
 
 Philosophy: don't push everything into the lexicon.
 Lexical semantics should be as simple as possible, since there are more
@@ -175,7 +215,7 @@ need a Haskell representation of such terms. The code below has been
 automatically generated by GF from the abstract syntax module 
 in Figure~\ref{fig:Toy-gf}.
 
-FIXME: do we really need to show the generate data types here?
+FIXME: do we really need to show the generated data types here?
 If so, how to include them automatically? And what about the G prefix?
 
 \subsection{Fragment 1: Basics}
@@ -497,26 +537,31 @@ With this addition, only readings 1 and 6 above are returned.
 
 %}
 
-\section{Ambiguity and Answers}
+\chapter{Semantics for the GF Resource Grammar API}
+\label{chapter:resource-grammar-semantics}
 
-\section{Evaluation}
-
-FraCaS semantic test suite \cite{cooper96:fracas-test-suite}.
-The test suite consists of a set of 346 problems, each of which has 1 to five
-premises and one question. The problems are annotated with ``yes'', ``no'',
-or ``don't know''.
-Some problems are degenerate, and some have complex answers.
-We used the machine readable version of the test suite as
-prepared by 
-Bill MacCartney\footnote{\url{http://nlp.stanford.edu/~wcmac/downloads/fracas.xml}}.
-
-Compare results to \cite{maccartney08:containment,maccartney07:WTEP}.
-They only use single-premise problems. Compare that, and that extended with 
-default unknown.
+% include Sem.tex.lhs
 
 \section{Future Work}
 
 \subsection{Temporal Reasoning}
+
+
+\chapter{Ambiguity and Answers}
+\label{chapter:ambiguity-answers}
+
+% include answers.tex
+
+\chapter{System Description}
+\label{chapter:system-description}
+
+GF interface.
+
+Consistency and informativity checks.
+
+Reasoning interface.
+
+\section{Future Work}
 
 \subsection{Background Knowledge}
 
@@ -535,15 +580,27 @@ there are no semantic relations between words
 in different languages. This means that we cannot, for example,
 answer questions about facts given in another language.
 
-\section{Conclusions}
+
+
+\chapter{Evaluation}
+\label{chapter:evaluation}
+
+FraCaS semantic test suite \cite{cooper96:fracas-test-suite}.
+The test suite consists of a set of 346 problems, each of which has 1 to five
+premises and one question. The problems are annotated with ``yes'', ``no'',
+or ``don't know''.
+Some problems are degenerate, and some have complex answers.
+We used the machine readable version of the test suite as
+prepared by 
+Bill MacCartney\footnote{\url{http://nlp.stanford.edu/~wcmac/downloads/fracas.xml}}.
+
+Compare results to \cite{maccartney08:containment,maccartney07:WTEP}.
+They only use single-premise problems. Compare that, and that extended with 
+default unknown.
+
+
 
 \bibliographystyle{plainnat}
 \bibliography{bringert-bibliography}
-
-\clearpage
-
-\appendix
-
-% include Sem.tex.lhs
 
 \end{document}
