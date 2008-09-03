@@ -238,39 +238,39 @@ The semantics is implemented as a Haskell~\citep{haskell98} program.
 
 We first provide straightforward semantics for the lexical items.
 
-> iPN :: GPN -> Ind
-> iPN GJohn = Const "John"
-> iPN GMary = Const "Mary"
-> iPN GBill = Const "Bill"
+> iPN :: PN -> Ind
+> iPN John = Const "John"
+> iPN Mary = Const "Mary"
+> iPN Bill = Const "Bill"
 
-> iV :: GV -> (Ind -> Prop)
-> iV GWalk = \x -> Pred "walk" [x]
+> iV :: V -> (Ind -> Prop)
+> iV Walk = \x -> Pred "walk" [x]
 
-> iV2 :: GV2 -> (Ind -> Ind -> Prop)
-> iV2 GEat   = \x y -> Pred "eat" [x,y]
-> iV2 GLove  = \x y -> Pred "love" [x,y]
+> iV2 :: V2 -> (Ind -> Ind -> Prop)
+> iV2 Eat   = \x y -> Pred "eat" [x,y]
+> iV2 Love  = \x y -> Pred "love" [x,y]
 
-> iN :: GN -> (Ind -> Prop)
-> iN GMan     = \x -> Pred "man" [x]
-> iN GWoman   = \x -> Pred "woman" [x]
-> iN GBurger  = \x -> Pred "burger" [x]
+> iN :: N -> (Ind -> Prop)
+> iN Man     = \x -> Pred "man" [x]
+> iN Woman   = \x -> Pred "woman" [x]
+> iN Burger  = \x -> Pred "burger" [x]
 
-> iN2 :: GN2 -> (Ind -> Ind -> Prop)
-> iN2 GOwner = \x y -> Pred "owner" [x,y]
+> iN2 :: N2 -> (Ind -> Ind -> Prop)
+> iN2 Owner = \x y -> Pred "owner" [x,y]
 
 %endif
 
 %if sem_toy_1_code || style /= newcode
 
-> iS :: GS -> Prop 
-> iS (GPredVP np vp) = (iVP vp) (iNP np)
+> iS :: S -> Prop 
+> iS (PredVP np vp) = (iVP vp) (iNP np)
 
-> iNP :: GNP -> Ind
-> iNP (GUsePN pn) = iPN pn
+> iNP :: NP -> Ind
+> iNP (UsePN pn) = iPN pn
 
-> iVP :: GVP -> (Ind -> Prop)
-> iVP (GUseV v)         = iV v
-> iVP (GComplV2 v2 np)  = (iV2 v2) (iNP np)
+> iVP :: VP -> (Ind -> Prop)
+> iVP (UseV v)         = iV v
+> iVP (ComplV2 v2 np)  = (iV2 v2) (iNP np)
 
 %endif
 
@@ -291,32 +291,32 @@ since we need to be able to introduce the universial quantifier.
 Montague~\cite{montague73:ptq} solved this problem by changing the type 
 of NP interpretations to |(Ind -> Prop) -> Prop|.
 
-> iNP :: GNP -> ((Ind -> Prop) -> Prop)
-> iNP GEveryone    = \v -> forAll x (v x)
-> iNP GSomeone     = \v -> thereIs x (v x)
+> iNP :: NP -> ((Ind -> Prop) -> Prop)
+> iNP Everyone    = \v -> forAll x (v x)
+> iNP Someone     = \v -> thereIs x (v x)
 
 We also need to change the rule for |UsePN|, which lifts proper names 
 to noun phrases:
 
-> iNP (GUsePN pn)  = \v -> v (iPN pn)
+> iNP (UsePN pn)  = \v -> v (iPN pn)
 
 We can now also handle noun phrases consisting of a determiner and a common noun, 
 as in ``every man walks'',
 which we would like to interpret as $\forall x. man(x) \Rightarrow walk(x)$.
 
-> iNP (GDetCN det cn) = (iDet det) (iCN cn)
+> iNP (DetCN det cn) = (iDet det) (iCN cn)
 
-> iDet :: GDet -> (Ind -> Prop) -> (Ind -> Prop) -> Prop
-> iDet GEvery  = \u v -> forAll x (u x ==> v x)
-> iDet GA      = \u v -> thereIs x (u x &&& v x)
+> iDet :: Det -> (Ind -> Prop) -> (Ind -> Prop) -> Prop
+> iDet Every  = \u v -> forAll x (u x ==> v x)
+> iDet A      = \u v -> thereIs x (u x &&& v x)
 
-> iCN :: GCN -> (Ind -> Prop)
-> iCN (GUseN n)         = iN n
-> iCN (GComplN2 n2 np)  = \x -> (iNP np) ((iN2 n2) x)
-> iCN (GRelCN cn rs)    = \x -> (iCN cn) x &&& (iRS rs) x
+> iCN :: CN -> (Ind -> Prop)
+> iCN (UseN n)         = iN n
+> iCN (ComplN2 n2 np)  = \x -> (iNP np) ((iN2 n2) x)
+> iCN (RelCN cn rs)    = \x -> (iCN cn) x &&& (iRS rs) x
 
-> iRS :: GRS -> (Ind -> Prop)
-> iRS (GRelVP vp) = iVP vp
+> iRS :: RS -> (Ind -> Prop)
+> iRS (RelVP vp) = iVP vp
 
 Since we have changed the type of noun phrase interpretations,
 we also need to change the rules which make use of noun phrases.
@@ -325,16 +325,16 @@ order of application; all we do is to apply the noun phrase
 interpretation (|(Ind -> Prop) -> Prop|) to the verb phrase interpretation
 (|Ind -> Prop|) to get the final |Prop|).
 %
-> iS :: GS -> Prop 
-> iS (GPredVP np vp) = (iNP np) (iVP vp)
+> iS :: S -> Prop 
+> iS (PredVP np vp) = (iNP np) (iVP vp)
 
 We also need to change the rule for transitive verb complementation:
 %
-> iVP (GComplV2 v2 np) = \x -> (iNP np) ((iV2 v2) x)
+> iVP (ComplV2 v2 np) = \x -> (iNP np) ((iV2 v2) x)
 %
 or, equivalently,
 %
-> iVP (GComplV2 v2 np) = (iNP np) . (iV2 v2)
+> iVP (ComplV2 v2 np) = (iNP np) . (iV2 v2)
 
 %endif
 
@@ -426,38 +426,38 @@ so we use |I a| as a shorthand for |Cont Prop a|.
 
 We lift the entire semantics to our new continuation functor.
 
-> iS :: GS -> I Prop 
-> iS (GPredVP np vp) = iNP np <*> iVP vp
+> iS :: S -> I Prop 
+> iS (PredVP np vp) = iNP np <*> iVP vp
 
 $shift$ ($\xi$) is used here
 
-> iNP :: GNP -> I ((Ind -> Prop) -> Prop)
-> iNP GEveryone        = shift k (forAll x (k (\v -> v x)))
-> iNP GSomeone         = shift k (thereIs x (k (\v -> v x)))
-> iNP (GUsePN pn)      = pure (\x v -> v x) <*> iPN pn
-> iNP (GDetCN det cn)  = iDet det <*> iCN cn
+> iNP :: NP -> I ((Ind -> Prop) -> Prop)
+> iNP Everyone        = shift k (forAll x (k (\v -> v x)))
+> iNP Someone         = shift k (thereIs x (k (\v -> v x)))
+> iNP (UsePN pn)      = pure (\x v -> v x) <*> iPN pn
+> iNP (DetCN det cn)  = iDet det <*> iCN cn
 
 $shift$ is used here
 
-> iDet :: GDet -> I ((Ind -> Prop) -> (Ind -> Prop) -> Prop)
-> iDet GEvery  = shift k (forAll x (k (\u v -> u x ==> v x)))
-> iDet GA      = shift k (thereIs x (k (\u v -> u x &&& v x)))
+> iDet :: Det -> I ((Ind -> Prop) -> (Ind -> Prop) -> Prop)
+> iDet Every  = shift k (forAll x (k (\u v -> u x ==> v x)))
+> iDet A      = shift k (thereIs x (k (\u v -> u x &&& v x)))
 
-> iVP :: GVP -> I (Ind -> Prop)
-> iVP (GUseV v)         = iV v
-> iVP (GComplV2 v2 np)  = pure (.) <*> iNP np <*> iV2 v2
+> iVP :: VP -> I (Ind -> Prop)
+> iVP (UseV v)         = iV v
+> iVP (ComplV2 v2 np)  = pure (.) <*> iNP np <*> iV2 v2
 
-> iCN :: GCN -> I (Ind -> Prop)
-> iCN (GUseN n)         = iN n
-> iCN (GComplN2 n2 np)  = pure (.) <*> iNP np <*> iN2 n2
-> iCN (GRelCN cn rs)    = pure (\cn' rs' x -> cn' x &&& rs' x) <*> iCN cn <*> iRS rs
+> iCN :: CN -> I (Ind -> Prop)
+> iCN (UseN n)         = iN n
+> iCN (ComplN2 n2 np)  = pure (.) <*> iNP np <*> iN2 n2
+> iCN (RelCN cn rs)    = pure (\cn' rs' x -> cn' x &&& rs' x) <*> iCN cn <*> iRS rs
 
 %endif
 
 %if sem_toy_3_code || style /= newcode
 
-> iRS :: GRS -> I (Ind -> Prop)
-> iRS (GRelVP vp) = iVP vp
+> iRS :: RS -> I (Ind -> Prop)
+> iRS (RelVP vp) = iVP vp
 
 %endif 
 
@@ -467,25 +467,25 @@ Finally, we need to lift the lexicon to use the interpretation functor.
 This is not strictly necessary, since we could instead wrap each call to
 interpretation functions for lexical categories in |pure|.
 
-> iN :: GN -> I (Ind -> Prop)
-> iN GMan     = pure (\x -> Pred "man" [x])
-> iN GWoman   = pure (\x -> Pred "woman" [x])
-> iN GBurger  = pure (\x -> Pred "burger" [x])
+> iN :: N -> I (Ind -> Prop)
+> iN Man     = pure (\x -> Pred "man" [x])
+> iN Woman   = pure (\x -> Pred "woman" [x])
+> iN Burger  = pure (\x -> Pred "burger" [x])
 
-> iN2 :: GN2 -> I (Ind -> Ind -> Prop)
-> iN2 GOwner = pure (\x y -> Pred "owner" [x,y])
+> iN2 :: N2 -> I (Ind -> Ind -> Prop)
+> iN2 Owner = pure (\x y -> Pred "owner" [x,y])
 
-> iPN :: GPN -> I Ind
-> iPN GJohn = pure (Const "John")
-> iPN GMary = pure (Const "Mary")
-> iPN GBill = pure (Const "Bill")
+> iPN :: PN -> I Ind
+> iPN John = pure (Const "John")
+> iPN Mary = pure (Const "Mary")
+> iPN Bill = pure (Const "Bill")
 
-> iV :: GV -> I (Ind -> Prop)
-> iV GWalk = pure (\x -> Pred "walk" [x])
+> iV :: V -> I (Ind -> Prop)
+> iV Walk = pure (\x -> Pred "walk" [x])
 
-> iV2 :: GV2 -> I (Ind -> Ind -> Prop)
-> iV2 GEat   = pure (\x y -> Pred "eat" [x,y])
-> iV2 GLove  = pure (\x y -> Pred "love" [x,y])
+> iV2 :: V2 -> I (Ind -> Ind -> Prop)
+> iV2 Eat   = pure (\x y -> Pred "eat" [x,y])
+> iV2 Love  = pure (\x y -> Pred "love" [x,y])
 
 %endif
 
@@ -523,8 +523,8 @@ treatment of scope islands implicitly uses $reset$ (|reset|).
 
 %if sem_toy_4_code || style /= newcode
 
-> iRS :: GRS -> I (Ind -> Prop)
-> iRS (GRelVP vp) = reset' (iVP vp)
+> iRS :: RS -> I (Ind -> Prop)
+> iRS (RelVP vp) = reset' (iVP vp)
 
 %endif
 

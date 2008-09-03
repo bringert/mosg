@@ -37,7 +37,7 @@ $(NAME).tex: $(LHS_INCLUDES)
 	lhs2TeX $(LHS2TEX_FLAGS) --newcode $< > $@
 
 examples/toy/Toy.hs examples/toy/Toy.pgf: examples/toy/ToyEng.gf
-	gfc --make --output-format=haskell -D examples/toy $^
+	gfc --make --output-format=haskell --haskell-prefix='' -D examples/toy $^
 
 examples/toy/SemToy1.hs: gf-reason.tex.lhs semantics.fmt
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_1_code --newcode $< > $@
