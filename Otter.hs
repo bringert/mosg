@@ -15,7 +15,7 @@ otterPath = "/Users/bringert/bin/otter"
 -- * Calling otter
 --
 
-answerWhQuest :: Theory -> (Exp -> Prop) -> IO [[String]]
+answerWhQuest :: Theory -> (Ind -> Prop) -> IO [[String]]
 answerWhQuest th q = liftM getAnswers $ callOtter (showWhQuest th q)
 
 callOtter :: String -- ^ input 
@@ -34,7 +34,7 @@ getAnswers s = map proofAnswers (s =~ ("^----*> .* ----*> [[:digit:]]+ \\[.*\\] 
    proofAnswers :: [String] -> [String]
    proofAnswers (_:a:_) = [x | (_:x:_) <- a =~ ans ]
 
-showWhQuest :: Theory -> (Exp -> Prop) -> String
+showWhQuest :: Theory -> (Ind -> Prop) -> String
 showWhQuest t q = unlines $ otterHeader ++ th ++ [q'] ++ otterFooter
   where th = map showFormula t
         q' = showFormula (neg (thereIs (\x -> q x &&& Pred "$answer" [x])))
@@ -63,14 +63,14 @@ showPropOtter :: Prop -> String
 showPropOtter = render . runVars . pprPropOtter 0
 
 pprPropOtter :: Int -> Prop -> Vars Doc
-pprPropOtter _ (Pred x xs) = do xs' <- mapM pprExp xs
+pprPropOtter _ (Pred x xs) = do xs' <- mapM pprInd xs
                                 return $ text x <> parens (hcat (punctuate (text ",") xs'))
 pprPropOtter n (And xs)    = liftM (prec 1 n . hsep . intersperse (text "&")) $ mapM (pprPropOtter 1) xs
 pprPropOtter n (Or xs)     = liftM (prec 1 n . hsep . intersperse (text "|")) $ mapM (pprPropOtter 1) xs
 pprPropOtter n (Imp x y)   = binConn "->" n x y
 pprPropOtter n (Equiv x y) = binConn "<->" n x y
-pprPropOtter n (Equal x y) = do x' <- pprExp x
-                                y' <- pprExp y
+pprPropOtter n (Equal x y) = do x' <- pprInd x
+                                y' <- pprInd y
                                 return $ prec 3 n (x' <+> text "=" <+> y')
 pprPropOtter n (Not x)     = do x' <- pprPropOtter 2 x
                                 return $ text "-" <+> x'
@@ -79,9 +79,9 @@ pprPropOtter n (Exists f)  = quant "exists" n f
 pprPropOtter n TrueProp    = return $ text "$T"
 pprPropOtter n FalseProp   = return $ text "$F"
 
-pprExp :: Exp -> Vars Doc
-pprExp (Const x) = return $ text x
-pprExp (Var x)   = return $ text x
+pprInd :: Ind -> Vars Doc
+pprInd (Const x) = return $ text x
+pprInd (Var x)   = return $ text x
 
 binConn :: String -> Int -> Prop -> Prop -> Vars Doc
 binConn op n x y = 
@@ -89,7 +89,7 @@ binConn op n x y =
        y' <- pprPropOtter 1 y
        return $ prec 1 n (x' <+> text op <+> y')
 
-quant :: String -> Int -> (Exp -> Prop) -> Vars Doc
+quant :: String -> Int -> (Ind -> Prop) -> Vars Doc
 quant q n f = 
     do x <- getUnique 
        f' <- pprPropOtter 3 (f (Var x))

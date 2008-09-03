@@ -133,7 +133,7 @@ Uncontracted negated question clause (English only).
 
 \subsection{IP: Interrogative Pronouns}
 
-> iIP :: GIP -> I' ((Exp -> Prop) -> Input)
+> iIP :: GIP -> I' ((Ind -> Prop) -> Input)
 
 ``who''
 
@@ -149,7 +149,7 @@ Uncontracted negated question clause (English only).
 
 ``which man''
 
-> iIDet :: GIDet -> I' ((Exp -> Prop) -> (Exp -> Prop) -> Input)
+> iIDet :: GIDet -> I' ((Ind -> Prop) -> (Ind -> Prop) -> Input)
 > iIDet Ghow8many_IDet = pure (\u v -> CountQuest (\x -> u x &&& v x))
 
 %if unhandled
@@ -224,7 +224,7 @@ propositions.
 Relative clases are interpreted as predicates.
 For now we ignore the tense and anteriority.
 
-> iRS :: GRS -> I (Exp -> Prop)
+> iRS :: GRS -> I (Ind -> Prop)
 > iRS (GUseRCl tense ant pol rcl) = pure (.) <*> iPol pol <*> iRCl rcl
 
 Uncontracted negated relative clause (English only), e.g. ``that does not sleep''.
@@ -235,7 +235,7 @@ Uncontracted negated relative clause (English only), e.g. ``that does not sleep'
 
 Relative clauses are interpreted as predicates.
 
-> iRCl :: GRCl -> I (Exp -> Prop)
+> iRCl :: GRCl -> I (Ind -> Prop)
 
 Such-that construction, using a declarative clause as a relative
 clause, e.g. ``such that a woman sleeps''.
@@ -262,7 +262,7 @@ sleeps''.
 
 Relative pronouns are interpreted as predicate modifiers.
 
-> iRP :: GRP -> I ((Exp -> Prop) -> (Exp -> Prop))
+> iRP :: GRP -> I ((Ind -> Prop) -> (Ind -> Prop))
 
 e.g. ``a part of which''
 
@@ -278,7 +278,7 @@ Relative pronoun, ``that'', ``which'', ``whose''.
 
 Clause missing NP, S/NP in GPSG.
 
-> iClSlash :: GClSlash -> I (Exp -> Prop)
+> iClSlash :: GClSlash -> I (Ind -> Prop)
 
 ``(which) a woman kills in Paris''
 
@@ -319,7 +319,7 @@ on noun phrases, adjectival phrases and sentences.
 
 \subsection{VP: Verb Phrases}
 
-> iVP :: GVP -> I (Exp -> Prop)
+> iVP :: GVP -> I (Ind -> Prop)
 
 ``sleeps with a woman''
 
@@ -355,7 +355,7 @@ on noun phrases, adjectival phrases and sentences.
 
 \subsection{VPSlash: VP/NP}
 
-> iVPSlash :: GVPSlash -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+> iVPSlash :: GVPSlash -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
 
 ``kills (John)''
 
@@ -377,7 +377,7 @@ on noun phrases, adjectival phrases and sentences.
 
 Complement of copula.
 
-> iComp :: GComp -> I (Exp -> Prop)
+> iComp :: GComp -> I (Ind -> Prop)
 
 Adjectival phrase complement, e.g. in ``(John is) very warm''.
 
@@ -397,7 +397,7 @@ where they are all the same individual.
 
 \subsection{NP: Noun Phrases}
 
-> iNP :: GNP -> I ((Exp -> Prop) -> Prop)
+> iNP :: GNP -> I ((Ind -> Prop) -> Prop)
 
 Noun phrase modified by an adverbial phrase,
 e.g. ``Paris at midnight''.
@@ -474,12 +474,12 @@ A proper name used as a noun phrase, e.g. ``John''.
 > iNP np = unhandled "iNP" np
 %endif
 
-> iListNP :: GListNP -> I [(Exp -> Prop) -> Prop]
+> iListNP :: GListNP -> I [(Ind -> Prop) -> Prop]
 > iListNP (GListNP nps) = traverse iNP nps
 
 \subsection{CN: Common Nouns}
 
-> iCN :: GCN -> I (Exp -> Prop)
+> iCN :: GCN -> I (Ind -> Prop)
 
 Common noun modified by an adjectival phrase, e.g. ``beautiful woman''.
 
@@ -525,7 +525,7 @@ party.
 
 \subsection{Predet: Pre-determiners}
 
-> iPredet :: GPredet -> I (((Exp -> Prop) -> Prop) -> ((Exp -> Prop) -> Prop))
+> iPredet :: GPredet -> I (((Ind -> Prop) -> Prop) -> ((Ind -> Prop) -> Prop))
 
 ``only (John)''
 FIXME: doesn't work correctly with plurals
@@ -541,7 +541,7 @@ FIXME: doesn't work correctly with plurals
 \subsection{Det: Determiners}
 
 
-> iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+> iDet :: GDet -> I ((Ind -> Prop) -> (Ind -> Prop) -> Prop)
 
 A determiner, with a quantifier, a cardinal number
 and an ordinal, e.g. ``these five best''.
@@ -612,7 +612,7 @@ the second property.
 
 The article only decides definiteness, not number.
 
-> iArt :: GArt -> I ((Exp -> Prop) -> (Exp -> Prop))
+> iArt :: GArt -> I ((Ind -> Prop) -> (Ind -> Prop))
 
 Indefinite article, ``a (man)'', or ``(men)''.
 
@@ -631,7 +631,7 @@ Definite article, ``the (man)'', or ``the (men)''.
 
 Quantifiers are treated as adjectives.
 
-> iQuant :: GQuant -> I ((Exp -> Prop) -> (Exp -> Prop))
+> iQuant :: GQuant -> I ((Ind -> Prop) -> (Ind -> Prop))
 
 Demonstrative, ``that (man)''.
 FIXME: should also make it definite
@@ -657,7 +657,7 @@ FIXME: Should this really allow more than one? Now ``john's dog'' allows john to
 
 Ordinals and superlatives.
 
-> iOrd :: GOrd -> I ((Exp -> Prop) -> (Exp -> Prop))
+> iOrd :: GOrd -> I ((Ind -> Prop) -> (Ind -> Prop))
 
 Superlative adjective, e.g. ``largest''.
 
@@ -672,7 +672,7 @@ Superlative adjective, e.g. ``largest''.
 Cardinal numbers. Takes three arguments, the interpretation of an article 
 or quantifier, the restriction and the sentence predicate.
 
-> iCard :: GCard -> I (((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+> iCard :: GCard -> I (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop)
 
 Cardinal number with digits.
 
@@ -695,7 +695,7 @@ or quantifier, the restriction and the sentence predicate.
 
 \subsection{AdN: Numeral-modifying adverb}
 
-> iAdN :: GAdN -> I ((((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop) -> (((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop))
+> iAdN :: GAdN -> I ((((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop) -> (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop))
 
 ``at least (five men)''.
 
@@ -705,7 +705,7 @@ or quantifier, the restriction and the sentence predicate.
 
 \subsection{Num: Number determining element}
 
-> iNum :: GNum -> I (((Exp -> Prop) -> (Exp -> Prop)) -> (Exp -> Prop) -> (Exp -> Prop) -> Prop)
+> iNum :: GNum -> I (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop)
 
 > iNum GNumSg = shift (\c -> thereIs (\x -> c (\ai u v -> ai u x &&& v x)))
 
@@ -730,7 +730,7 @@ A fixed number of distinct objects, given by a cardinal number.
 
 Adjectival phrases are interpreted as one-place predicates.
 
-> iAP :: GAP -> I (Exp -> Prop)
+> iAP :: GAP -> I (Ind -> Prop)
 
 Complementation of a two-place adjective, e.g. ``equivalent to a dog''.
 
@@ -761,7 +761,7 @@ FIXME: we are cheating by ignoring the adverb
 > iAP ap = unhandled "iAP" ap
 %endif 
 
-> iListAP :: GListAP -> I [Exp -> Prop]
+> iListAP :: GListAP -> I [Ind -> Prop]
 > iListAP (GListAP aps) = traverse iAP aps
 
 
@@ -769,7 +769,7 @@ FIXME: we are cheating by ignoring the adverb
 
 Adverbial phrases that can modify NP, CN, VP.
 
-> iAdv :: GAdv -> I ((Exp -> Prop) -> (Exp -> Prop))
+> iAdv :: GAdv -> I ((Ind -> Prop) -> (Ind -> Prop))
 
 Adverbial phrase conjunction.
 
@@ -787,7 +787,7 @@ Subjunctive phrase.
 > iAdv adv = unhandled "iAdv" adv
 %endif
 
-> iListAdv :: GListAdv -> I [(Exp -> Prop) -> (Exp -> Prop)]
+> iListAdv :: GListAdv -> I [(Ind -> Prop) -> (Ind -> Prop)]
 > iListAdv (GListAdv advs) = traverse iAdv advs
 
 Interpretation of sentence-modifying adverbial phrases.
@@ -801,7 +801,7 @@ Interpretation of sentence-modifying adverbial phrases.
 
 \subsection{AdV: Adverb directly attached to verb}
 
-> iAdV :: GAdV -> I ((Exp -> Prop) -> (Exp -> Prop))
+> iAdV :: GAdV -> I ((Ind -> Prop) -> (Ind -> Prop))
 
 %if unhandled
 > iAdV adv = unhandled "iAdV" adv
@@ -824,12 +824,12 @@ Interpretation of sentence-modifying adverbial phrases.
 
 Nouns, e.g. ``dog''.
 
-> iN :: GN -> I (Exp -> Prop)
+> iN :: GN -> I (Ind -> Prop)
 > iN n = pure (\x -> Pred (symbol n) [x])
 
 Two-place nouns, e.g. ``owner of ...''.
 
-> iN2 :: GN2 -> I (Exp -> Exp -> Prop)
+> iN2 :: GN2 -> I (Ind -> Ind -> Prop)
 > iN2 (GComplN3 n3 np) = pure (\n3i npi x y -> npi (\z -> n3i x z y)) <*> iN3 n3 <*> iNP np
 > iN2 (GUse2N3 n3) = pure (\n3i x y -> thereIs (\z -> n3i x z y)) <*> iN3 n3
 > iN2 (GUse3N3 n3) = pure (\n3i x y -> thereIs (\z -> n3i x y z)) <*> iN3 n3
@@ -837,49 +837,49 @@ Two-place nouns, e.g. ``owner of ...''.
 
 Three-place nouns, e.g. ``distance from ... to ...''.
 
-> iN3 :: GN3 -> I (Exp -> Exp -> Exp -> Prop)
+> iN3 :: GN3 -> I (Ind -> Ind -> Ind -> Prop)
 > iN3 n3 = pure (\x y z -> Pred (symbol n3) [x,y,z])
 
 Proper names, e.g. ``John''.
 
-> iPN :: GPN -> I Exp
+> iPN :: GPN -> I Ind
 > iPN pn = pure (Const (symbol pn))
 
 Adjectives, e.g. ``big''.
 
-> iA :: GA -> I (Exp -> Prop)
+> iA :: GA -> I (Ind -> Prop)
 > iA (GUseA2 a2) = pure (\i x -> thereIs (\y -> i (\v -> v y) x)) <*> iA2 a2
 > iA a = pure (\x -> Pred (symbol a) [x])
 
 Adjectives when used comparatively. FIXME: weird.
 
-> iA_comparative :: GA -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+> iA_comparative :: GA -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
 > iA_comparative a@(GUseA2 _) = unhandled "iA_comparative" a
 > iA_comparative a = pure (\o x -> o (\y -> comparative_Pred a x y))
 
 Two-place adjectives, e.g. ``equivalent to ...''
 
-> iA2 :: GA2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+> iA2 :: GA2 -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
 > iA2 a2 = pure (\o x -> o (\y -> Pred (symbol a2) [x,y]))
 
 Intransitive verbs, e.g. ``sleep''.
 
-> iV :: GV -> I (Exp -> Prop)
+> iV :: GV -> I (Ind -> Prop)
 > iV v = pure (\x -> Pred (symbol v) [x])
 
 Transitive verbs, e.g. ``kill''.
 
-> iV2 :: GV2 -> I (Exp -> Exp -> Prop)
+> iV2 :: GV2 -> I (Ind -> Ind -> Prop)
 > iV2 v2 = pure (\x y -> Pred (symbol v2) [x,y])
 
 Ditransitive verbs, e.g. ``give''.
 
-> iV3 :: GV3 -> I (Exp -> Exp -> Exp -> Prop)
+> iV3 :: GV3 -> I (Ind -> Ind -> Ind -> Prop)
 > iV3 v3 = pure (\x y z -> Pred (symbol v3) [x,y,z])
 
 Prepositions, e.g. ``in''.
 
-> iPrep :: GPrep -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+> iPrep :: GPrep -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
 > iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
 
 \subsection{Digits: Cardinals and Ordinals in Digits}
@@ -944,7 +944,7 @@ Numerals are interpreted as integers, and then handled by |iInt|.
 
 Integer interpretation. Used above for letter and digit numerals.
 
-> iInt :: Int -> I ((((Exp -> Prop) -> Prop) -> Prop) -> Prop)
+> iInt :: Int -> I ((((Ind -> Prop) -> Prop) -> Prop) -> Prop)
 > iInt 0 = pure (\q -> q (\p -> true))
 > iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
 
@@ -965,13 +965,13 @@ Integer interpretation. Used above for letter and digit numerals.
 -- * Special predicates
 --
 
-> of_Pred :: Exp -> Exp -> Prop
+> of_Pred :: Ind -> Ind -> Prop
 > of_Pred x y = special "of" [x,y]
 
-> comparative_Pred :: GA -> Exp -> Exp -> Prop
+> comparative_Pred :: GA -> Ind -> Ind -> Prop
 > comparative_Pred a x y = special ("more_" ++ symbol a) [x,y]
 
-> special :: String -> [Exp] -> Prop
+> special :: String -> [Ind] -> Prop
 > special x = Pred ("special_" ++ x) 
 
 --

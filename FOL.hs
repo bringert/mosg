@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall -}
 module FOL (
             -- * Types
-            Theory, Prop(..),Exp(..),
+            Theory, Prop(..),Ind(..),
             -- * Construction API
             (&&&), (|||), ands, ors, (==>), (<=>), neg, (===), (=/=), forAll, thereIs, true, false,
             -- * Pretty-printing internals
@@ -25,19 +25,19 @@ import Text.PrettyPrint.HughesPJ hiding (char)
 type Theory = [Prop]
 
 data Prop =
-    Pred String [Exp]
+    Pred String [Ind]
   | And [Prop]
   | Or [Prop]
   | Imp Prop Prop
   | Equiv Prop Prop
   | Not Prop
-  | Equal Exp Exp
-  | All (Exp -> Prop)
-  | Exists (Exp -> Prop)
+  | Equal Ind Ind
+  | All (Ind -> Prop)
+  | Exists (Ind -> Prop)
   | TrueProp
   | FalseProp
 
-data Exp = Const String
+data Ind = Const String
          | Var Var
 
 type Var = String
@@ -73,16 +73,16 @@ p <=> q = simplify $ Equiv p q
 neg :: Prop -> Prop
 neg p = simplify $ Not p
 
-(===) :: Exp -> Exp -> Prop
+(===) :: Ind -> Ind -> Prop
 (===) = Equal
 
-(=/=) :: Exp -> Exp -> Prop
+(=/=) :: Ind -> Ind -> Prop
 x =/= y = neg (x === y)
 
-forAll :: (Exp -> Prop) -> Prop
+forAll :: (Ind -> Prop) -> Prop
 forAll f = simplify $ All f
 
-thereIs :: (Exp -> Prop) -> Prop
+thereIs :: (Ind -> Prop) -> Prop
 thereIs f = simplify $ Exists f
 
 true :: Prop
@@ -166,14 +166,14 @@ instance Show Prop where
     showsPrec n = showString . render . runUnique vars . pprProp n
 
 pprProp :: Int -> Prop -> Vars Doc
-pprProp _ (Pred x xs) = do xs' <- mapM pprExp xs
+pprProp _ (Pred x xs) = do xs' <- mapM pprInd xs
                            return $ text x <> parens (hcat (punctuate (text ",") xs'))
 pprProp n (And xs)    = liftM (prec 1 n . hsep . intersperse (text "&")) $ mapM (pprProp 1) xs
 pprProp n (Or xs)     = liftM (prec 1 n . hsep . intersperse (text "|")) $ mapM (pprProp 1) xs
 pprProp n (Imp x y)   = binConn "=>" n x y
 pprProp n (Equiv x y) = binConn "<=>" n x y
-pprProp n (Equal x y) =  do x' <- pprExp x
-                            y' <- pprExp y
+pprProp n (Equal x y) =  do x' <- pprInd x
+                            y' <- pprInd y
                             return $ prec 3 n (x' <+> text "=" <+> y')
 pprProp n (Not x)     = do x' <- pprProp 2 x
                            return $ text "~" <+> x'
@@ -182,9 +182,9 @@ pprProp n (Exists f)  = quant "?" n f
 pprProp n TrueProp    = return $ text "$true"
 pprProp n FalseProp   = return $ text "$false"
 
-pprExp :: Exp -> Vars Doc
-pprExp (Const x) = return $ text x
-pprExp (Var x)   = return $ text x
+pprInd :: Ind -> Vars Doc
+pprInd (Const x) = return $ text x
+pprInd (Var x)   = return $ text x
 
 binConn :: String -> Int -> Prop -> Prop -> Vars Doc
 binConn op n x y = 
@@ -192,7 +192,7 @@ binConn op n x y =
        y' <- pprProp 1 y
        return $ prec 1 n (x' <+> text op <+> y')
 
-quant :: String -> Int -> (Exp -> Prop) -> Vars Doc
+quant :: String -> Int -> (Ind -> Prop) -> Vars Doc
 quant q n f = 
     do x <- getUnique 
        f' <- pprProp 1 (f (Var x))
@@ -214,7 +214,7 @@ readProp n = skipSpaceAround $ choice rs
              ++ if n < 1 then [readBin] else []
         readPred = do p <- readConst
                       string "("
-                      args <- sepBy readExp (string ",")
+                      args <- sepBy readInd (string ",")
                       string ")"
                       return $ Pred p args
         readBin = do p <- readProp 1
@@ -226,9 +226,9 @@ readProp n = skipSpaceAround $ choice rs
                             string "=>" >> return (==>),
                             string "<=>" >> return (<=>)]
         readNot = string "~" >> liftM neg (readProp 1)
-        readEqual = do e1 <- readExp
+        readEqual = do e1 <- readInd
                        string "="
-                       e2 <- readExp
+                       e2 <- readInd
                        return $ e1 === e2
         readAll = readQuant "!" forAll
         readExists = readQuant "?" thereIs
@@ -246,8 +246,8 @@ readProp n = skipSpaceAround $ choice rs
         readTrue = string "$true" >> return TrueProp
         readFalse = string "$false" >> return FalseProp
 
-readExp :: ReadP Exp
-readExp = liftM Var readVar +++ liftM Const readConst
+readInd :: ReadP Ind
+readInd = liftM Var readVar +++ liftM Const readConst
 
 readVar :: ReadP Var
 readVar = skipSpaceAround $ liftM2 (:) (satisfy isUpper) (munch alpha_numeric)
@@ -261,7 +261,7 @@ alpha_numeric c = isAlphaNum c || c == '_'
 skipSpaceAround :: ReadP a -> ReadP a
 skipSpaceAround = between skipSpaces skipSpaces
 
-abstract :: Var -> Prop -> (Exp -> Prop)
+abstract :: Var -> Prop -> (Ind -> Prop)
 abstract v p = \x -> substProp v x p
 
 --
@@ -269,24 +269,24 @@ abstract v p = \x -> substProp v x p
 --
 
 substProp :: String -- ^ variable name
-          -> Exp -- ^ expression to use instead
+          -> Ind -- ^ expression to use instead
           -> Prop -> Prop
 substProp v x t = 
     case t of
-      Pred s es -> Pred s (map (substExp v x) es)
+      Pred s es -> Pred s (map (substInd v x) es)
       And ps    -> And (map (substProp v x) ps)
       Or ps     -> Or (map (substProp v x) ps)
       Imp p q   -> Imp (substProp v x p) (substProp v x q)
       Equiv p q -> Equiv (substProp v x p) (substProp v x q)
       Not p     -> Not (substProp v x p)
-      Equal e f -> Equal (substExp v x e) (substExp v x f)
+      Equal e f -> Equal (substInd v x e) (substInd v x f)
       All b     -> All (\y -> substProp v x (b y))
       Exists b  -> Exists (\y -> substProp v x (b y))
       TrueProp  -> TrueProp
       FalseProp -> FalseProp
 
-substExp :: String -- ^ variable name
-         -> Exp -- ^ expression to use instead
-         -> Exp -> Exp
-substExp v x (Var v') | v' == v = x
-substExp _ _ e = e
+substInd :: String -- ^ variable name
+         -> Ind -- ^ expression to use instead
+         -> Ind -> Ind
+substInd v x (Var v') | v' == v = x
+substInd _ _ e = e

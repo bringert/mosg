@@ -15,8 +15,8 @@ import Text.PrettyPrint.HughesPJ hiding (char)
 \begin{code}
 data Input = Statement Prop
            | YNQuest Prop
-           | WhQuest (Exp -> Prop)
-           | CountQuest (Exp -> Prop)
+           | WhQuest (Ind -> Prop)
+           | CountQuest (Ind -> Prop)
 \end{code}
 
 %if style == newcode
@@ -48,10 +48,10 @@ toYNQuest :: Input -> Input
 toYNQuest (Statement p) = YNQuest p
 toYNQuest (YNQuest p) = YNQuest p
 
-toWhQuest :: (Exp -> Input) -> Input
+toWhQuest :: (Ind -> Input) -> Input
 toWhQuest f = WhQuest (\x -> case f x of { Statement p -> p})
 
-toCountQuest :: (Exp -> Input) -> Input
+toCountQuest :: (Ind -> Input) -> Input
 toCountQuest f = CountQuest (\x -> case f x of { Statement p -> p})
 
 --
@@ -70,7 +70,7 @@ pprInput n (CountQuest u) = wrapFun "countq" u
 wrapProp :: String -> Prop -> Vars Doc
 wrapProp s p = liftM ((text s <>) . parens) (pprProp 0 p)
 
-wrapFun :: String -> (Exp -> Prop) -> Vars Doc
+wrapFun :: String -> (Ind -> Prop) -> Vars Doc
 wrapFun o u = do v <- getUnique
                  p <- pprProp 0 (u (Var v))
                  return $ text o <> parens (text v <> text "," <> p)
@@ -94,7 +94,7 @@ readWrappedProp s = do skipSpaces
                        skipSpaces
                        between (string "(") (string ")") (readProp 0)
 
-readWrappedFun :: String -> ReadP (Exp -> Prop)
+readWrappedFun :: String -> ReadP (Ind -> Prop)
 readWrappedFun s = do skipSpaces
                       string s
                       skipSpaces

@@ -39,7 +39,7 @@ propToHtml n FalseProp   = return $ emphasize << "false"
 
 
 
-expToHtml :: Exp -> Vars Html
+expToHtml :: Ind -> Vars Html
 expToHtml (Const x) = return $ toHtml x
 expToHtml (Var x)   = return $ var x
 
@@ -52,7 +52,7 @@ binConn op n x y =
        y' <- propToHtml 1 y
        return $ prec 1 n (x' <+> op <+> y')
 
-quant :: Html -> Int -> (Exp -> Prop) -> Vars Html
+quant :: Html -> Int -> (Ind -> Prop) -> Vars Html
 quant q n f = 
     do x <- getUnique 
        f' <- propToHtml 0 (f (Var x))

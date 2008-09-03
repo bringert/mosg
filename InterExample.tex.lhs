@@ -171,19 +171,19 @@ in the implementation of |<*>| for |I|.
 
 \begin{spec}
 
-data Prop  = Pred String [Exp]
+data Prop  = Pred String [Ind]
            | Prop &&& Prop
            | Prop ||| Prop
            | Prop ==> Prop
            | Prop <=> Prop
            | neg Prop
            | Prop = Prop
-           | forAll (Exp -> Prop)
-           | thereIs (Exp -> Prop)
+           | forAll (Ind -> Prop)
+           | thereIs (Ind -> Prop)
            | true
            | false
 
-data Exp = Const String | Var String
+data Ind = Const String | Var String
 
 \end{spec}
 
@@ -194,24 +194,24 @@ data Exp = Const String | Var String
 
 Relative clauses are scope islands, and thus use |reset|.
 
-> iRS :: RS -> I (Exp -> Prop)
+> iRS :: RS -> I (Ind -> Prop)
 > iRS (RelVP vp) = reset (iVP vp)
 
-> iVP :: VP -> I (Exp -> Prop)
+> iVP :: VP -> I (Ind -> Prop)
 > iVP (ComplV2 v2 np) = iV2 v2 <*> iNP np
 > iVP (UseV v) = iV v
 
-> iNP :: NP -> I ((Exp -> Prop) -> Prop)
+> iNP :: NP -> I ((Ind -> Prop) -> Prop)
 > iNP (DetCN det cn) = iDet det <*> iCN cn
 > iNP Everyone  = cont (\c -> forAll (\x -> c (\u -> u x)))
 > iNP Someone   = cont (\c -> thereIs (\x -> c (\u -> u x)))
 > iNP John      = pure (\f -> f (Const "john"))
 
-> iDet :: Det -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+> iDet :: Det -> I ((Ind -> Prop) -> (Ind -> Prop) -> Prop)
 > iDet Every  = cont (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
 > iDet A      = cont (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
-> iCN :: CN -> I (Exp -> Prop)
+> iCN :: CN -> I (Ind -> Prop)
 > iCN (UseN n) = iN n
 
 Is this a scope island?
@@ -219,18 +219,18 @@ Is this a scope island?
 > iCN (ComplN2 n2 np) = iN2 n2 <*> iNP np
 > iCN (RelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> iRS rs
 
-> iV :: V -> I (Exp -> Prop)
+> iV :: V -> I (Ind -> Prop)
 > iV Sleep = pure (\x -> Pred "sleep" [x])
 
-> iV2 :: V2 -> I (((Exp -> Prop) -> Prop) -> Exp -> Prop)
+> iV2 :: V2 -> I (((Ind -> Prop) -> Prop) -> Ind -> Prop)
 > iV2 Love = pure (\u x -> u (\y -> Pred "love" [x,y]))
 
-> iN :: N -> I (Exp -> Prop)
+> iN :: N -> I (Ind -> Prop)
 > iN Man    = pure (\x -> Pred "man"   [x])
 > iN Woman  = pure (\x -> Pred "woman" [x])
 > iN Shake  = pure (\x -> Pred "shake" [x])
 
-> iN2 :: N2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+> iN2 :: N2 -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
 > iN2 Owner = pure (\o x -> o (\y -> Pred "owner" [x,y]))
 
 

@@ -74,7 +74,7 @@ propToForm = runVars . f
                    f <- f (b (Var x))
                    return $ q (varSymbol x) f
 
-    expToTerm :: Exp -> F.Term
+    expToTerm :: Ind -> F.Term
     expToTerm (Const c) = F.Fun (name c F.::: ([] F.:-> F.top)) []
     expToTerm (Var x)   = F.Var (varSymbol x)
 

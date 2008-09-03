@@ -119,8 +119,8 @@ make reset work on non-function types.
 
 \section{Semantics}
 
-> data Input = WhQuest (Exp -> Prop)
->            | CountQuest (Exp -> Prop)
+> data Input = WhQuest (Ind -> Prop)
+>            | CountQuest (Ind -> Prop)
 >            | YNQuest Prop
 >            | Statement Prop
 
@@ -136,7 +136,7 @@ make reset work on non-function types.
 > wrapProp :: String -> Prop -> Vars Doc
 > wrapProp s p = liftM ((text s <>) . parens) (pprProp 0 p)
 
-> wrapFun :: String -> (Exp -> Prop) -> Vars Doc
+> wrapFun :: String -> (Ind -> Prop) -> Vars Doc
 > wrapFun o u = do v <- getUnique
 >                  p <- pprProp 0 (u (Var v))
 >                  return $ text o <> parens (text v <> text "," <> p)
@@ -151,11 +151,11 @@ make reset work on non-function types.
 > iQS (QuestVP ip vp) = iIP ip <*> reset' (iVP vp)
 > iQS (QuestS s) = pure YNQuest <*> reset (iS s)
 
-> iIP :: IP -> Cont Input ((Exp -> Prop) -> Input)
+> iIP :: IP -> Cont Input ((Ind -> Prop) -> Input)
 > iIP Who = pure (\u -> WhQuest u)
 > iIP (IDetCN idet cn) = iIDet idet <*> reset' (iCN cn)
 
-> iIDet :: IDet -> Cont Input ((Exp -> Prop) -> (Exp -> Prop) -> Input)
+> iIDet :: IDet -> Cont Input ((Ind -> Prop) -> (Ind -> Prop) -> Input)
 > iIDet Which = pure (\ni u -> WhQuest (\x -> ni x &&& u x))
 > iIDet How_many = pure (\ni u -> CountQuest (\x -> ni x &&& u x))
 
@@ -164,24 +164,24 @@ make reset work on non-function types.
 
 Relative clauses are scope islands, and thus use |reset|.
 
-> iRS :: RS -> I (Exp -> Prop)
+> iRS :: RS -> I (Ind -> Prop)
 > iRS (RelVP vp) = reset' (iVP vp)
 
-> iVP :: VP -> I (Exp -> Prop)
+> iVP :: VP -> I (Ind -> Prop)
 > iVP (ComplV2 v2 np) = iV2 v2 <*> iNP np
 > iVP (UseV v) = iV v
 
-> iNP :: NP -> I ((Exp -> Prop) -> Prop)
+> iNP :: NP -> I ((Ind -> Prop) -> Prop)
 > iNP (DetCN det cn) = iDet det <*> iCN cn
 > iNP Everyone  = shift (\c -> forAll (\x -> c (\u -> u x)))
 > iNP Someone   = shift (\c -> thereIs (\x -> c (\u -> u x)))
 > iNP John      = pure (\f -> f (Const "john"))
 
-> iDet :: Det -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
+> iDet :: Det -> I ((Ind -> Prop) -> (Ind -> Prop) -> Prop)
 > iDet Every  = shift (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
 > iDet A      = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
 
-> iCN :: CN -> I (Exp -> Prop)
+> iCN :: CN -> I (Ind -> Prop)
 > iCN (UseN n) = iN n
 
 Is this a scope island?
@@ -189,18 +189,18 @@ Is this a scope island?
 > iCN (ComplN2 n2 np) = iN2 n2 <*> iNP np
 > iCN (RelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> iRS rs
 
-> iV :: V -> I (Exp -> Prop)
+> iV :: V -> I (Ind -> Prop)
 > iV Sleep = pure (\x -> Pred "sleep" [x])
 
-> iV2 :: V2 -> I (((Exp -> Prop) -> Prop) -> Exp -> Prop)
+> iV2 :: V2 -> I (((Ind -> Prop) -> Prop) -> Ind -> Prop)
 > iV2 Love = pure (\u x -> u (\y -> Pred "love" [x,y]))
 
-> iN :: N -> I (Exp -> Prop)
+> iN :: N -> I (Ind -> Prop)
 > iN Man    = pure (\x -> Pred "man"   [x])
 > iN Woman  = pure (\x -> Pred "woman" [x])
 > iN Shake  = pure (\x -> Pred "shake" [x])
 
-> iN2 :: N2 -> I (((Exp -> Prop) -> Prop) -> (Exp -> Prop))
+> iN2 :: N2 -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
 > iN2 Owner = pure (\o x -> o (\y -> Pred "owner" [x,y]))
 
 
