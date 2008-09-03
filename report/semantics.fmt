@@ -1,6 +1,14 @@
 %include polycode.fmt
+%include lambda.fmt
 
-%if style /= newcode
+%if style == newcode
+
+%format thereIs x e = "thereIs (\" x "->" e ")"
+%format forAll x e = "forAll (\" x "->" e ")"
+%format shift c e   = "shift (\" c "->" e ")"
+
+%else
+
 % Use sans-serif font for constructors 
 %subst conid a     = "\mathsf{" a "}"
 
@@ -11,10 +19,16 @@
 %format <=>          = "\Leftrightarrow"
 %format ===          = "="
 %format =/=          = "\neq"
-%format thereIs      = "\exists"
-%format forAll       = "\forall"
+%format thereIs x (e)     = "\exists" x "\mathpunct{.}" e
+%format forAll x (e)       = "\forall" x "\mathpunct{.}" e
+%format shift c (e)         = "\xi" c "\mathpunct{.}" e
 %format neg          = "\lnot"
+%format k = "\kappa"
+
+%format reset (a)   = "\mathopen{[}" a "\mathclose{]}"
+%format reset' (a)   = "\mathopen{[}" a "\mathclose{]}"
 
 %format I            = "\mathcal{I}"
+
 %endif
 

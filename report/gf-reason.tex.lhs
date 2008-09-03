@@ -218,6 +218,8 @@ in Figure~\ref{fig:Toy-gf}.
 FIXME: do we really need to show the generated data types here?
 If so, how to include them automatically? And what about the G prefix?
 
+Simplification rules.
+
 \subsection{Fragment 1: Basics}
 
 The first fragment only contains transitive and intranstive verbs, and a single proper 
@@ -245,14 +247,16 @@ The semantics is implemented as a Haskell~\citep{haskell98} program.
 > iVP (GComplV2 v2 np)  = (iV2 v2) (iNP np)
 
 > iPN :: GPN -> Exp
-> iPN GJohn_PN = Const "John"
+> iPN GJohn = Const "John"
+> iPN GMary = Const "Mary"
+> iPN GBill = Const "Bill"
 
 > iV :: GV -> (Exp -> Prop)
-> iV GWalk_V = \x -> Pred "walk" [x]
+> iV GWalk = \x -> Pred "walk" [x]
 
 > iV2 :: GV2 -> (Exp -> Exp -> Prop)
-> iV2 GEat_V2   = \x y -> Pred "eat" [x,y]
-> iV2 GLove_V2  = \x y -> Pred "love" [x,y]
+> iV2 GEat   = \x y -> Pred "eat" [x,y]
+> iV2 GLove  = \x y -> Pred "love" [x,y]
 
 This lets use handle the sentences ``John walks'' and ``John loves John'',
 which are assigned the first-order logic formulas
@@ -291,8 +295,8 @@ Montague~\cite{montague73:ptq} solved this problem by changing the type
 of NP interpretations to |(Exp -> Prop) -> Prop|.
 
 > iNP :: GNP -> ((Exp -> Prop) -> Prop)
-> iNP GEveryone    = \v -> forAll (\x -> v x)
-> iNP GSomeone     = \v -> thereIs (\x -> v x)
+> iNP GEveryone    = \v -> forAll x (v x)
+> iNP GSomeone     = \v -> thereIs x (v x)
 
 We also need to change the rule for |UsePN|, which lifts proper names 
 to noun phrases:
@@ -306,8 +310,8 @@ which we would like to interpret as $\forall x. man(x) \Rightarrow walk(x)$.
 > iNP (GDetCN det cn) = (iDet det) (iCN cn)
 
 > iDet :: GDet -> (Exp -> Prop) -> (Exp -> Prop) -> Prop
-> iDet GEvery  = \u v -> forAll (\x -> u x ==> v x)
-> iDet GA      = \u v -> thereIs (\x -> u x &&& v x)
+> iDet GEvery  = \u v -> forAll x (u x ==> v x)
+> iDet GA      = \u v -> thereIs x (u x &&& v x)
 
 > iCN :: GCN -> (Exp -> Prop)
 > iCN (GUseN n)         = iN n
@@ -436,19 +440,19 @@ We lift the entire semantics to our new continuation functor.
 > iS :: GS -> I Prop 
 > iS (GPredVP np vp) = iNP np <*> iVP vp
 
-|shift| is used here
+$shift$ ($\xi$) is used here
 
 > iNP :: GNP -> I ((Exp -> Prop) -> Prop)
-> iNP GEveryone        = shift (\c -> forAll (\x -> c (\v -> v x)))
-> iNP GSomeone         = shift (\c -> thereIs (\x -> c (\v -> v x)))
-> iNP (GUsePN pn)      = pure (\x v -> v x) <*> (iPN pn)
+> iNP GEveryone        = shift k (forAll x (k (\v -> v x)))
+> iNP GSomeone         = shift k (thereIs x (k (\v -> v x)))
+> iNP (GUsePN pn)      = pure (\x v -> v x) <*> iPN pn
 > iNP (GDetCN det cn)  = iDet det <*> iCN cn
 
-|shift| is used here
+$shift$ is used here
 
 > iDet :: GDet -> I ((Exp -> Prop) -> (Exp -> Prop) -> Prop)
-> iDet GEvery  = shift (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
-> iDet GA      = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet GEvery  = shift k (forAll x (k (\u v -> u x ==> v x)))
+> iDet GA      = shift k (thereIs x (k (\u v -> u x &&& v x)))
 
 > iVP :: GVP -> I (Exp -> Prop)
 > iVP (GUseV v)         = iV v
@@ -475,22 +479,24 @@ This is not strictly necessary, since we could instead wrap each call to
 interpretation functions for lexical categories in |pure|.
 
 > iN :: GN -> I (Exp -> Prop)
-> iN GMan_N     = pure (\x -> Pred "man" [x])
-> iN GWoman_N   = pure (\x -> Pred "woman" [x])
-> iN GBurger_N  = pure (\x -> Pred "burger" [x])
+> iN GMan     = pure (\x -> Pred "man" [x])
+> iN GWoman   = pure (\x -> Pred "woman" [x])
+> iN GBurger  = pure (\x -> Pred "burger" [x])
 
 > iN2 :: GN2 -> I (Exp -> Exp -> Prop)
-> iN2 GOwner_N2 = pure (\x y -> Pred "owner" [x,y])
+> iN2 GOwner = pure (\x y -> Pred "owner" [x,y])
 
 > iPN :: GPN -> I Exp
-> iPN GJohn_PN = pure (Const "John")
+> iPN GJohn = pure (Const "John")
+> iPN GMary = pure (Const "Mary")
+> iPN GBill = pure (Const "Bill")
 
 > iV :: GV -> I (Exp -> Prop)
-> iV GWalk_V = pure (\x -> Pred "walk" [x])
+> iV GWalk = pure (\x -> Pred "walk" [x])
 
 > iV2 :: GV2 -> I (Exp -> Exp -> Prop)
-> iV2 GEat_V2   = pure (\x y -> Pred "eat" [x,y])
-> iV2 GLove_V2  = pure (\x y -> Pred "love" [x,y])
+> iV2 GEat   = pure (\x y -> Pred "eat" [x,y])
+> iV2 GLove  = pure (\x y -> Pred "love" [x,y])
 
 %endif
 
@@ -524,7 +530,7 @@ Shan~\cite{shan04:delimited-continuations} notes that
 \emph{delimited continuations} are useful for modelling several
 natural language phenomena, and notes that 
 Barker's~\citep{barker02:continuations-quantification}
-treatment of scope islands implicitly uses |reset|.
+treatment of scope islands implicitly uses $reset$ (|reset|).
 
 %if sem_toy_4_code || style /= newcode
 
@@ -536,6 +542,11 @@ treatment of scope islands implicitly uses |reset|.
 With this addition, only readings 1 and 6 above are returned.
 
 %}
+
+\section{Related Work}
+
+GF semantics in dependent type theory \cite{ranta04:semantics-type-theory}.
+
 
 \chapter{Semantics for the GF Resource Grammar API}
 \label{chapter:resource-grammar-semantics}

@@ -8,6 +8,8 @@ LHS_INCLUDES= \
 
 LHS2TEX_FLAGS= --path=..:
 
+GHCI_FLAGS=-fwarn-incomplete-patterns -i.. -iexamples/toy
+
 .PHONY: default pdf clean showpdf
 
 default: pdf
@@ -37,29 +39,29 @@ $(NAME).tex: $(LHS_INCLUDES)
 examples/toy/Toy.hs examples/toy/Toy.pgf: examples/toy/ToyEng.gf
 	gfc --make --output-format=haskell -D examples/toy $^
 
-examples/toy/SemToy1.hs: gf-reason.tex.lhs examples/toy/Toy.hs
+examples/toy/SemToy1.hs: gf-reason.tex.lhs semantics.fmt
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_1_code --newcode $< > $@
 
-testtoy1: examples/toy/SemToy1.hs
-	ghci -i.. -iexamples/toy $<
+testtoy1: examples/toy/SemToy1.hs examples/toy/Toy.hs
+	ghci $(GHCI_FLAGS) $<
 
-examples/toy/SemToy2.hs: gf-reason.tex.lhs examples/toy/Toy.hs
+examples/toy/SemToy2.hs: gf-reason.tex.lhs semantics.fmt
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_2_code --newcode $< > $@
 
-testtoy2: examples/toy/SemToy2.hs
-	ghci -i.. -iexamples/toy $<
+testtoy2: examples/toy/SemToy2.hs examples/toy/Toy.hs
+	ghci $(GHCI_FLAGS) $<
 
-examples/toy/SemToy3.hs: gf-reason.tex.lhs examples/toy/Toy.hs
+examples/toy/SemToy3.hs: gf-reason.tex.lhs semantics.fmt
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_3_code --newcode $< > $@
 
-testtoy3: examples/toy/SemToy3.hs
-	ghci -i.. -iexamples/toy $<
+testtoy3: examples/toy/SemToy3.hs examples/toy/Toy.hs
+	ghci $(GHCI_FLAGS) $<
 
-examples/toy/SemToy4.hs: gf-reason.tex.lhs examples/toy/Toy.hs
+examples/toy/SemToy4.hs: gf-reason.tex.lhs semantics.fmt
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_4_code --newcode $< > $@
 
-testtoy4: examples/toy/SemToy4.hs
-	ghci -i.. -iexamples/toy $<
+testtoy4: examples/toy/SemToy4.hs examples/toy/Toy.hs
+	ghci $(GHCI_FLAGS) $<
 
 
 clean:
