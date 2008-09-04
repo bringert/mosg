@@ -31,6 +31,15 @@
 %format reset (a)   = "\mathopen{[}" a "\mathclose{]}"
 %format reset' (a)   = "\mathopen{[}" a "\mathclose{]}"
 
+%format eval = "\varepsilon"
+%format eval' = "\varepsilon"
+
+% Lists as sets
+%format [ = "\mathopen{\{}"
+%format ] = "\mathclose{\}}"
+%format ++ = "\cup"
+%format <- = "\in"
+
 %format pred p xs = p xs
 %format Const c = "\mathsf{" c "}"
 

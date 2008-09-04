@@ -108,9 +108,9 @@ GF resource grammar API~\cite{ranta08:resource-library}.
 This is a compositional semantics based on typed lambda calculus,
 in the Montague \cite{montague73:ptq} tradition.
 
-We use continuations for to handle scope 
+We use continuations to handle scope 
 ambiguities~\cite{barker02:continuations-quantification},
-amd delimited continuations for scope islands
+and delimited continuations for scope islands
 \cite{shan04:delimited-continuations}.
 
 To simplify the implementation, we use applicative 

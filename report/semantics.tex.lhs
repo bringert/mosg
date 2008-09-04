@@ -110,13 +110,13 @@ $\forall x \mathpunct{.} \phi$,
 $\exists x \mathpunct{.} \phi$,
 $x = y$,
 $x \neq y$,
-$p(x_1,\ldots,x_n)$,
+$\text{p}(x_1,\ldots,x_n)$,
 
 Expressions:
 
 $x ::=$
 $u$,
-$\mathsf{C}$
+$\text{C}$
 
 When we show formulas which are the result of semantic interpretation,
 the will sometimes be simplified according to the rules of first-order logic.
@@ -186,7 +186,7 @@ $walk(John)$ and $love(John,John)$, respectively.
 
 When we add determiners to our language fragment, we will need some way handling
 quantifiers, as we would for example like the sentence ``everyone walks'' to
-have the interpretation $forall x. walk(x)$.
+have the interpretation |forAll x (pred "walk" (x))|.
 Our previous type of NP interpretations, |Ind|, is insufficient
 since we need to be able to introduce the universial quantifier.
 Montague~\cite{montague73:ptq} solved this problem by changing the type 
@@ -229,12 +229,13 @@ interpretation (|(Ind -> Prop) -> Prop|) to the verb phrase interpretation
 > iS :: S -> Prop 
 > iS (PredVP np vp) = (iNP np) (iVP vp)
 
-We also need to change the rule for transitive verb complementation:
+We also need to change the rule for transitive verb complementation since it
+uses NP:
 %
-% if style == newcode
+%if style == newcode
 > iVP :: VP -> (Ind -> Prop)
 > iVP (UseV v)         = iV v
-% endif
+%endif
 %
 > iVP (ComplV2 v2 np) = \x -> (iNP np) ((iV2 v2) x)
 %
@@ -310,8 +311,13 @@ FIXME: first show simpler version which generates redundant interpretations?
 
 %endif
 
+In the interest of readability, we will use set notation below.
+This can be straightforwardly reaplced by the Church encoding of lists
+to obtain a pure lambda calculus implementation.
 
-This is a representation of a non-deterministic continuation functor.
+A computation is a set of functions that return a value given
+its continuation (context).
+We use a type symonym below.
 
 > type Cont o a = [(a -> o) -> o]
 
@@ -325,26 +331,38 @@ In case the reader is concerned with the exponential behavior
 of this operator, we refer to section~\ref{sec:efficiency}.
 
 > (<*>) :: Cont o (a -> b) -> Cont o a -> Cont o b
-> xs <*> ys = concat [[  \c -> x (\f -> y (\a -> c (f a))),
->                        \c -> y (\a -> x (\f -> c (f a)))]
->                        | x <- xs, y <- ys]
+> xs <*> ys  =   [\c -> x (\f -> y (\a -> c (f a))) | x <- xs, y <- ys]
+>            ++  [\c -> y (\a -> x (\f -> c (f a))) | x <- xs, y <- ys]
 
-Runs a compuation and retrives all posible results.
 
+The |pure| and |<*>| functions make this an 
+\emph{applicative functor}~\cite{mcbride07:applicative}.
+Applicative functors generalize
+\emph{monads}~\cite{wadler92:monads,moggi89:monads}.
+Shan~\shortcite{shan01:monads-natural-language}
+shows how a continuation monad can be used to handle quantification.
+However, that treatment does not take quantifier scope ambiguity into account.
+
+We also define an evaluation operator |eval|
+(symbol borrowed from Shan~\cite{shan04:delimited-continuations}) which runs a 
+computation and retrives all possible results.
+%
 > eval :: Cont o o -> [o]
 > eval x = [y (\f -> f) | y <- x]
 
 A computation that looks at the continuation.
+In the interest of readability, we will write |shift c e| instead of 
 %{
 %if style == newcode
 %format shift = "shift"
 %else 
 %format shift = "\xi"
 %endif
-
+%
+|shift (\c -> e)|.
+%
 > shift :: ((a -> o) -> o) -> Cont o a
 > shift f = [f]
-
 %}
 
 
@@ -523,6 +541,35 @@ in the order of adjacent universal quantifiers.
 \section{Related Work}
 
 GF semantics in dependent type theory \cite{ranta04:semantics-type-theory}.
+We share the idea of writing interpretation rules on the abstract 
+syntax of a type theoretic grammar (GF in both cases).
+However, Ranta uses a dependently typed lambda calculus where we
+use a more pedestrian polymorpic lambda calculus.
+Also, Ranta handles quantifier scope ambiguity by making the 
+grammar ambiguous while keeping the interpretation rules
+straightforward.
+
+Compared to Barker, we have a more elgant way of writing
+interpretation rules, since the applicative functor formulation
+and control operators take care of the continuation plumbing.
+Also, we implement non-deterministic evaluation order in a single place,
+the definition of |<*>|, rather than having to add multiple interpretations
+for each syntactic construct.
+
+The idea of using a applicative functor for hiding the continuation
+plumbing is very similar to Shan's use of monads for the same purpose,
+but the restrictions of a monad does not allow the non-deterministic evaluation
+order that we need.
+Our 
+
+Delimited continuations.
+
+Blackburn and Bos.
+We are using an explicit abstract syntax, which makes it
+easier to change the surface language or the semantics independently.
+In particular, this makes it pssoible for us to construct a multilingual
+semantics.
+
 
 
 %}
