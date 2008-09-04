@@ -28,10 +28,30 @@
 
 %endif
 
-\section{Introduction}
-
 %{
 %include semantics.fmt
+
+\section{Introduction}
+
+Montague~\shortcite{montague73:ptq} uses compositional rules that
+map English expressions to lambda calculus terms over a higher-order
+logic. 
+There is a large body of work that extends this treatment to cover 
+additional phenomena, such as scope ambiguities.
+These efforts, such as Cooper storage~\cite{cooper83:quantification},
+are often expressed as extensions to the
+core lambda calculus.
+We wish to stay within a (polymorphically) typed
+lambda calculus.
+Continuations have been proposed as an approach to deal
+with a range of semantic phenomena~\cite{barker02:continuations-quantification}.
+
+
+We use first-order logic as our target language, rather than the higher-order 
+logic used by Montague~\shortcite{montague73:ptq}. 
+This lets us use our semantics for practical applications with exisiting 
+automated first-order reasoning tools.
+
 
 Philosophy: don't push everything into the lexicon.
 Lexical semantics should be as simple as possible, since there are more
@@ -62,15 +82,49 @@ If so, how to include them automatically? And what about the G prefix?
 
 Lambda calculus over first-order logic.
 
+Lambda calculus:
 
+$e ::=$
+$e \ e'$,
+$\lambda x \mathpunct{.} e$,
+$x$,
+$\phi$
 
-Simplification rules.
+Types:
+
+$\tau ::=$
+$\tau \rightarrow \tau'$,
+$\mathsf{Ind}$,
+$\mathsf{Prop}$
+
+We use the following syntax for first-order logic with equality:
+
+Formulas:
+
+$\phi, \psi ::= $
+$\phi \land \psi$,
+$\phi \lor \psi$,
+$\phi \Rightarrow \psi$,
+$\lnot \phi$,
+$\forall x \mathpunct{.} \phi$,
+$\exists x \mathpunct{.} \phi$,
+$x = y$,
+$x \neq y$,
+$p(x_1,\ldots,x_n)$,
+
+Expressions:
+
+$x ::=$
+$u$,
+$\mathsf{C}$
+
+When we show formulas which are the result of semantic interpretation,
+the will sometimes be simplified according to the rules of first-order logic.
 
 \subsection{Fragment 1: Basics}
 
 The first fragment only contains transitive and intranstive verbs, and a single proper 
 name, along with the neccessary predication and complementation rules.
-The semantics is implemented as a Haskell~\cite{haskell98} program.
 
 %if sem_toy_1_code || sem_toy_2_code || style /= newcode
 
@@ -259,21 +313,18 @@ The |pure| function lifts a pure value into the functor.
 > pure a = [\c -> c a]
 
 The |<*>| operator performs lifted function application.
+In case the reader is concerned with the exponential behavior
+of this operator, we refer to section~\ref{sec:efficiency}.
 
 > (<*>) :: Cont o (a -> b) -> Cont o a -> Cont o b
 > xs <*> ys = concat [[  \c -> x (\f -> y (\a -> c (f a))),
 >                        \c -> y (\a -> x (\f -> c (f a)))]
 >                        | x <- xs, y <- ys]
 
-Runs a compuation and retrive all posible results.
+Runs a compuation and retrives all posible results.
 
 > eval :: Cont o o -> [o]
 > eval x = [y (\f -> f) | y <- x]
-
-The same but for single-argument functions.
-
-> eval' :: Cont o (a -> o) -> [a -> o]
-> eval' x = [\e -> y (\f -> f e) | y <- x]
 
 A computation that looks at the continuation.
 %{
@@ -288,15 +339,6 @@ A computation that looks at the continuation.
 
 %}
 
-The |reset| function for creating delimited continuation computations.
-
-> reset :: Cont o o -> Cont p o
-> reset x = [\c -> c y | y <- eval x]
-
-Like |reset| but for single argument functions.
-
-> reset' :: Cont o (a -> o) -> Cont p (a -> o)
-> reset' x = [\c -> c y | y <- eval' x]
 
 %endif
 
@@ -405,8 +447,34 @@ Shan~\cite{shan04:delimited-continuations} notes that
 natural language phenomena, and notes that 
 Barker's~\shortcite{barker02:continuations-quantification}
 treatment of scope islands implicitly uses $reset$ (|reset|).
+Barker notes that this can only be done for categories
+whose interpretation type is $t$ (|Prop| in our treatment).
+However, as we show below, we can do it for
+any type |\tau_1 -> ... -> \tau_n -> Prop| (though we have only needed
+|Ind -> Prop| so far.
+
 
 %if sem_toy_4_code || style /= newcode
+
+The |reset| function for creating delimited continuation computations.
+
+> reset :: Cont o o -> Cont p o
+> reset x = [\c -> c y | y <- eval x]
+
+Like |reset| but for single argument functions.
+
+> reset' :: Cont o (a -> o) -> Cont p (a -> o)
+> reset' x = [\c -> c y | y <- eval' x]
+
+This uses a version of |eval| for single-argument functions.
+This can be straight-forwardly be extended to any number of arguments,
+but we have so far not found a needed for that.
+
+> eval' :: Cont o (a -> o) -> [a -> o]
+> eval' x = [\e -> y (\f -> f e) | y <- x]
+
+The rule for relative sentences now uses |reset'| to make the
+relative sentence a scope island.
 
 > iRS :: RS -> I (Ind -> Prop)
 > iRS (RelVP vp) = reset' (iVP vp)
@@ -415,7 +483,12 @@ treatment of scope islands implicitly uses $reset$ (|reset|).
 
 With this addition, only readings 1 and 6 above are returned.
 
+\section{Haskell implementation}
+
+The semantics is implemented as a Haskell~\cite{haskell98} program.
+
 \subsection{Efficiency}
+\label{sec:efficiency}
 
 The naive implementation above always uses both left-to-right and right-to-left 
 evaluation whenever |<*>| is used.
