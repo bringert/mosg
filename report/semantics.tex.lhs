@@ -133,6 +133,7 @@ name, along with the neccessary predication and complementation rules.
 > import Toy
 > import FOL
 > import TestToy
+> import Prelude hiding (pred)
 
 %endif
 
@@ -144,19 +145,19 @@ We first provide straightforward semantics for the lexical items.
 > iPN Bill = Const "Bill"
 
 > iV :: V -> (Ind -> Prop)
-> iV Walk = \x -> Pred "walk" [x]
+> iV Walk = \x -> pred "walk" (x)
 
 > iV2 :: V2 -> (Ind -> Ind -> Prop)
-> iV2 Eat   = \x y -> Pred "eat" [x,y]
-> iV2 Love  = \x y -> Pred "love" [x,y]
+> iV2 Eat   = \x y -> pred "eat" (x,y)
+> iV2 Love  = \x y -> pred "love" (x,y)
 
 > iN :: N -> (Ind -> Prop)
-> iN Man     = \x -> Pred "man" [x]
-> iN Woman   = \x -> Pred "woman" [x]
-> iN Burger  = \x -> Pred "burger" [x]
+> iN Man     = \x -> pred "man" (x)
+> iN Woman   = \x -> pred "woman" (x)
+> iN Burger  = \x -> pred "burger" (x)
 
 > iN2 :: N2 -> (Ind -> Ind -> Prop)
-> iN2 Owner = \x y -> Pred "owner" [x,y]
+> iN2 Owner = \x y -> pred "owner" (x,y)
 
 %endif
 
@@ -297,6 +298,7 @@ FIXME: first show simpler version which generates redundant interpretations?
 > import Toy
 > import FOL
 > import TestToy
+> import Prelude hiding (pred)
 
 > test1 = test (eval . iS) "a man who loves every woman eats a burger"
 
@@ -395,12 +397,12 @@ This is not strictly necessary, since we could instead wrap each call to
 interpretation functions for lexical categories in |pure|.
 
 > iN :: N -> I (Ind -> Prop)
-> iN Man     = pure (\x -> Pred "man" [x])
-> iN Woman   = pure (\x -> Pred "woman" [x])
-> iN Burger  = pure (\x -> Pred "burger" [x])
+> iN Man     = pure (\x -> pred "man" (x))
+> iN Woman   = pure (\x -> pred "woman" (x))
+> iN Burger  = pure (\x -> pred "burger" (x))
 
 > iN2 :: N2 -> I (Ind -> Ind -> Prop)
-> iN2 Owner = pure (\x y -> Pred "owner" [x,y])
+> iN2 Owner = pure (\x y -> pred "owner" (x,y))
 
 > iPN :: PN -> I Ind
 > iPN John = pure (Const "John")
@@ -408,11 +410,11 @@ interpretation functions for lexical categories in |pure|.
 > iPN Bill = pure (Const "Bill")
 
 > iV :: V -> I (Ind -> Prop)
-> iV Walk = pure (\x -> Pred "walk" [x])
+> iV Walk = pure (\x -> pred "walk" (x))
 
 > iV2 :: V2 -> I (Ind -> Ind -> Prop)
-> iV2 Eat   = pure (\x y -> Pred "eat" [x,y])
-> iV2 Love  = pure (\x y -> Pred "love" [x,y])
+> iV2 Eat   = pure (\x y -> pred "eat" (x,y))
+> iV2 Love  = pure (\x y -> pred "love" (x,y))
 
 %endif
 
@@ -506,8 +508,11 @@ in the order of adjacent universal quantifiers.
 
 \subsubsection{A more efficient functor}
 
+%if style /= newcode
+
 %include Inter.lhs
 
+%endif
 
 \section{Related Work}
 

@@ -4,6 +4,7 @@ module FOL (
             Theory, Prop(..),Ind(..),
             -- * Construction API
             (&&&), (|||), ands, ors, (==>), (<=>), neg, (===), (=/=), forAll, thereIs, true, false,
+            pred,
             -- * Pretty-printing internals
             Vars, runVars, getUnique,
             pprProp,
@@ -15,6 +16,7 @@ module FOL (
 import Control.Monad
 import Data.Char
 import Data.List
+import Prelude hiding (pred)
 import Text.ParserCombinators.ReadP hiding (get)
 import Text.PrettyPrint.HughesPJ hiding (char)
 
@@ -90,6 +92,25 @@ true = TrueProp
 
 false :: Prop
 false = FalseProp
+
+class ToPred a where
+    pred :: String -> a -> Prop
+
+instance ToPred Ind where
+    pred s x = Pred s [x]
+
+instance (ToInd a, ToInd b) => ToPred (a,b) where
+    pred s (x,y) = Pred s [toInd x]
+
+instance (ToInd a, ToInd b, ToInd c) => ToPred (a,b,c) where
+    pred s (x,y,z) = Pred s [toInd x, toInd y, toInd z]
+
+class ToInd a where
+    toInd :: a -> Ind
+
+instance ToInd Ind where
+    toInd x = x
+
 
 simplify :: Prop -> Prop
 simplify (And []) = TrueProp

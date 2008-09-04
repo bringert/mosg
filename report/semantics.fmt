@@ -12,6 +12,9 @@
 % Use sans-serif font for constructors 
 %subst conid a     = "\mathsf{" a "}"
 
+% Don't quote strings
+%subst string a         = "\text{" a "}"
+
 %format <*>          = "\varoast"
 %format &&&          = "\land"
 %format |||          = "\lor"
@@ -27,6 +30,9 @@
 
 %format reset (a)   = "\mathopen{[}" a "\mathclose{]}"
 %format reset' (a)   = "\mathopen{[}" a "\mathclose{]}"
+
+%format pred p xs = p xs
+%format Const c = "\mathsf{" c "}"
 
 %format I            = "\mathcal{I}"
 
