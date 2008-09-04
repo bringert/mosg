@@ -5,6 +5,9 @@
 \usepackage{natbib}
 \usepackage[pdftex]{graphicx}
 
+\let\cite=\citep
+\let\shortcite=\citeyearpar
+
 %include polycode.fmt
 
 %% Tell included files (e.g. semantics.tex.lhs) that they are not stand-alone.
@@ -103,7 +106,7 @@ We have written a first-order logic semantics for a substantial fraction of the
 GF resource grammar API~\cite{ranta08:resource-library}.
 
 This is a compositional semantics based on typed lambda calculus,
-in the Montague \citep{montague73:ptq} tradition.
+in the Montague \cite{montague73:ptq} tradition.
 
 We use continuations for to handle scope 
 ambiguities~\cite{barker02:continuations-quantification},
@@ -111,7 +114,7 @@ amd delimited continuations for scope islands
 \cite{shan04:delimited-continuations}.
 
 To simplify the implementation, we use applicative 
-functors~\cite{mcbride07:applicative}. Shan~\cite{shan01:monads-natural-language}
+functors~\cite{mcbride07:applicative}. Shan~\shortcite{shan01:monads-natural-language}
 has used monads for a similiar effect, but this does not allow 
 the non-determinism that we want.
 
