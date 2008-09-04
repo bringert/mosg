@@ -231,6 +231,11 @@ interpretation (|(Ind -> Prop) -> Prop|) to the verb phrase interpretation
 
 We also need to change the rule for transitive verb complementation:
 %
+% if style == newcode
+> iVP :: VP -> (Ind -> Prop)
+> iVP (UseV v)         = iV v
+% endif
+%
 > iVP (ComplV2 v2 np) = \x -> (iNP np) ((iV2 v2) x)
 %
 or, equivalently,
