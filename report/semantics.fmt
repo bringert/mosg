@@ -41,7 +41,7 @@
 %format <- = "\in"
 
 %format pred p xs = p xs
-%format Const c = "\mathsf{" c "}"
+%format (Const c) = "\mathsf{" c "}"
 
 %format I            = "\mathcal{I}"
 

@@ -247,30 +247,36 @@ or, equivalently,
 
 \subsection{Fragment 3: Quantifier scope ambiguity}
 
-Now, consider a sentence such as ``every man loves a woman''.
+Consider a sentence such as ``every man loves a woman''.
 The rules in the previous section would interpret this as
-$forall x. man(x) \Rightarrow exist y. woman(y) \land love(x,y)$.
-However, the sentence also has the alternative meaning
-$exist y. woman(y) \land forall x. man(x) \Rightarrow love(x,y)$,
-that is, that there is some woman whom every man loves.
-To be able to do this, we need to allow the quantifiers from
-a nested noun phrase to escape to the top level of the formula.
 
-A number of approaches have been proposed to handle such
+|forAll x (pred "man" (x) ==> thereIs y (pred "woman" (y) &&& pred "love" (x,y))|.
+
+However, the sentence also has the alternative meaning
+
+|thereIs y (pred "woman" (y) &&& forAll x (pred "man" (x) ==> love(x,y)|,
+
+that is, that there is some woman whom every man loves.
+To be able to generate both these readings, we need to allow the quantifiers from
+a nested noun phrase to escape to the top level of the formula.
+We also need a mechanism for allowing interpretation to be non-deterministic.
+
+A number of approaches have been proposed to handle
 \emph{quantifier scope ambiguity}, such as 
-Cooper storage~\cite{FIXME}, and its improved successor,
+Cooper storage~\cite{cooper83:quantification}, and its improved version,
 Keller storage~\cite{keller88:nester-cooper-storage}.
 While it is possible to implement Keller storage in a typed
 lambda calculus, the result is not very elegant. Cooper storage
 seems difficult to implement in a typed way, because of the 
 unsoundness that Keller pointed out.
 
-Instead of storage, we can use continuations to deal with 
+Instead of storage, we can use \emph{continuations} to deal with 
 quantifier scope.
-Barker~\cite{barker02:continuations-quantification} notes
-that Montague's trick is equivalent to continuation 
-passin, and that quantifier scope ambiguity can be handled by
-using a non-deterministic evaluation order.
+Barker~\shortcite{barker02:continuations-quantification} shows 
+that contiuations can be used to handle a range of semantic phenomena,
+and that quantifier scope ambiguity can be handled by 
+using a non-deterministic evaluation order in a continuized
+semantics.
 
 A \emph{continuation monad} can be used to hide the plumbing details 
 of continuation passing style in natural language 
@@ -278,22 +284,21 @@ semantics~\cite{shan01:monads-natural-language}.
 As Shan notes, one advantage of using a monadic style is that the monad
 in question
 can easily be replaced with a more elaborate one when we want to
-account for additional details, changing most of the interpretation rules,
-as we do in the next section.
+account for additional details, 
+without having to change all the interpretation rules.
 However, it is in general not possible to make a continuation 
 monad with non-deterministic 
-evaluation order, since the bind operation of a monad requires left-to-right
-evaluation.
+evaluation order, since the bind operation of a monad 
+(|>>=| in Haskell, $\star$ in \cite{shan01:monads-natural-language}) 
+requires left-to-right evaluation.
 But, fortunately for us, monads can be generalized to 
 \emph{applicative functors}~\cite{mcbride07:applicative},
-whose combining operator is order-agnostic.
+whose combining operator (|<*>|) is order-agnostic.
 Thus, instead of a continuation monad for natural language semantics,
 we propose a \emph{continuation applicative functor} with non-deterministic
 evaluation order. In this section, we show that an applicative functor is sufficient for
-the needs of a compositional natural language semantics, and that it can handle 
+the needs of our semantics, and that it can handle 
 quantifier scope ambiguities. 
-
-FIXME: first show simpler version which generates redundant interpretations?
 
 \subsubsection{Interpretation Functor}
 
@@ -377,35 +382,22 @@ so we use |I a| as a shorthand for |Cont Prop a|.
 
 > type I a = Cont Prop a
 
-We lift the entire semantics to our new continuation functor.
-
+We first lift the parts of our semantics that do not introduce any quantifiers
+to use our new continuation functor.
+Function application is replaced with lifted function application (|<*>|),
+and |pure| is used to lift the combination functions where necessary.
+%
 > iS :: S -> I Prop 
 > iS (PredVP np vp) = iNP np <*> iVP vp
-
-$shift$ ($\xi$) is used here
-
-> iNP :: NP -> I ((Ind -> Prop) -> Prop)
-> iNP Everyone        = shift k (forAll x (k (\v -> v x)))
-> iNP Someone         = shift k (thereIs x (k (\v -> v x)))
-> iNP (UsePN pn)      = pure (\x v -> v x) <*> iPN pn
-> iNP (DetCN det cn)  = iDet det <*> iCN cn
-
-$shift$ is used here
-
-> iDet :: Det -> I ((Ind -> Prop) -> (Ind -> Prop) -> Prop)
-> iDet Every  = shift k (forAll x (k (\u v -> u x ==> v x)))
-> iDet A      = shift k (thereIs x (k (\u v -> u x &&& v x)))
-
+>
 > iVP :: VP -> I (Ind -> Prop)
 > iVP (UseV v)         = iV v
 > iVP (ComplV2 v2 np)  = pure (.) <*> iNP np <*> iV2 v2
-
+>
 > iCN :: CN -> I (Ind -> Prop)
 > iCN (UseN n)         = iN n
 > iCN (ComplN2 n2 np)  = pure (.) <*> iNP np <*> iN2 n2
 > iCN (RelCN cn rs)    = pure (\cn' rs' x -> cn' x &&& rs' x) <*> iCN cn <*> iRS rs
-
-%endif
 
 %if sem_toy_3_code || style /= newcode
 
@@ -414,28 +406,45 @@ $shift$ is used here
 
 %endif 
 
+Noun phrases and determiners introduce quantifiers.
+Since we want to move quantifiers to the top-level,
+these interpretations use the shift operator ($\xi$)
+to obtain the current continuation and wrap the quantifier around it.
+
+> iNP :: NP -> I ((Ind -> Prop) -> Prop)
+> iNP Everyone        = shift k (forAll x (k (\v -> v x)))
+> iNP Someone         = shift k (thereIs x (k (\v -> v x)))
+> iNP (UsePN pn)      = pure (\x v -> v x) <*> iPN pn
+> iNP (DetCN det cn)  = iDet det <*> iCN cn
+>
+> iDet :: Det -> I ((Ind -> Prop) -> (Ind -> Prop) -> Prop)
+> iDet Every  = shift k (forAll x (k (\u v -> u x ==> v x)))
+> iDet A      = shift k (thereIs x (k (\u v -> u x &&& v x)))
+
+%endif
+
 %if sem_toy_3_code || sem_toy_4_code || style /= newcode
 
 Finally, we need to lift the lexicon to use the interpretation functor.
-This is not strictly necessary, since we could instead wrap each call to
-interpretation functions for lexical categories in |pure|.
+This is very straightforward: we just use |pure| to lift 
+each interpretation.
 
 > iN :: N -> I (Ind -> Prop)
 > iN Man     = pure (\x -> pred "man" (x))
 > iN Woman   = pure (\x -> pred "woman" (x))
 > iN Burger  = pure (\x -> pred "burger" (x))
-
+>
 > iN2 :: N2 -> I (Ind -> Ind -> Prop)
 > iN2 Owner = pure (\x y -> pred "owner" (x,y))
-
+>
 > iPN :: PN -> I Ind
 > iPN John  = pure (Const "John")
 > iPN Mary  = pure (Const "Mary")
 > iPN Bill  = pure (Const "Bill")
-
+>
 > iV :: V -> I (Ind -> Prop)
 > iV Walk = pure (\x -> pred "walk" (x))
-
+>
 > iV2 :: V2 -> I (Ind -> Ind -> Prop)
 > iV2 Eat   = pure (\x y -> pred "eat" (x,y))
 > iV2 Love  = pure (\x y -> pred "love" (x,y))
