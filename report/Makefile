@@ -11,7 +11,7 @@ LHS_INCLUDES= \
 
 LHS2TEX_FLAGS= --path=..:
 
-GHCI_FLAGS=-fwarn-incomplete-patterns -i.. -iexamples/toy
+GHCI_FLAGS=-fwarn-incomplete-patterns -fwarn-missing-signatures -i.. -iexamples/toy
 
 .PHONY: default pdf clean showpdf
 
