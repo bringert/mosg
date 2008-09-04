@@ -54,8 +54,10 @@ A computation that looks at the continuation.
 %else 
 %format shift = "\xi"
 %endif
+
 > shift :: ((a -> o) -> o) -> Cont o a
 > shift f = Cont [f]
+
 %}
 
 The |reset| function for creating delimited continuation computations.
