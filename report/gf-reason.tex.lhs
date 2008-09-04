@@ -390,34 +390,73 @@ FIXME: first show simpler version which generates redundant interpretations?
 
 \subsubsection{Interpretation Functor}
 
-%if style /= newcode
-
-The class of applicative functors:
-
-> class Functor f => Applicative f where
->   pure :: a -> f a
->   (<*>) :: f (a -> b) -> f a -> f b
-
-%include Inter.lhs
-
-%endif
-
-\subsubsection{Semantics}
-
 %if sem_toy_3_code || sem_toy_4_code || style /= newcode
 
 %if style == newcode
 
 > import Toy
 > import FOL
-> import Inter
 > import TestToy
-
-> import Control.Applicative (pure, (<*>))
 
 > test1 = test (eval . iS) "a man who loves every woman eats a burger"
 
 %endif
+
+
+This is a representation of a non-deterministic continuation functor.
+
+> type Cont o a = [(a -> o) -> o]
+
+The |pure| function lifts a pure value into the functor.
+
+> pure :: a -> Cont o a
+> pure a = [\c -> c a]
+
+The |<*>| operator performs lifted function application.
+
+> (<*>) :: Cont o (a -> b) -> Cont o a -> Cont o b
+> xs <*> ys = concat [[  \c -> x (\f -> y (\a -> c (f a))),
+>                        \c -> y (\a -> x (\f -> c (f a)))]
+>                        | x <- xs, y <- ys]
+
+Runs a compuation and retrive all posible results.
+
+> eval :: Cont o o -> [o]
+> eval x = [y (\f -> f) | y <- x]
+
+The same but for single-argument functions.
+
+> eval' :: Cont o (a -> o) -> [a -> o]
+> eval' x = [\e -> y (\f -> f e) | y <- x]
+
+A computation that looks at the continuation.
+%{
+%if style == newcode
+%format shift = "shift"
+%else 
+%format shift = "\xi"
+%endif
+
+> shift :: ((a -> o) -> o) -> Cont o a
+> shift f = [f]
+
+%}
+
+The |reset| function for creating delimited continuation computations.
+
+> reset :: Cont o o -> Cont p o
+> reset x = [\c -> c y | y <- eval x]
+
+Like |reset| but for single argument functions.
+
+> reset' :: Cont o (a -> o) -> Cont p (a -> o)
+> reset' x = [\c -> c y | y <- eval' x]
+
+%endif
+
+\subsubsection{Semantics}
+
+%if sem_toy_3_code || sem_toy_4_code || style /= newcode
 
 In this example, the outer return type is always |Prop|,
 so we use |I a| as a shorthand for |Cont Prop a|.
