@@ -305,6 +305,7 @@ FIXME: first show simpler version which generates redundant interpretations?
 > import TestToy
 > import Prelude hiding (pred)
 
+> test1 :: IO ()
 > test1 = test (eval . iS) "a man who loves every woman eats a burger"
 
 %endif
