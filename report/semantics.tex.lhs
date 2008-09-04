@@ -80,7 +80,35 @@ If so, how to include them automatically? And what about the G prefix?
 
 \section{Semantics}
 
-Lambda calculus over first-order logic.
+We interpret each abstract syntax term as a term in
+$\lambda$-calculus over first-order logic with equality.
+We use the customary connectives and quantifiers,
+$n$-ary predicates, equality, inequality.
+
+Formulas:
+
+$\phi, \psi ::= $
+$\phi \land \psi$,
+$\phi \lor \psi$,
+$\phi \Rightarrow \psi$,
+$\lnot \phi$,
+$\forall u \mathpunct{.} \phi$,
+$\exists u \mathpunct{.} \phi$,
+$x = y$,
+$x \neq y$,
+$\text{p}(x_1,\ldots,x_n)$,
+$true$,
+$false$
+
+Expressions:
+
+$x ::=$
+$u$,
+$\text{C}$
+
+A term in our $\lambda$-calculus is a function application,
+an abstraction (function value), a variable or a first-order logic formula.
+FIXE> not true, they can be intermingled.
 
 Lambda calculus:
 
@@ -97,33 +125,13 @@ $\tau \rightarrow \tau'$,
 $\mathsf{Ind}$,
 $\mathsf{Prop}$
 
-We use the following syntax for first-order logic with equality:
-
-Formulas:
-
-$\phi, \psi ::= $
-$\phi \land \psi$,
-$\phi \lor \psi$,
-$\phi \Rightarrow \psi$,
-$\lnot \phi$,
-$\forall x \mathpunct{.} \phi$,
-$\exists x \mathpunct{.} \phi$,
-$x = y$,
-$x \neq y$,
-$\text{p}(x_1,\ldots,x_n)$,
-
-Expressions:
-
-$x ::=$
-$u$,
-$\text{C}$
 
 When we show formulas which are the result of semantic interpretation,
 the will sometimes be simplified according to the rules of first-order logic.
 
 \subsection{Fragment 1: Basics}
 
-The first fragment only contains transitive and intranstive verbs, and a single proper 
+Our first language fragment only contains transitive and intranstive verbs, and a single proper 
 name, along with the neccessary predication and complementation rules.
 
 %if sem_toy_1_code || sem_toy_2_code || style /= newcode
@@ -150,14 +158,6 @@ We first provide straightforward semantics for the lexical items.
 > iV2 :: V2 -> (Ind -> Ind -> Prop)
 > iV2 Eat   = \x y -> pred "eat" (x,y)
 > iV2 Love  = \x y -> pred "love" (x,y)
-
-> iN :: N -> (Ind -> Prop)
-> iN Man     = \x -> pred "man" (x)
-> iN Woman   = \x -> pred "woman" (x)
-> iN Burger  = \x -> pred "burger" (x)
-
-> iN2 :: N2 -> (Ind -> Ind -> Prop)
-> iN2 Owner = \x y -> pred "owner" (x,y)
 
 %endif
 
@@ -191,6 +191,18 @@ Our previous type of NP interpretations, |Ind|, is insufficient
 since we need to be able to introduce the universial quantifier.
 Montague~\cite{montague73:ptq} solved this problem by changing the type 
 of NP interpretations to |(Ind -> Prop) -> Prop|.
+
+We first add interpretations for the remaining lexical categories.
+
+> iN :: N -> (Ind -> Prop)
+> iN Man     = \x -> pred "man" (x)
+> iN Woman   = \x -> pred "woman" (x)
+> iN Burger  = \x -> pred "burger" (x)
+>
+> iN2 :: N2 -> (Ind -> Ind -> Prop)
+> iN2 Owner = \x y -> pred "owner" (x,y)
+
+And then move on to the quantificational noun phrases.
 
 > iNP :: NP -> ((Ind -> Prop) -> Prop)
 > iNP Everyone    = \v -> forAll x (v x)
