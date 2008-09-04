@@ -21,7 +21,6 @@
 
 \begin{abstract}
 
-
 \end{abstract}
 
 %endif
@@ -55,6 +54,12 @@ in Figure~\ref{fig:Toy-gf}.
 
 FIXME: do we really need to show the generated data types here?
 If so, how to include them automatically? And what about the G prefix?
+
+\section{Semantics}
+
+Lambda calculus over first-order logic.
+
+
 
 Simplification rules.
 
@@ -407,11 +412,33 @@ treatment of scope islands implicitly uses $reset$ (|reset|).
 
 With this addition, only readings 1 and 6 above are returned.
 
-%}
+\subsection{Efficiency}
+
+The naive implementation above always uses both left-to-right and right-to-left 
+evaluation whenever |<*>| is used.
+This means that the number of formulas produced is roughly exponential
+in the number of nodes in the abstract syntax tree. 
+However, since only a few of the interpretation rules make use of 
+$\xi$, there are many duplicates.
+This blow-up can be avoided in most cases by chaning the implementation
+of the continuation functor, as shown below.
+Now, the number of formulas produced in exponential in the number of 
+uses of $\xi$. For some sentences, this may still be a significant 
+number, but these are now syntactically different readings.
+Some of the may still be logically equivalent, for example if they only differ
+in the order of adjacent universal quantifiers.
+
+\subsubsection{A more efficient functor}
+
+%include Inter.lhs
+
 
 \section{Related Work}
 
 GF semantics in dependent type theory \cite{ranta04:semantics-type-theory}.
+
+
+%}
 
 
 
