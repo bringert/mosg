@@ -135,41 +135,51 @@ name, along with the neccessary predication and complementation rules.
 > import TestToy
 > import Prelude hiding (pred)
 
+> iS :: S -> S'
+> iVP :: VP -> VP'
+> iNP :: NP -> NP'
+
+> iV :: V -> V'
+> iV2 :: V2 -> V2'
+> iN :: N -> N'
+> iN2 :: N2 -> N2'
+> iPN :: PN -> PN'
+
 %endif
 
 We first provide straightforward semantics for the lexical items.
 
-> iPN :: PN -> Ind
+> type PN' = Ind
 > iPN John  = Const "John"
 > iPN Mary  = Const "Mary"
 > iPN Bill  = Const "Bill"
 
-> iV :: V -> (Ind -> Prop)
+> type V' = Ind -> Prop
 > iV Walk = \x -> pred "walk" (x)
 
-> iV2 :: V2 -> (Ind -> Ind -> Prop)
+> type V2' = Ind -> Ind -> Prop
 > iV2 Eat   = \x y -> pred "eat" (x,y)
 > iV2 Love  = \x y -> pred "love" (x,y)
 
-> iN :: N -> (Ind -> Prop)
+> type N' = Ind -> Prop
 > iN Man     = \x -> pred "man" (x)
 > iN Woman   = \x -> pred "woman" (x)
 > iN Burger  = \x -> pred "burger" (x)
 
-> iN2 :: N2 -> (Ind -> Ind -> Prop)
+> type N2' = Ind -> Ind -> Prop
 > iN2 Owner = \x y -> pred "owner" (x,y)
 
 %endif
 
 %if sem_toy_1_code || style /= newcode
 
-> iS :: S -> Prop 
+> type S' = Prop 
 > iS (PredVP np vp) = (iVP vp) (iNP np)
 
-> iNP :: NP -> Ind
+> type NP' = Ind
 > iNP (UsePN pn) = iPN pn
 
-> iVP :: VP -> (Ind -> Prop)
+> type VP' = Ind -> Prop
 > iVP (UseV v)         = iV v
 > iVP (ComplV2 v2 np)  = (iV2 v2) (iNP np)
 
@@ -184,6 +194,14 @@ $walk(John)$ and $love(John,John)$, respectively.
 
 %if sem_toy_2_code || style /= newcode
 
+%if style == newcode
+
+> iRS :: RS -> RS'
+> iDet :: Det -> Det'
+> iCN :: CN -> CN'
+
+%endif
+
 When we add determiners to our language fragment, we will need some way handling
 quantifiers, as we would for example like the sentence ``everyone walks'' to
 have the interpretation $forall x. walk(x)$.
@@ -192,7 +210,7 @@ since we need to be able to introduce the universial quantifier.
 Montague~\cite{montague73:ptq} solved this problem by changing the type 
 of NP interpretations to |(Ind -> Prop) -> Prop|.
 
-> iNP :: NP -> ((Ind -> Prop) -> Prop)
+> type NP' = (Ind -> Prop) -> Prop
 > iNP Everyone    = \v -> forAll x (v x)
 > iNP Someone     = \v -> thereIs x (v x)
 
@@ -207,16 +225,16 @@ which we would like to interpret as $\forall x. man(x) \Rightarrow walk(x)$.
 
 > iNP (DetCN det cn) = (iDet det) (iCN cn)
 
-> iDet :: Det -> (Ind -> Prop) -> (Ind -> Prop) -> Prop
+> type Det' = (Ind -> Prop) -> (Ind -> Prop) -> Prop
 > iDet Every  = \u v -> forAll x (u x ==> v x)
 > iDet A      = \u v -> thereIs x (u x &&& v x)
 
-> iCN :: CN -> (Ind -> Prop)
+> type CN' = Ind -> Prop
 > iCN (UseN n)         = iN n
 > iCN (ComplN2 n2 np)  = \x -> (iNP np) ((iN2 n2) x)
 > iCN (RelCN cn rs)    = \x -> (iCN cn) x &&& (iRS rs) x
 
-> iRS :: RS -> (Ind -> Prop)
+> type RS' = Ind -> Prop
 > iRS (RelVP vp) = iVP vp
 
 Since we have changed the type of noun phrase interpretations,
@@ -226,11 +244,15 @@ order of application; all we do is to apply the noun phrase
 interpretation (|(Ind -> Prop) -> Prop|) to the verb phrase interpretation
 (|Ind -> Prop|) to get the final |Prop|).
 %
-> iS :: S -> Prop 
+> type S' = Prop 
 > iS (PredVP np vp) = (iNP np) (iVP vp)
 
 We also need to change the rule for transitive verb complementation:
 %
+%if style == newcode
+> type VP' = Ind -> Prop
+> iVP (UseV v)        = iV v
+%endif
 > iVP (ComplV2 v2 np) = \x -> (iNP np) ((iV2 v2) x)
 %
 or, equivalently,
