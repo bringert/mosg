@@ -1,6 +1,7 @@
 NAME=gf-reason
 
 LHS_INCLUDES= \
+  semantics.tex.lhs \
   ../Sem.tex.lhs \
   examples/toy/Toy.gf.lhs \
   examples/toy/ToyEng.gf.lhs \
@@ -24,6 +25,12 @@ $(NAME).pdf: $(NAME).tex
 	pdflatex $(NAME)
 
 $(NAME).tex: $(LHS_INCLUDES)
+
+semantics.pdf: semantics.tex
+	pdflatex semantics
+
+showsem: semantics.pdf
+	acroread $^
 
 %.tex: %.tex.lhs
 	lhs2TeX $(LHS2TEX_FLAGS) -o $@ $<
