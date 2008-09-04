@@ -36,14 +36,5 @@
 
 %format I            = "\mathcal{I}"
 
-%format (iPN x) = x "^*"
-%format PN' = "\mathsf{PN}^*"
-
-%format (iNP x) = x "^*"
-%format NP' = "\mathsf{NP}^*"
-
-%format (iVP x) = x "^*"
-%format VP' = "\mathsf{VP}^*"
-
 %endif
 
