@@ -140,9 +140,9 @@ name, along with the neccessary predication and complementation rules.
 We first provide straightforward semantics for the lexical items.
 
 > iPN :: PN -> Ind
-> iPN John = Const "John"
-> iPN Mary = Const "Mary"
-> iPN Bill = Const "Bill"
+> iPN John  = Const "John"
+> iPN Mary  = Const "Mary"
+> iPN Bill  = Const "Bill"
 
 > iV :: V -> (Ind -> Prop)
 > iV Walk = \x -> pred "walk" (x)
@@ -405,9 +405,9 @@ interpretation functions for lexical categories in |pure|.
 > iN2 Owner = pure (\x y -> pred "owner" (x,y))
 
 > iPN :: PN -> I Ind
-> iPN John = pure (Const "John")
-> iPN Mary = pure (Const "Mary")
-> iPN Bill = pure (Const "Bill")
+> iPN John  = pure (Const "John")
+> iPN Mary  = pure (Const "Mary")
+> iPN Bill  = pure (Const "Bill")
 
 > iV :: V -> I (Ind -> Prop)
 > iV Walk = pure (\x -> pred "walk" (x))
