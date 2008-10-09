@@ -497,7 +497,7 @@ treatment of scope islands implicitly uses $reset$ (|reset|).
 Barker notes that this can only be done for categories
 whose interpretation type is $t$ (|Prop| in our treatment).
 However, as we show below, we can do it for
-any type |\tau_1 -> ... -> \tau_n -> Prop| (though we have only needed
+any type |tau_1 -> ... -> tau_n -> Prop| (though we have only needed
 |Ind -> Prop| so far.
 
 

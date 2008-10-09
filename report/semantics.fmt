@@ -45,5 +45,9 @@
 
 %format I            = "\mathcal{I}"
 
+%format tau = "\tau"
+%format tau_1
+%format tau_n
+
 %endif
 

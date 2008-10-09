@@ -201,7 +201,7 @@ along with some minor extensions.
 \chapter{Semantics for the GF Resource Grammar API}
 \label{chapter:resource-grammar-semantics}
 
-% include Sem.tex.lhs
+%include Sem.tex.lhs
 
 \section{Future Work}
 
