@@ -100,7 +100,7 @@ instance ToPred Ind where
     pred s x = Pred s [x]
 
 instance (ToInd a, ToInd b) => ToPred (a,b) where
-    pred s (x,y) = Pred s [toInd x]
+    pred s (x,y) = Pred s [toInd x, toInd y]
 
 instance (ToInd a, ToInd b, ToInd c) => ToPred (a,b,c) where
     pred s (x,y,z) = Pred s [toInd x, toInd y, toInd z]
