@@ -47,25 +47,25 @@ showsem: semantics.pdf
 examples/toy/Toy.hs examples/toy/Toy.pgf: examples/toy/ToyEng.gf
 	gfc --make --output-format=haskell --haskell-prefix='' -D examples/toy $^
 
-examples/toy/SemToy1.hs: gf-reason.tex.lhs $(LHS_INCLUDES)
+examples/toy/SemToy1.hs: semantics.tex.lhs $(LHS_INCLUDES)
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_1_code --newcode $< > $@
 
 testtoy1: examples/toy/SemToy1.hs examples/toy/Toy.hs
 	ghci $(GHCI_FLAGS) $<
 
-examples/toy/SemToy2.hs: gf-reason.tex.lhs $(LHS_INCLUDES)
+examples/toy/SemToy2.hs: semantics.tex.lhs $(LHS_INCLUDES)
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_2_code --newcode $< > $@
 
 testtoy2: examples/toy/SemToy2.hs examples/toy/Toy.hs
 	ghci $(GHCI_FLAGS) $<
 
-examples/toy/SemToy3.hs: gf-reason.tex.lhs $(LHS_INCLUDES)
+examples/toy/SemToy3.hs: semantics.tex.lhs $(LHS_INCLUDES)
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_3_code --newcode $< > $@
 
 testtoy3: examples/toy/SemToy3.hs examples/toy/Toy.hs
 	ghci $(GHCI_FLAGS) $<
 
-examples/toy/SemToy4.hs: gf-reason.tex.lhs $(LHS_INCLUDES)
+examples/toy/SemToy4.hs: semantics.tex.lhs $(LHS_INCLUDES)
 	lhs2TeX $(LHS2TEX_FLAGS) -ssem_toy_4_code --newcode $< > $@
 
 testtoy4: examples/toy/SemToy4.hs examples/toy/Toy.hs
