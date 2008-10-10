@@ -1,9 +1,11 @@
 % -*- Mode: LaTeX; coding:utf-8 -*-
 
 \documentclass[a4paper,twoside,openany]{report}
-\usepackage[pdftex,bookmarks,unicode]{hyperref}
+\usepackage{url}
+\usepackage{multirow}
 \usepackage{natbib}
 \usepackage[pdftex]{graphicx}
+\usepackage[pdftex,bookmarks,unicode]{hyperref}
 
 \let\cite=\citep
 \let\shortcite=\citeyearpar
@@ -211,7 +213,7 @@ along with some minor extensions.
 \chapter{Ambiguity and Answers}
 \label{chapter:ambiguity-answers}
 
-% include answers.tex
+%include answers.tex.lhs
 
 \chapter{System Description}
 \label{chapter:system-description}

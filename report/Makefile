@@ -4,6 +4,7 @@ LHS_INCLUDES= \
   gf.fmt \
   semantics.fmt \
   semantics.tex.lhs \
+  answers.tex.lhs \
   ../Sem.tex.lhs \
   examples/toy/Toy.gf.lhs \
   examples/toy/ToyEng.gf.lhs \
