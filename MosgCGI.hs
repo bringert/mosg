@@ -5,7 +5,7 @@ import Input_XHtml
 
 import Control.Monad.Trans
 import Data.Maybe
-import Network.CGI
+import Network.CGI hiding (Html)
 import System.IO
 import Text.XHtml
 
