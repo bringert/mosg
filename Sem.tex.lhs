@@ -825,7 +825,7 @@ Interpretation of sentence-modifying adverbial phrases.
 Nouns, e.g. ``dog''.
 
 > iN :: GN -> I (Ind -> Prop)
-> iN n = pure (\x -> Pred (symbol n) [x])
+> iN (LexN n) = pure (\x -> Pred (symbol n) [x])
 
 Two-place nouns, e.g. ``owner of ...''.
 
@@ -833,54 +833,54 @@ Two-place nouns, e.g. ``owner of ...''.
 > iN2 (GComplN3 n3 np) = pure (\n3i npi x y -> npi (\z -> n3i x z y)) <*> iN3 n3 <*> iNP np
 > iN2 (GUse2N3 n3) = pure (\n3i x y -> thereIs (\z -> n3i x z y)) <*> iN3 n3
 > iN2 (GUse3N3 n3) = pure (\n3i x y -> thereIs (\z -> n3i x y z)) <*> iN3 n3
-> iN2 n2 = pure (\x y -> Pred (symbol n2) [x,y])
+> iN2 (LexN2 n2) = pure (\x y -> Pred (symbol n2) [x,y])
 
 Three-place nouns, e.g. ``distance from ... to ...''.
 
 > iN3 :: GN3 -> I (Ind -> Ind -> Ind -> Prop)
-> iN3 n3 = pure (\x y z -> Pred (symbol n3) [x,y,z])
+> iN3 (LexN3 n3) = pure (\x y z -> Pred (symbol n3) [x,y,z])
 
 Proper names, e.g. ``John''.
 
 > iPN :: GPN -> I Ind
-> iPN pn = pure (Const (symbol pn))
+> iPN (LexPN pn) = pure (Const (symbol pn))
 
 Adjectives, e.g. ``big''.
 
 > iA :: GA -> I (Ind -> Prop)
 > iA (GUseA2 a2) = pure (\i x -> thereIs (\y -> i (\v -> v y) x)) <*> iA2 a2
-> iA a = pure (\x -> Pred (symbol a) [x])
+> iA (LexA a) = pure (\x -> Pred (symbol a) [x])
 
 Adjectives when used comparatively. FIXME: weird.
 
 > iA_comparative :: GA -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
 > iA_comparative a@(GUseA2 _) = unhandled "iA_comparative" a
-> iA_comparative a = pure (\o x -> o (\y -> comparative_Pred a x y))
+> iA_comparative (LexA a) = pure (\o x -> o (\y -> comparative_Pred (symbol a) x y))
 
 Two-place adjectives, e.g. ``equivalent to ...''
 
 > iA2 :: GA2 -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
-> iA2 a2 = pure (\o x -> o (\y -> Pred (symbol a2) [x,y]))
+> iA2 (LexA2 a2) = pure (\o x -> o (\y -> Pred (symbol a2) [x,y]))
 
 Intransitive verbs, e.g. ``sleep''.
 
 > iV :: GV -> I (Ind -> Prop)
-> iV v = pure (\x -> Pred (symbol v) [x])
+> iV (LexV v) = pure (\x -> Pred (symbol v) [x])
 
 Transitive verbs, e.g. ``kill''.
 
 > iV2 :: GV2 -> I (Ind -> Ind -> Prop)
-> iV2 v2 = pure (\x y -> Pred (symbol v2) [x,y])
+> iV2 (LexV2 v2) = pure (\x y -> Pred (symbol v2) [x,y])
 
 Ditransitive verbs, e.g. ``give''.
 
 > iV3 :: GV3 -> I (Ind -> Ind -> Ind -> Prop)
-> iV3 v3 = pure (\x y z -> Pred (symbol v3) [x,y,z])
+> iV3 (LexV3 v3) = pure (\x y z -> Pred (symbol v3) [x,y,z])
 
 Prepositions, e.g. ``in''.
 
 > iPrep :: GPrep -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
-> iPrep prep = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
+> iPrep (LexPrep prep) = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
 
 \subsection{Digits: Cardinals and Ordinals in Digits}
 
@@ -968,8 +968,8 @@ Integer interpretation. Used above for letter and digit numerals.
 > of_Pred :: Ind -> Ind -> Prop
 > of_Pred x y = special "of" [x,y]
 
-> comparative_Pred :: GA -> Ind -> Ind -> Prop
-> comparative_Pred a x y = special ("more_" ++ symbol a) [x,y]
+> comparative_Pred :: String -> Ind -> Ind -> Prop
+> comparative_Pred a x y = special ("more_" ++ a) [x,y]
 
 > special :: String -> [Ind] -> Prop
 > special x = Pred ("special_" ++ x) 
@@ -978,8 +978,8 @@ Integer interpretation. Used above for letter and digit numerals.
 -- * Utilities
 --
 
-> symbol :: Show a => a -> String
-> symbol = map toLower . takeWhile (/='_') . tail . head . words . show 
+> symbol :: String -> String
+> symbol = map toLower . takeWhile (/='_')
 
 > unhandled :: Show a => String -> a -> b
 > unhandled f x = error $ "Missing case in " ++ f ++ ": " ++ head (words (show x))
