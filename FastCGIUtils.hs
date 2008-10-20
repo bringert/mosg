@@ -1,17 +1,28 @@
-module FastCGIUtils (initFastCGI, loopFastCGI) where
+{-# LANGUAGE DeriveDataTypeable #-}
+module FastCGIUtils (initFastCGI, loopFastCGI,
+                     throwCGIError, handleCGIErrors,
+                     outputJSONP, 
+                     splitBy) where
 
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
+import Data.Dynamic
 import Data.IORef
 import Prelude hiding (catch)
+import System.Directory
 import System.Environment
 import System.Exit
 import System.IO
 import System.IO.Unsafe
 import System.Posix
+import System.Time
 
 import Network.FastCGI
+
+import Text.JSON
+import qualified Codec.Binary.UTF8.String as UTF8 (encodeString, decodeString)
+
 
 initFastCGI :: IO ()
 initFastCGI = installSignalHandlers
@@ -94,8 +105,45 @@ restartIfModified =
                          -- FIXME: setCurrentDirectory?
                          executeFile prog False args Nothing
 
-
 -- Logging
 
 logError :: String -> IO ()
 logError s = hPutStrLn stderr s
+
+-- * General CGI Error exception mechanism
+
+data CGIError = CGIError { cgiErrorCode :: Int, cgiErrorMessage :: String, cgiErrorText :: [String] }
+                deriving Typeable
+
+throwCGIError :: Int -> String -> [String] -> CGI a
+throwCGIError c m t = throwCGI $ DynException $ toDyn $ CGIError c m t
+
+handleCGIErrors :: CGI CGIResult -> CGI CGIResult
+handleCGIErrors x = x `catchCGI` \e -> case e of
+                                         DynException d -> case fromDynamic d of
+                                                             Nothing -> throw e
+                                                             Just (CGIError c m t) -> outputError c m t
+                                         _ -> throw e
+
+-- * General CGI and JSON stuff
+
+outputJSONP :: JSON a => a -> CGI CGIResult
+outputJSONP x = 
+    do mc <- getInput "jsonp"
+       let str = case mc of
+                   Nothing -> encode x
+                   Just c  -> c ++ "(" ++ encode x ++ ")"
+       setHeader "Content-Type" "text/json; charset=utf-8"
+       outputStrict $ UTF8.encodeString str
+
+outputStrict :: String -> CGI CGIResult
+outputStrict x | x == x = output x
+               | otherwise = fail "I am the pope."
+
+-- * General utilities
+
+splitBy :: (a -> Bool) -> [a] -> [[a]]
+splitBy _ [] = [[]]
+splitBy f list = case break f list of
+                   (first,[]) -> [first]
+                   (first,_:rest) -> first : splitBy f rest

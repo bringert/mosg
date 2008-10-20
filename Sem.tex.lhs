@@ -26,7 +26,8 @@ Grammatical Framework Resource Grammar Library}
 %if style == newcode
 
 > {-# OPTIONS_GHC -fwarn-incomplete-patterns -fwarn-overlapping-patterns #-}
-> module Sem (interpretText) where
+> {-# LANGUAGE DeriveDataTypeable #-}
+> module Sem (interpretText, UnhandledTree(..), tryUnhandledTree) where
 
 > import Syntax
 > import FOL
@@ -37,6 +38,10 @@ Grammatical Framework Resource Grammar Library}
 > import Control.Monad
 > import Data.Traversable (traverse)
 > import Data.Char
+
+> import PGF (Tree)
+> import Control.Exception (throwDyn, catchDyn)
+> import Data.Typeable (Typeable)
 
 %endif
 
@@ -981,7 +986,17 @@ Integer interpretation. Used above for letter and digit numerals.
 > symbol :: String -> String
 > symbol = map toLower . takeWhile (/='_')
 
-> unhandled :: Show a => String -> a -> b
-> unhandled f x = error $ "Missing case in " ++ f ++ ": " ++ head (words (show x))
+> unhandled :: Gf a => String -> a -> b
+> unhandled f x = throwUnhandledTree f (gf x)
+
+> data UnhandledTree = UnhandledTree { unhandledFunction :: String, unhandledSubtree :: Tree }
+>  deriving (Show,Typeable)
+
+> throwUnhandledTree :: String -> Tree -> a
+> throwUnhandledTree f t = throwDyn $ UnhandledTree f t
+
+> tryUnhandledTree :: IO a -> IO (Either UnhandledTree a)
+> tryUnhandledTree x = catchDyn (liftM Right x) (return . Left)
+
 
 %endif

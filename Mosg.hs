@@ -27,7 +27,7 @@ type Error = String
 
 data Result = Result {
       resInputText :: String,
-      resInterpretations :: Either Input [(GText,Either Error [Input])],
+      resInterpretations :: Either Input [(GText,Either UnhandledTree [Input])],
       resDifferentInterpretations :: [Input],
       resInputType :: InputType,
       resConsistent :: [Prop],
@@ -82,11 +82,11 @@ preprocess = unwords . unfoldr split
         where isBreak x = isSpace x || (isPunctuation x && x `notElem` "-'")
 
 parseText :: Grammar -> String -> [GText]
-parseText gr = map fg . concat . parseAll gr "Text" . preprocess
+parseText gr = map fg . concat . parseAll gr (read "Text") . preprocess
 
-tryInput :: Show a => a -> IO (Either Error a)
-tryInput p = try (evaluate (length (show p) `seq` p)) 
-                 >>= either (\e -> hPutStrLn stderr (show e) >> return (Left (show e))) (return . Right)
+tryInput :: Show a => a -> IO (Either UnhandledTree a)
+tryInput p = tryUnhandledTree (evaluate (length (show p) `seq` p)) 
+                 >>= either (\e -> hPutStrLn stderr (show e) >> return (Left e)) (return . Right)
 
 readInputMaybe :: String -> Maybe Input
 readInputMaybe s = case [x | (x,t) <- reads s, all isSpace t] of
@@ -107,7 +107,7 @@ parseInput gr i =
                        debug $ "Parse results: " ++ show (length ps)
                        return $ Right ps
 
-interpretTrees :: Either Input [GText] -> IO (Either Input [(GText,Either Error [Input])])
+interpretTrees :: Either Input [GText] -> IO (Either Input [(GText,Either UnhandledTree [Input])])
 interpretTrees (Left i) = return (Left i)
 interpretTrees (Right ts) = liftM (Right . zip ts) $ mapM (tryInput . interpretText) ts
 

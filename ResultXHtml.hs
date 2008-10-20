@@ -1,9 +1,12 @@
 module ResultXHtml (statistics, writeOutput) where
 
 import Syntax
+import Sem
 import Mosg
 import Problem
 import Input_XHtml
+
+import PGF
 
 import Data.List
 import Data.Maybe
@@ -148,6 +151,8 @@ instance HTML ProblemResult where
                             +++ thead << tr << map (th <<) ["Details","ID","Correct answer","Answer"]
                             +++ map toHtml rs)
 
+instance HTML UnhandledTree where
+    toHtml u = toHtml $ "Missing case in " ++ unhandledFunction u ++ ": " ++ showTree (unhandledSubtree u)
 
 instance HTML GText where
     toHtml t = toHtml $ show t
