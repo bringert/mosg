@@ -18,9 +18,8 @@ concrete English of Abstract =
 --  TimeEng,
 
   ExtraEng - [VPI, ListVPI, BaseVPI, ConsVPI, MkVPI, ConjVPI, ComplVPIVV],
-{-
   LexiconEng
--}
+{-
   LexiconEng [N3, distance_N3, 
 	      VQ, wonder_VQ, 
 	      V2A, paint_V2A, 
@@ -30,6 +29,7 @@ concrete English of Abstract =
 	      VA, become_VA],
   BigLexEng,
   FraCaSLexiconEng
+-}
 
 ** open ResEng, MorphoEng, ParadigmsEng, Prelude in {
 

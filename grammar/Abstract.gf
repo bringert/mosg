@@ -20,8 +20,8 @@ abstract Abstract =
 -- Lexica
 --
 
---  , Lexicon
-
+  , Lexicon
+{-
   , Lexicon [N3, distance_N3, 
 	      VQ, wonder_VQ, 
 	      V2A, paint_V2A, 
@@ -31,7 +31,7 @@ abstract Abstract =
 	      VA, become_VA]
   , BigLexEngAbs
   , FraCaSLexicon
-
+-}
 --
 -- English-specific resource grammar constructs
 --
