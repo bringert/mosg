@@ -35,7 +35,8 @@ public class Semantics {
 	public static class Interpretation extends JavaScriptObject {
 		protected Interpretation() { }
 
-		public final native String getType() /*-{ return this.type; }-*/;
+		public final native boolean isStatement() /*-{ return this.type == "stm"; }-*/;
+		public final native boolean isYesNoQuestion() /*-{ return this.type == "ynquest"; }-*/;
 		public final native String getProp() /*-{ return this.prop; }-*/;
 	}
 

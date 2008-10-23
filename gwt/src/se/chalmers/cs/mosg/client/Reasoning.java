@@ -34,7 +34,9 @@ public class Reasoning {
 	public static class Answer extends JavaScriptObject {
 		protected Answer() { }
 
-		public final native String getAnswer() /*-{ return this.answer; }-*/;
+		public final native boolean isYes() /*-{ return this.answer == "yes"; }-*/;
+		public final native boolean isNo() /*-{ return this.answer == "no"; }-*/;
+		public final native boolean isUnknown() /*-{ return this.answer == "unknown"; }-*/;
 	}
 
 	/* Common */

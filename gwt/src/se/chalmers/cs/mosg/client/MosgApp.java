@@ -38,22 +38,15 @@ public class MosgApp implements EntryPoint {
 	private PGF.Grammar grammar;
 	private InputLanguageBox fromLangBox;
 	private Button submitButton;
-	private VerticalPanel outputPanel;
+	private FactsBox factsBox;
 	private PopupPanel statusPopup;
 	private Label statusLabel;
 
-	private void addTranslation(String text, String toLang) {
-		Label l = new Label(text);
-		l.addStyleName("my-translation");
-		PGF.Language lang = grammar.getLanguage(toLang);
-		if (lang != null) {
-			l.getElement().setLang(lang.getLanguageCode());
-		}
-		outputPanel.add(l);
+	private void addFact(String fact) {
+		factsBox.addFact(fact);
 	}
 
 	private void submit() {
-		outputPanel.clear();
 		parse();
 	}
 
@@ -73,7 +66,7 @@ public class MosgApp implements EntryPoint {
 	private void interpret(PGF.ParseResults results) {
 		setStatus("Interpreting...");
 		for (PGF.ParseResult r : results.iterable()) {
-		    GWT.log("Interpreting " + r.getTree(), null);
+			GWT.log("Interpreting " + r.getTree(), null);
 			semantics.interpret(r.getTree(), 
 					new Semantics.InterpretCallback() {
 				public void onResult (Semantics.Interpretations interpretations) {
@@ -89,23 +82,33 @@ public class MosgApp implements EntryPoint {
 	private void reason(Semantics.Interpretations interpretations) {
 		setStatus("Reasoning...");
 		for (Semantics.Interpretation i : interpretations.getInterpretations().iterable()) {
-			// FIXME: look at i.getType()
-		    GWT.log("Checking " + i.getProp(), null);
-			reasoning.isTrue(getFacts(), i.getProp(), 
-					new Reasoning.ReasoningCallback() {
-				public void onResult (Reasoning.Answer answer) {
-					setStatus(answer.getAnswer());
-				}
-				public void onError (Throwable e) {
-					showError("Reasoning failed", e);
-				}
-			});
+			if (i.isStatement()) {
+				// FIXME: what if there are multiple interpretations?
+				addFact(i.getProp());
+			} else if (i.isYesNoQuestion()) {
+				GWT.log("Checking " + i.getProp(), null);
+				reasoning.isTrue(getFacts(), i.getProp(), 
+						new Reasoning.ReasoningCallback() {
+					public void onResult (Reasoning.Answer answer) {
+						if (answer.isYes()) {
+							setStatus("Yes");
+						} else if (answer.isNo()) {
+							setStatus("No");
+						} else {
+							setStatus("Unknown");
+						}
+					}
+					public void onError (Throwable e) {
+						showError("Reasoning failed", e);
+					}
+				});
+			}
 		}
 		clearStatus();
 	}
 
 	private List<String> getFacts() {
-		return new ArrayList<String>();
+		return factsBox.getFacts();
 	}
 
 	private void updateLangs() {
@@ -177,15 +180,14 @@ public class MosgApp implements EntryPoint {
 		settingsPanel.add(fromLangBox);
 		settingsPanel.add(submitButton);
 
-		outputPanel = new VerticalPanel();
-		outputPanel.addStyleName("my-output");
+		factsBox = new FactsBox();
 
 		VerticalPanel vPanel = new VerticalPanel();
 		vPanel.setWidth("100%");
 		vPanel.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
 		vPanel.add(suggest);
 		vPanel.add(settingsPanel);
-		vPanel.add(outputPanel);
+		vPanel.add(factsBox);
 
 		RootPanel.get().add(vPanel);
 
