@@ -21,11 +21,10 @@ main = do runFastCGIConcurrent' forkIO 100 (handleErrors (handleCGIErrors cgiMai
 cgiMain :: CGI CGIResult
 cgiMain =
     do tree <- getTree
-       i <- liftIO $ interpret tree
-       json <- case i of
-                 Left u       -> return $ toJSObject [("interpretations", JSArray []),
-                                                       ("error", showJSON ("Missing case in " ++ unhandledFunction u ++ ": " ++ showTree (unhandledSubtree u)))]
-                 Right inputs -> return $ toJSObject [("interpretations", showJSON inputs)]
+       path <- pathInfo
+       json <- case filter (not . null) $ splitBy (=='/') path of
+                 ["interpret"] -> doInterpret tree
+                 _ -> throwCGIError 400 ("Unknown command " ++ path) ["Unknown command " ++ path ++ "."]
        outputJSONP json
   where
     getTree :: CGI Tree
@@ -38,8 +37,22 @@ cgiMain =
              Nothing   -> throwCGIError 400 "Missing tree" ["Missing tree."]
 
 instance JSON Input where
-    readJSON x = readJSON x >>= readM
-    showJSON = showJSON . show
+    showJSON (Statement p)  = showJSON $ toJSObject [("type","stm"),("prop", show p)]
+    showJSON (YNQuest p)    = showJSON $ toJSObject [("type","ynquest"),("prop", show p)]
+    showJSON (WhQuest u)    = let (x,p) = showFun u 
+                               in showJSON $ toJSObject [("type","whquest"),("var", x),("prop", show p)]
+    showJSON (CountQuest u) = let (x,p) = showFun u 
+                               in showJSON $ toJSObject [("type","countquest"),("var", x),("prop", show p)]
+
+
+doInterpret :: Tree -> CGI JSValue
+doInterpret tree =
+    do i <- liftIO $ interpret tree
+       case i of
+         Left u       -> return $ showJSON $ toJSObject [("interpretations", JSArray []),
+                                              ("error", showJSON ("Missing case in " ++ unhandledFunction u ++ ": " ++ showTree (unhandledSubtree u)))]
+         Right inputs -> return $ showJSON $ toJSObject [("interpretations", showJSON inputs)]
+
 
 tryInput :: Show a => a -> IO (Either UnhandledTree a)
 tryInput p = tryUnhandledTree (evaluate (length (show p) `seq` p)) 
@@ -47,9 +60,3 @@ tryInput p = tryUnhandledTree (evaluate (length (show p) `seq` p))
 
 interpret :: Tree -> IO (Either UnhandledTree [Input])
 interpret = tryInput . interpretText . fg
-
-
-readM :: (Monad m, Read a) => String -> m a
-readM s = case reads s of
-            [(x,rest)] | all isSpace rest -> return x
-            _ -> fail $ "read failed: " ++ show s

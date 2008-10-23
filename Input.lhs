@@ -71,9 +71,17 @@ wrapProp :: String -> Prop -> Vars Doc
 wrapProp s p = liftM ((text s <>) . parens) (pprProp 0 p)
 
 wrapFun :: String -> (Ind -> Prop) -> Vars Doc
-wrapFun o u = do v <- getUnique
-                 p <- pprProp 0 (u (Var v))
+wrapFun o u = do (v,p) <- pprFun u
                  return $ text o <> parens (text v <> text "," <> p)
+
+pprFun :: (Ind -> Prop) -> Vars (String,Doc)
+pprFun u = do v <- getUnique
+              p <- pprProp 0 (u (Var v))
+              return (v,p)
+
+showFun :: (Ind -> Prop) -> (String,String)
+showFun u = runVars $ do (x,p) <- pprFun u
+                         return (x, render p)
 
 --
 -- * Parsing
