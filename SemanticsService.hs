@@ -40,9 +40,9 @@ instance JSON Input where
     showJSON (Statement p)  = showJSON $ toJSObject [("type","stm"),("prop", show p)]
     showJSON (YNQuest p)    = showJSON $ toJSObject [("type","ynquest"),("prop", show p)]
     showJSON (WhQuest u)    = let (x,p) = showFun u 
-                               in showJSON $ toJSObject [("type","whquest"),("var", x),("prop", show p)]
+                               in showJSON $ toJSObject [("type","whquest"),("variable", x),("prop", show p)]
     showJSON (CountQuest u) = let (x,p) = showFun u 
-                               in showJSON $ toJSObject [("type","countquest"),("var", x),("prop", show p)]
+                               in showJSON $ toJSObject [("type","countquest"),("variable", x),("prop", show p)]
 
 
 doInterpret :: Tree -> CGI JSValue

@@ -3,3 +3,26 @@
     font-size: 150%;
     margin: 1em 0 0.5em 0;
 }
+
+.my-settingsPanel * {
+    margin: 0 0.4em;
+}
+
+.my-FactsBox {
+    margin-top: 1em;
+}
+
+.my-inputListPanel {
+    margin: 1em;
+    border: thin solid silver;
+}
+
+.my-InputPanel {
+}
+
+.my-InputTreePanel {
+	margin-left: 1em;
+}
+
+.my-InterpretationPanel {
+}

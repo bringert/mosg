@@ -10,7 +10,7 @@ import com.google.gwt.user.client.ui.Widget;
 public class FactsBox extends VerticalPanel {
 
 	public FactsBox() {
-		addStyleName("my-facts");		
+		addStyleName("my-FactsBox");		
 	}
 	
 	public void addFact(String fact) {

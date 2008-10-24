@@ -35,42 +35,46 @@ public class MosgApp implements EntryPoint {
 
 	private CompletionOracle oracle;
 	private SuggestBox suggest;
-	private PGF.Grammar grammar;
 	private InputLanguageBox fromLangBox;
 	private Button submitButton;
+	private VerticalPanel inputListPanel;
 	private FactsBox factsBox;
 	private PopupPanel statusPopup;
 	private Label statusLabel;
-
-	private void addFact(String fact) {
-		factsBox.addFact(fact);
-	}
 
 	private void submit() {
 		parse();
 	}
 
 	private void parse() {
+		String text = suggest.getText();
+		List<String> fromLangs = fromLangBox.getSelectedValues();
 		setStatus("Parsing...");
-		pgf.parse(suggest.getText(), fromLangBox.getSelectedValues(), null, 
-				new PGF.ParseCallback() {
-			public void onResult (PGF.ParseResults results) {
-				interpret(results);
+		final InputPanel inputPanel = new InputPanel(text);
+		inputListPanel.add(inputPanel);
+		pgf.parse(text, fromLangs, null, new PGF.ParseCallback() {
+			public void onResult(PGF.ParseResults results) {
+				interpret(results, inputPanel);
 			}
-			public void onError (Throwable e) {
+			public void onError(Throwable e) {
 				showError("Parsing failed", e);
 			}
 		});
 	}
 
-	private void interpret(PGF.ParseResults results) {
+	private void interpret(PGF.ParseResults results, InputPanel inputPanel) {
+		for (Widget w : inputListPanel) {
+			InputPanel p = (InputPanel)w;
+			p.setExpanded(false);
+		}
+
 		setStatus("Interpreting...");
 		for (PGF.ParseResult r : results.iterable()) {
 			GWT.log("Interpreting " + r.getTree(), null);
-			semantics.interpret(r.getTree(), 
-					new Semantics.InterpretCallback() {
+			final InputTreePanel inputTreePanel = inputPanel.addInputTree(r.getTree());
+			semantics.interpret(r.getTree(), new Semantics.Callback() {
 				public void onResult (Semantics.Interpretations interpretations) {
-					reason(interpretations);
+					reason(interpretations, inputTreePanel);
 				}
 				public void onError (Throwable e) {
 					showError("Interpretation failed", e);
@@ -79,34 +83,70 @@ public class MosgApp implements EntryPoint {
 		}
 	}
 
-	private void reason(Semantics.Interpretations interpretations) {
+	private void reason(Semantics.Interpretations interpretations, InputTreePanel inputTreePanel) {
 		setStatus("Reasoning...");
+
+		// Add interpretations to history
 		for (Semantics.Interpretation i : interpretations.getInterpretations().iterable()) {
+			InterpretationPanel panel = inputTreePanel.addInterpretation(i);
 			if (i.isStatement()) {
-				// FIXME: what if there are multiple interpretations?
-				addFact(i.getProp());
+				checkConsistency(i.getProposition(), panel);
+				checkInformativity(i.getProposition(), panel);
 			} else if (i.isYesNoQuestion()) {
-				GWT.log("Checking " + i.getProp(), null);
-				reasoning.isTrue(getFacts(), i.getProp(), 
-						new Reasoning.ReasoningCallback() {
-					public void onResult (Reasoning.Answer answer) {
-						if (answer.isYes()) {
-							setStatus("Yes");
-						} else if (answer.isNo()) {
-							setStatus("No");
-						} else {
-							setStatus("Unknown");
-						}
-					}
-					public void onError (Throwable e) {
-						showError("Reasoning failed", e);
-					}
-				});
+				checkAnswer(i.getProposition(), panel);				
 			}
 		}
+
+		// FIXME: wait for all the checks
+		// FIXME: get consistent and informative facts
+		// FIXME: optimistic/pessimistic/interactive
+		// FIXME: add facts
+		
 		clearStatus();
 	}
-
+	
+	private void checkConsistency(String fact, final InterpretationPanel panel) {
+		GWT.log("Checking consistency " + fact, null);
+		reasoning.isConsistent(getFacts(), fact, new Reasoning.Callback() {
+			public void onResult (Reasoning.Answer answer) {
+				panel.setConsistency(answer.show());
+			}
+			public void onError (Throwable e) {
+				showError("Consistency check failed", e);
+			}
+		});
+	}
+	
+	private void checkInformativity(String fact, final InterpretationPanel panel) {
+		GWT.log("Checking informativity " + fact, null);
+		reasoning.isInformative(getFacts(), fact, new Reasoning.Callback() {
+			public void onResult (Reasoning.Answer answer) {
+				panel.setInformativity(answer.show());
+			}
+			public void onError (Throwable e) {
+				showError("Informativity check failed", e);
+			}
+		});
+	}
+	
+	private void checkAnswer(String conjecture, final InterpretationPanel panel) {
+		GWT.log("Checking answer " + conjecture, null);
+		reasoning.isTrue(getFacts(), conjecture, new Reasoning.Callback() {
+			public void onResult (Reasoning.Answer answer) {
+				panel.setAnswer(answer.show());
+			}
+			public void onError (Throwable e) {
+				showError("Answer check failed", e);
+			}
+		});
+	}
+	
+	private void addFacts(List<String> facts) {
+		for (String fact : facts) {
+			factsBox.addFact(fact);
+		}
+	}
+	
 	private List<String> getFacts() {
 		return factsBox.getFacts();
 	}
@@ -130,8 +170,6 @@ public class MosgApp implements EntryPoint {
 	}
 
 	private void setGrammar(PGF.Grammar grammar) {
-		this.grammar = grammar;
-
 		fromLangBox.setGrammar(grammar);
 
 		updateLangs();
@@ -181,13 +219,18 @@ public class MosgApp implements EntryPoint {
 		settingsPanel.add(submitButton);
 
 		factsBox = new FactsBox();
-
+		
+		inputListPanel = new VerticalPanel();
+		inputListPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
+		inputListPanel.setStyleName("my-inputListPanel");		
+		
 		VerticalPanel vPanel = new VerticalPanel();
 		vPanel.setWidth("100%");
 		vPanel.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
 		vPanel.add(suggest);
 		vPanel.add(settingsPanel);
 		vPanel.add(factsBox);
+		vPanel.add(inputListPanel);
 
 		RootPanel.get().add(vPanel);
 
