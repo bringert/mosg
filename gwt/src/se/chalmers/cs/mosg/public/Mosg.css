@@ -1,5 +1,5 @@
 .gwt-SuggestBox {
-    width: 70%;
+    width: 800px;
     font-size: 150%;
     margin: 1em 0 0.5em 0;
 }
@@ -12,9 +12,18 @@
     margin-top: 1em;
 }
 
-.my-inputListPanel {
+.my-inputListDisclosurePanel {
     margin: 1em;
     border: thin solid silver;
+    width: 800px;
+}
+
+.my-inputListScrollPanel {
+    width: 798px;
+}
+
+.my-inputListPanel {
+	margin: 5px;
 }
 
 .my-InputPanel {

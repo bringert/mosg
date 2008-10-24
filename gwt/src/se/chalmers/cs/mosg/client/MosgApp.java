@@ -1,6 +1,5 @@
 package se.chalmers.cs.mosg.client;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import se.chalmers.cs.gf.gwt.client.CompletionOracle;
@@ -12,11 +11,13 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ClickListener;
+import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.KeyboardListenerAdapter;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -49,7 +50,6 @@ public class MosgApp implements EntryPoint {
 	private void parse() {
 		String text = suggest.getText();
 		List<String> fromLangs = fromLangBox.getSelectedValues();
-		setStatus("Parsing...");
 		final InputPanel inputPanel = new InputPanel(text);
 		inputListPanel.add(inputPanel);
 		pgf.parse(text, fromLangs, null, new PGF.ParseCallback() {
@@ -68,7 +68,6 @@ public class MosgApp implements EntryPoint {
 			p.setExpanded(false);
 		}
 
-		setStatus("Interpreting...");
 		for (PGF.ParseResult r : results.iterable()) {
 			GWT.log("Interpreting " + r.getTree(), null);
 			final InputTreePanel inputTreePanel = inputPanel.addInputTree(r.getTree());
@@ -84,9 +83,7 @@ public class MosgApp implements EntryPoint {
 	}
 
 	private void reason(Semantics.Interpretations interpretations, InputTreePanel inputTreePanel) {
-		setStatus("Reasoning...");
 
-		// Add interpretations to history
 		for (Semantics.Interpretation i : interpretations.getInterpretations().iterable()) {
 			InterpretationPanel panel = inputTreePanel.addInterpretation(i);
 			if (i.isStatement()) {
@@ -101,8 +98,6 @@ public class MosgApp implements EntryPoint {
 		// FIXME: get consistent and informative facts
 		// FIXME: optimistic/pessimistic/interactive
 		// FIXME: add facts
-		
-		clearStatus();
 	}
 	
 	private void checkConsistency(String fact, final InterpretationPanel panel) {
@@ -214,15 +209,20 @@ public class MosgApp implements EntryPoint {
 		HorizontalPanel settingsPanel = new HorizontalPanel();
 		settingsPanel.addStyleName("my-settingsPanel");
 		settingsPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		settingsPanel.add(new Label("From:"));
+		settingsPanel.add(new Label("Language:"));
 		settingsPanel.add(fromLangBox);
 		settingsPanel.add(submitButton);
 
 		factsBox = new FactsBox();
 		
 		inputListPanel = new VerticalPanel();
-		inputListPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
-		inputListPanel.setStyleName("my-inputListPanel");		
+		inputListPanel.setStyleName("my-inputListPanel");
+		inputListPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);		
+		ScrollPanel inputListScrollPanel = new ScrollPanel(inputListPanel);
+		inputListScrollPanel.setStyleName("my-inputListScrollPanel");
+		DisclosurePanel inputListDisclosurePanel = new DisclosurePanel("Log", true);
+		inputListDisclosurePanel.setContent(inputListScrollPanel);
+		inputListDisclosurePanel.setStyleName("my-inputListDisclosurePanel");		
 		
 		VerticalPanel vPanel = new VerticalPanel();
 		vPanel.setWidth("100%");
@@ -230,7 +230,7 @@ public class MosgApp implements EntryPoint {
 		vPanel.add(suggest);
 		vPanel.add(settingsPanel);
 		vPanel.add(factsBox);
-		vPanel.add(inputListPanel);
+		vPanel.add(inputListDisclosurePanel);
 
 		RootPanel.get().add(vPanel);
 
