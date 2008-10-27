@@ -1,0 +1,48 @@
+name: mosg
+version: 1.0
+cabal-version: >= 1.2
+build-type: Simple
+license: GPL
+license-file: LICENSE
+synopsis: First-order logic reasoning in natural language.
+
+executable semantics.fcgi
+  build-depends: base,
+                 old-time,
+                 directory,
+                 containers,
+                 pretty,
+                 unix,
+                 cgi >= 3001.1.7.0,
+                 fastcgi >= 3001.0.2.1,
+                 json >= 0.3.3,
+                 utf8-string >= 0.3.1.1,
+                 gf >= 3.0
+  main-is: SemanticsService.hs
+  other-modules:
+    Inter
+    FOL
+    FastCGIUtils
+    Syntax
+    Input
+    Sem
+  ghc-options: -threaded
+
+executable reasoning.fcgi
+  build-depends: base,
+                 old-time,
+                 directory,
+                 containers,
+                 unix,
+                 cgi >= 3001.1.7.0,
+                 fastcgi >= 3001.0.2.1,
+                 json >= 0.3.3,
+                 utf8-string >= 0.3.1.1,
+                 gf >= 3.0,
+                 folkung
+  main-is: SemanticsService.hs
+  other-modules:
+    FOL
+    FastCGIUtils
+    ReasonFolkung
+  ghc-options: -threaded
