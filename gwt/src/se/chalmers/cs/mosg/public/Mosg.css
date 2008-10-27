@@ -22,24 +22,29 @@ h1 {
 }
 
 .my-ScrollingDisclosurePanel {
-    margin: 1em;
-    border: thin solid silver;
+    margin: 10px;
+    border: 1px solid silver;
+    padding: 0;
     width: 800px; 
 }
 
 .my-ScrollingDisclosurePanel .my-scroll, .my-ScrollingDisclosurePanel .gwt-DisclosurePanel {
-    width: 798px;
+    margin: 0;
+	padding: 0;
+    width: 788px;
 }
 
 .my-ScrollingDisclosurePanel .gwt-DisclosurePanel .content {
 	margin: 5px;
+	padding: 0;
+	border: none;
 }
 
 .my-InputPanel {
 }
 
 .my-InputTreePanel {
-	margin-left: 1em;
+	margin-left: 10px;
 }
 
 .my-InterpretationPanel {
