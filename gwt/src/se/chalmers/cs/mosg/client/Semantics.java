@@ -30,6 +30,10 @@ public class Semantics {
 	public static class Interpretations extends JavaScriptObject {
 		protected Interpretations() { }
 		
+		public final boolean isEmpty() {
+			return getInterpretations().isEmpty();
+		}
+
 		public final boolean onlyStatements() {
 			for (Interpretation i : getInterpretations().iterable()) {
 				if (!i.isStatement()) { return false; }
@@ -44,6 +48,8 @@ public class Semantics {
 			return true;
 		}
 		
+		public final native String getError() /*-{ return this.error; }-*/;
+				
 		public final native IterableJsArray<Interpretation> getInterpretations() /*-{ return this.interpretations; }-*/;
 	}
 

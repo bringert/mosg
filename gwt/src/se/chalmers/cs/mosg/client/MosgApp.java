@@ -89,6 +89,11 @@ public class MosgApp implements EntryPoint {
 
 	private void reason(Semantics.Interpretations interpretations, ParseResultPanel parseResultPanel) {
 
+		if (interpretations.isEmpty()) {
+			parseResultPanel.interpretationFailed(interpretations.getError());
+			return;		
+		}
+		
 		for (Semantics.Interpretation i : interpretations.getInterpretations().iterable()) {
 			InterpretationPanel panel = parseResultPanel.addInterpretation(i);
 			if (i.isStatement()) {
@@ -98,11 +103,6 @@ public class MosgApp implements EntryPoint {
 				checkAnswer(i.getProposition(), panel);				
 			}
 		}
-
-		// FIXME: wait for all the checks
-		// FIXME: get consistent and informative facts
-		// FIXME: optimistic/pessimistic/interactive
-		// FIXME: add facts
 	}
 	
 	private void checkConsistency(String fact, final InterpretationPanel panel) {
