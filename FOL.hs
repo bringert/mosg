@@ -230,9 +230,9 @@ instance Read Prop where
     readsPrec n = readP_to_S (readProp n)
 
 readProp :: Int -> ReadP Prop
-readProp n = skipSpaceAround $ choice rs
-  where rs = [readPred, readNot, readEqual, readAll, readExists, readParen, readTrue, readFalse]
-             ++ if n < 1 then [readBin] else []
+readProp = skipSpaceAround . readProp'
+  where readProp' 0 = readBin <++ readProp' 1
+        readProp' 1 = choice [readPred, readNot, readEqual, readAll, readExists, readParen, readTrue, readFalse]
         readPred = do p <- readConst
                       string "("
                       args <- sepBy readInd (string ",")
