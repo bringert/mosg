@@ -4,6 +4,10 @@
     margin: 1em 0 0.5em 0;
 }
 
+.my-ScrollingDisclosurePanel a.header {
+  text-decoration: none;
+}
+
 .my-settingsPanel * {
     margin: 0 0.4em;
 }
