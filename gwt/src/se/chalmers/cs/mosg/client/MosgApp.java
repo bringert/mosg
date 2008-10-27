@@ -199,11 +199,11 @@ public class MosgApp implements EntryPoint {
 	}
 
 	private String combineFacts(List<String> facts) {
-		// FIXME: this is pessimistic, implement th others too
+		// FIXME: this is pessimistic, implement the others too
 		StringBuilder sb = new StringBuilder();
 		for (String fact : facts) {
 			if (sb.length() > 0)
-				sb.append(" & ");
+				sb.append(" | ");
 			sb.append('(').append(fact).append(')');
 		}
 		return sb.toString();
