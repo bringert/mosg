@@ -13,15 +13,15 @@ import com.google.gwt.user.client.ui.TreeItem;
 public class InputPanel extends Composite {
 
 	private TreeItem treeItem;
-	
+
 	/** The number of children what have not been completely checked
 	 *  for consistency and informativity, or answer. */
 	private int unchecked;
-	
+
 	private List<InterpretationPanel> interpretations = new ArrayList<InterpretationPanel>();
-	
+
 	private List<ReasoningListener> listeners = new LinkedList<ReasoningListener>();
-	
+
 	public InputPanel(String input) {
 		treeItem = new TreeItem(input);
 		Tree tree = new Tree();
@@ -29,11 +29,11 @@ public class InputPanel extends Composite {
 		initWidget(tree);
 		setStyleName("my-InputPanel");
 	}
-	
+
 	public void setExpanded(boolean expanded) {
 		treeItem.setState(expanded);
 	}
-	
+
 	public ParseResultPanel addInputTree(PGF.ParseResult inputTree) {
 		unchecked++;
 		ParseResultPanel panel = new ParseResultPanel(inputTree);
@@ -48,18 +48,18 @@ public class InputPanel extends Composite {
 		treeItem.setState(true);
 		return panel;
 	}
-	
+
 	public void childChecked() {
 		unchecked--;
 		if (unchecked == 0) {
-			
+
 		}
 	}
-	
+
 	public void addReasoningListener(ReasoningListener l) {
 		listeners.add(l);
 	}
-	
+
 	private void fireReasoningDone() {
 		if (unchecked == 0) {
 			for (ReasoningListener l : listeners) {
@@ -67,7 +67,7 @@ public class InputPanel extends Composite {
 			}
 		}
 	}
-	
+
 	public interface ReasoningListener {	
 		public void onReasoningDone(List<InterpretationPanel> interpretations);
 	}

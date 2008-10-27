@@ -14,7 +14,7 @@ import com.google.gwt.user.client.ui.Widget;
 public class ScrollingDisclosurePanel extends Composite implements HasWidgets {
 
 	private VerticalPanel contentPanel;
-	
+
 	public ScrollingDisclosurePanel(final String header) {
 		contentPanel = new VerticalPanel();
 		contentPanel.setStyleName("my-content");
@@ -51,5 +51,5 @@ public class ScrollingDisclosurePanel extends Composite implements HasWidgets {
 	public boolean remove(Widget w) {
 		return contentPanel.remove(w);
 	}
-	
+
 }

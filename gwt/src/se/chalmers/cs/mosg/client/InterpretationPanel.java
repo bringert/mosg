@@ -5,11 +5,11 @@ import com.google.gwt.user.client.ui.TreeItem;
 public class InterpretationPanel extends TreeItem {
 
 	private Semantics.Interpretation interpretation;
-	
+
 	private Reasoning.Answer consistency;
 	private Reasoning.Answer informativity;
 	private Reasoning.Answer answer;
-	
+
 	public InterpretationPanel(Semantics.Interpretation interpretation) {
 		this.interpretation = interpretation;
 		setText(interpretation.show());
@@ -30,7 +30,7 @@ public class InterpretationPanel extends TreeItem {
 	public Reasoning.Answer getAnswer() {
 		return answer;
 	}
-	
+
 	public boolean isConsistent() {
 		return checkAnswer(consistency);
 	}
@@ -38,15 +38,15 @@ public class InterpretationPanel extends TreeItem {
 	public boolean isInformative() {
 		return checkAnswer(informativity);
 	}
-	
+
 	private static boolean checkAnswer(Reasoning.Answer a) {		
 		return a != null && a.isYes();
 	}
-	
+
 	private ParseResultPanel getParent() {
 		return (ParseResultPanel)getParentItem();
 	}
-	
+
 	public void setConsistency(Reasoning.Answer consistency) {
 		this.consistency = consistency;		
 		addItem("Consistent: " + showAnswer(consistency));
@@ -60,16 +60,16 @@ public class InterpretationPanel extends TreeItem {
 		setState(true);
 		getParent().childInformativityChecked();
 	}
-	
+
 	public void setAnswer(Reasoning.Answer answer) {
 		this.answer = answer;
 		addItem("Answer: " + showAnswer(answer));
 		setState(true);
 		getParent().childAnswerChecked();
 	}
-	
+
 	private static String showAnswer(Reasoning.Answer a) {
 		return a == null ? "Failed" : a.show();
 	}
-	
+
 }

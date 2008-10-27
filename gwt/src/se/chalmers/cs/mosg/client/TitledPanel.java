@@ -27,11 +27,11 @@ public class TitledPanel extends Composite implements HasWidgets {
 	public String getTitle() {
 		return titleLabel.getText();
 	}
-	
+
 	public void setTitle(String title) {
 		titleLabel.setText(title);
 	}
-	
+
 	public void add(Widget child) {
 		contentPanel.add(child);
 	}

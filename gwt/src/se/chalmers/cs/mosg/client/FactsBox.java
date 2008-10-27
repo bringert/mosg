@@ -12,13 +12,13 @@ public class FactsBox extends ScrollingDisclosurePanel {
 		super("Facts");
 		addStyleName("my-FactsBox");		
 	}
-	
+
 	public void addFact(String fact) {
 		CheckBox c = new CheckBox(fact);
 		c.setChecked(true);
 		add(c);
 	}
-	
+
 	public List<String> getFacts() {
 		List<String> ret = new ArrayList<String>();
 		for (Widget w : this) {
@@ -29,5 +29,5 @@ public class FactsBox extends ScrollingDisclosurePanel {
 		}
 		return ret;
 	}
-	
+
 }

@@ -11,13 +11,13 @@ import java.util.ArrayList;
 public class Semantics {
 
 	private String baseURL;
-	
+
 	public Semantics (String baseURL) {
 		this.baseURL = baseURL;
 	}
 
 	/* Interpretation */
-	
+
 	public JSONRequest interpret (String tree, final Callback callback) {
 		List<Arg> args = new ArrayList<Arg>();
 		args.add(new Arg("tree", tree));
@@ -29,7 +29,7 @@ public class Semantics {
 
 	public static class Interpretations extends JavaScriptObject {
 		protected Interpretations() { }
-		
+
 		public final boolean isEmpty() {
 			return getInterpretations().isEmpty();
 		}
@@ -47,9 +47,9 @@ public class Semantics {
 			}
 			return true;
 		}
-		
+
 		public final native String getError() /*-{ return this.error; }-*/;
-				
+
 		public final native IterableJsArray<Interpretation> getInterpretations() /*-{ return this.interpretations; }-*/;
 	}
 
@@ -60,7 +60,7 @@ public class Semantics {
 		public final native boolean isYesNoQuestion() /*-{ return this.type == "ynquest"; }-*/;
 		public final native String getProposition() /*-{ return this.prop; }-*/;
 		public final native String getVariable() /*-{ return this.variable; }-*/;
-		
+
 		public final String show() {
 			if (isStatement()) {
 				return getProposition();

@@ -42,7 +42,7 @@ public class MosgApp implements EntryPoint {
 	private PopupPanel statusPopup;
 	private Label statusLabel;
 
-	
+
 	private void parse() {
 		String text = suggest.getText();
 		List<String> fromLangs = fromLangBox.getSelectedValues();
@@ -93,7 +93,7 @@ public class MosgApp implements EntryPoint {
 			parseResultPanel.interpretationFailed(interpretations.getError());
 			return;		
 		}
-		
+
 		for (Semantics.Interpretation i : interpretations.getInterpretations().iterable()) {
 			InterpretationPanel panel = parseResultPanel.addInterpretation(i);
 			if (i.isStatement()) {
@@ -104,7 +104,7 @@ public class MosgApp implements EntryPoint {
 			}
 		}
 	}
-	
+
 	private void checkConsistency(String fact, final InterpretationPanel panel) {
 		GWT.log("Checking consistency " + fact, null);
 		reasoning.isConsistent(getFacts(), fact, new Reasoning.Callback() {
@@ -117,7 +117,7 @@ public class MosgApp implements EntryPoint {
 			}
 		});
 	}
-	
+
 	private void checkInformativity(String fact, final InterpretationPanel panel) {
 		GWT.log("Checking informativity " + fact, null);
 		reasoning.isInformative(getFacts(), fact, new Reasoning.Callback() {
@@ -130,7 +130,7 @@ public class MosgApp implements EntryPoint {
 			}
 		});
 	}
-	
+
 	private void checkAnswer(String conjecture, final InterpretationPanel panel) {
 		GWT.log("Checking answer " + conjecture, null);
 		reasoning.isTrue(getFacts(), conjecture, new Reasoning.Callback() {
@@ -143,13 +143,13 @@ public class MosgApp implements EntryPoint {
 			}
 		});
 	}
-	
+
 	private void handleInterpretations(List<InterpretationPanel> interpretations) {
 		if (interpretations.isEmpty()) {
 			setStatus("No interpretations.");
 			return;
 		}
-		
+
 		List<String> okStatements = new ArrayList<String>();
 		List<Reasoning.Answer> yesNoAnswers = new ArrayList<Reasoning.Answer>();
 
@@ -160,7 +160,7 @@ public class MosgApp implements EntryPoint {
 				yesNoAnswers.add(i.getAnswer());
 			}
 		}
-		
+
 		if (yesNoAnswers.isEmpty()) {
 			if (okStatements.isEmpty()) {
 				setStatus("No consistent and informative interpretations.");
@@ -194,10 +194,10 @@ public class MosgApp implements EntryPoint {
 				return;
 			}
 		}
-		
+
 		suggest.setText("");
 	}
-		
+
 	private String combineFacts(List<String> facts) {
 		// FIXME: this is pessimistic, implement th others too
 		StringBuilder sb = new StringBuilder();
@@ -208,11 +208,11 @@ public class MosgApp implements EntryPoint {
 		}
 		return sb.toString();
 	}
-	
+
 	private void addFact(String fact) {
 		factsBox.addFact(fact);
 	}
-	
+
 	private List<String> getFacts() {
 		return factsBox.getFacts();
 	}
@@ -286,9 +286,9 @@ public class MosgApp implements EntryPoint {
 		settingsPanel.add(submitButton);
 
 		factsBox = new FactsBox();
-		
+
 		inputListPanel = new ScrollingDisclosurePanel("Log");
-		
+
 		VerticalPanel vPanel = new VerticalPanel();
 		vPanel.setWidth("100%");
 		vPanel.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
