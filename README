@@ -1,0 +1,49 @@
+== Requirements ==
+
+- Non-Hackage Haskell packages:
+  - gf
+  - gf-server
+  - folkung
+
+- Hackage packages
+  - cgi
+  - fastcgi
+  - json
+  - utf8-string
+
+- Lighttpd
+  (MacPorts)   $ sudo port install lighttpd
+  (Ubuntu)      $ sudo apt-get install lighttpd
+
+- Google Web Toolkit
+    Set $GWT_CLASSPATH to point to the GWT JAR files. For example:
+    $ export GWT_DIR="/Users/bringert/src/gwt-mac-1.5.2"
+    $ export GWT_CLASSPATH="$GWT_DIR/gwt-user.jar:$GWT_DIR/gwt-dev-mac.jar"
+
+== Compile ==
+
+- Grammar:
+  $ make Syntax.pgf
+
+- PGF service (copied from $HOME/.cabal/bin/pgf.fcgi):
+  $ make pgf.fcgi
+
+- Semantics service
+  $ make semantics.fcgi
+
+- Reasoning service
+  $ make reasoning.fcgi
+
+- GWT UI:
+  $ make gwt
+
+
+== Run ==
+
+- Start lighttpd:
+  $ make run
+
+- In web browser, visit http://localhost:1970/
+
+- Or, to use GWT Development Shell:
+  $ make hosted

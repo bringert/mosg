@@ -5,7 +5,7 @@ GHCFLAGS =
 
 INSTALL_DIR = $(HOME)/public_html/mosg
 
-.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas semantics.fcgi reasoning.fcgi pgf.fcgi gwt test Syntax.pgf Syntax.hs showpdf install clean distclean
+.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas semantics.fcgi reasoning.fcgi pgf.fcgi gwt hosted test Syntax.pgf Syntax.hs showpdf install clean distclean
 
 mosg.fcgi: Sem.hs
 	ghc $(GHCFLAGS) -threaded -package gf -package folkung -package fastcgi --make -o $@ MainFastCGI.hs
@@ -30,6 +30,9 @@ pgf.fcgi:
 
 gwt:
 	gwt/Mosg-compile
+
+hosted:
+	gwt/Mosg-shell-external
 
 test:
 	ghc $(GHCFLAGS) -i../embedded-gf/src --make -o $@ test.hs
