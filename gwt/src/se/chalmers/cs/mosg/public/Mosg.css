@@ -1,3 +1,12 @@
+body {
+    margin: 0;
+    padding: 5px;    
+}
+
+h1 {
+    text-align: center;
+}
+
 .gwt-SuggestBox {
     width: 800px;
     font-size: 150%;

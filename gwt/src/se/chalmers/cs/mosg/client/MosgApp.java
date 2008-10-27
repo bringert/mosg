@@ -42,10 +42,7 @@ public class MosgApp implements EntryPoint {
 	private PopupPanel statusPopup;
 	private Label statusLabel;
 
-	private void submit() {
-		parse();
-	}
-
+	
 	private void parse() {
 		String text = suggest.getText();
 		List<String> fromLangs = fromLangBox.getSelectedValues();
@@ -255,10 +252,11 @@ public class MosgApp implements EntryPoint {
 		});
 
 		suggest = new SuggestBox(oracle);
+		suggest.setTitle("Enter a statement or a question");
 		suggest.addKeyboardListener(new KeyboardListenerAdapter() {
 			public void onKeyUp (Widget sender, char keyCode, int modifiers) {
 				if (keyCode == KEY_ENTER) {
-					submit();
+					parse();
 				}
 			}
 		});
@@ -276,7 +274,7 @@ public class MosgApp implements EntryPoint {
 		submitButton.setEnabled(false);
 		submitButton.addClickListener(new ClickListener() {
 			public void onClick(Widget sender) {
-				submit();
+				parse();
 			}
 		});
 
