@@ -12,17 +12,17 @@
     margin-top: 1em;
 }
 
-.my-inputListDisclosurePanel {
+.my-ScrollingDisclosurePanel {
     margin: 1em;
     border: thin solid silver;
     width: 800px;
 }
 
-.my-inputListScrollPanel {
+.my-ScrollingDisclosurePanel .my-scroll {
     width: 798px;
 }
 
-.my-inputListPanel {
+.my-ScrollingDisclosurePanel .my-content {
 	margin: 5px;
 }
 

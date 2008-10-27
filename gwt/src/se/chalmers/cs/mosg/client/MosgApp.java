@@ -12,13 +12,11 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ClickListener;
-import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.KeyboardListenerAdapter;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -39,7 +37,7 @@ public class MosgApp implements EntryPoint {
 	private SuggestBox suggest;
 	private InputLanguageBox fromLangBox;
 	private Button submitButton;
-	private VerticalPanel inputListPanel;
+	private ScrollingDisclosurePanel inputListPanel;
 	private FactsBox factsBox;
 	private PopupPanel statusPopup;
 	private Label statusLabel;
@@ -74,17 +72,21 @@ public class MosgApp implements EntryPoint {
 			p.setExpanded(false);
 		}
 
-		for (PGF.ParseResult r : results.iterable()) {
-			GWT.log("Interpreting " + r.getTree(), null);
-			final ParseResultPanel parseResultPanel = inputPanel.addInputTree(r);
-			semantics.interpret(r.getTree(), new Semantics.Callback() {
-				public void onResult (Semantics.Interpretations interpretations) {
-					reason(interpretations, parseResultPanel);
-				}
-				public void onError (Throwable e) {
-					showError("Interpretation failed", e);
-				}
-			});
+		if (results.isEmpty()) {
+			setStatus("No parse results.");
+		} else {
+			for (PGF.ParseResult r : results.iterable()) {
+				GWT.log("Interpreting " + r.getTree(), null);
+				final ParseResultPanel parseResultPanel = inputPanel.addInputTree(r);
+				semantics.interpret(r.getTree(), new Semantics.Callback() {
+					public void onResult (Semantics.Interpretations interpretations) {
+						reason(interpretations, parseResultPanel);
+					}
+					public void onError (Throwable e) {
+						showError("Interpretation failed", e);
+					}
+				});
+			}
 		}
 	}
 
@@ -165,6 +167,7 @@ public class MosgApp implements EntryPoint {
 		if (yesNoAnswers.isEmpty()) {
 			if (okStatements.isEmpty()) {
 				setStatus("No consistent and informative interpretations.");
+				return;
 			} else {
 				String fact = combineFacts(okStatements);
 				addFact(fact);			
@@ -191,9 +194,11 @@ public class MosgApp implements EntryPoint {
 				}
 			} else {
 				setStatus("Input is ambiguous between statement and question.");
+				return;
 			}
 		}
 		
+		suggest.setText("");
 	}
 		
 	private String combineFacts(List<String> facts) {
@@ -201,8 +206,8 @@ public class MosgApp implements EntryPoint {
 		StringBuilder sb = new StringBuilder();
 		for (String fact : facts) {
 			if (sb.length() > 0)
-				sb.append("&");
-			sb.append(fact);
+				sb.append(" & ");
+			sb.append('(').append(fact).append(')');
 		}
 		return sb.toString();
 	}
@@ -284,14 +289,7 @@ public class MosgApp implements EntryPoint {
 
 		factsBox = new FactsBox();
 		
-		inputListPanel = new VerticalPanel();
-		inputListPanel.setStyleName("my-inputListPanel");
-		inputListPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);		
-		ScrollPanel inputListScrollPanel = new ScrollPanel(inputListPanel);
-		inputListScrollPanel.setStyleName("my-inputListScrollPanel");
-		DisclosurePanel inputListDisclosurePanel = new DisclosurePanel("Log", true);
-		inputListDisclosurePanel.setContent(inputListScrollPanel);
-		inputListDisclosurePanel.setStyleName("my-inputListDisclosurePanel");		
+		inputListPanel = new ScrollingDisclosurePanel("Log");
 		
 		VerticalPanel vPanel = new VerticalPanel();
 		vPanel.setWidth("100%");
@@ -299,7 +297,7 @@ public class MosgApp implements EntryPoint {
 		vPanel.add(suggest);
 		vPanel.add(settingsPanel);
 		vPanel.add(factsBox);
-		vPanel.add(inputListDisclosurePanel);
+		vPanel.add(inputListPanel);
 
 		RootPanel.get().add(vPanel);
 

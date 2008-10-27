@@ -50,18 +50,21 @@ public class InterpretationPanel extends TreeItem {
 	public void setConsistency(Reasoning.Answer consistency) {
 		this.consistency = consistency;		
 		addItem("Consistent: " + showAnswer(consistency));
+		setState(true);
 		getParent().childConsistencyChecked();
 	}
 
 	public void setInformativity(Reasoning.Answer informativity) {
 		this.informativity = informativity;
 		addItem("Informative: " + showAnswer(informativity));
+		setState(true);
 		getParent().childInformativityChecked();
 	}
 	
 	public void setAnswer(Reasoning.Answer answer) {
 		this.answer = answer;
 		addItem("Answer: " + showAnswer(answer));
+		setState(true);
 		getParent().childAnswerChecked();
 	}
 	

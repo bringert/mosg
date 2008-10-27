@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-public class FactsBox extends VerticalPanel {
+public class FactsBox extends ScrollingDisclosurePanel {
 
 	public FactsBox() {
+		super("Facts");
 		addStyleName("my-FactsBox");		
 	}
 	
