@@ -5,7 +5,7 @@ GHCFLAGS =
 
 INSTALL_DIR = $(HOME)/public_html/mosg
 
-.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas semantics.fcgi reasoning.fcgi pgf.fcgi test Syntax.pgf Syntax.hs showpdf install clean distclean
+.PHONY: mosg.cgi mosg.fcgi mosg mosg-fracas semantics.fcgi reasoning.fcgi pgf.fcgi gwt test Syntax.pgf Syntax.hs showpdf install clean distclean
 
 mosg.fcgi: Sem.hs
 	ghc $(GHCFLAGS) -threaded -package gf -package folkung -package fastcgi --make -o $@ MainFastCGI.hs
@@ -27,6 +27,9 @@ reasoning.fcgi:
 
 pgf.fcgi:
 	cp ../gf/src/server/pgf.fcgi .
+
+gwt:
+	gwt/Mosg-compile
 
 test:
 	ghc $(GHCFLAGS) -i../embedded-gf/src --make -o $@ test.hs
@@ -58,6 +61,7 @@ InterExample.pdf: InterExample.tex
 
 Syntax.pgf Syntax.hs:
 	gfc --make --output-format=haskell --haskell=lexical --lexical=N,N2,N3,PN,A,A2,V,V2,V3,Prep --name=Syntax grammar/English.gf # grammar/Swedish.gf # grammar/Norwegian.gf grammar/German.gf
+
 run: pgf.fcgi semantics.fcgi reasoning.fcgi
 	@echo '*********************************************'
 	@echo 'See http://localhost:1970/'
