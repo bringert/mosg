@@ -20,6 +20,8 @@ public class ParseResultPanel extends TreeItem {
 
 	/** The number of yes/no question children whose answer has not been checked. */
 	private int answerUnchecked = 0;
+	
+	private List<InterpretationPanel> interpretations = new ArrayList<InterpretationPanel>();
 
 	private List<ReasoningListener> listeners = new LinkedList<ReasoningListener>();
 
@@ -35,19 +37,21 @@ public class ParseResultPanel extends TreeItem {
 
 	public InterpretationPanel addInterpretation(Semantics.Interpretation interpretation) {
 		InterpretationPanel panel = new InterpretationPanel(interpretation);
+		interpretations.add(panel);
+		addItem(panel);
 		if (interpretation.isStatement()) {
 			consistencyUnchecked++;
 			informativityUnchecked++;
 		} else if (interpretation.isYesNoQuestion()) {
 			answerUnchecked++;			
 		}
-		addItem(panel);
 		setState(true);
 		return panel;
 	}
 
 	public void interpretationFailed (String error) {
 		addItem("Interpretation failed: " + error);
+		fireReasoningDone();
 	}
 
 	public void childConsistencyChecked() {
@@ -69,23 +73,14 @@ public class ParseResultPanel extends TreeItem {
 		return consistencyUnchecked == 0 && informativityUnchecked == 0 && answerUnchecked == 0;
 	}
 
-	private List<InterpretationPanel> getChildren() {
-		List<InterpretationPanel> ret = new ArrayList<InterpretationPanel>();
-		for (int i = 0; i < getChildCount(); i++) {
-			ret.add((InterpretationPanel)getChild(i));
-		}
-		return ret;
-	}
-
 	public void addReasoningListener(ReasoningListener l) {
 		listeners.add(l);
 	}
 
 	private void fireReasoningDone() {
 		if (areAllChecked()) {
-			List<InterpretationPanel> children = getChildren();
 			for (ReasoningListener l : listeners) {
-				l.onReasoningDone(children);
+				l.onReasoningDone(interpretations);
 			}
 		}
 	}
