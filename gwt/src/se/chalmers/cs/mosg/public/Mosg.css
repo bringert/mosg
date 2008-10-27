@@ -13,10 +13,6 @@ h1 {
     margin: 1em 0 0.5em 0;
 }
 
-.my-ScrollingDisclosurePanel a.header {
-  text-decoration: none;
-}
-
 .my-settingsPanel * {
     margin: 0 0.4em;
 }
@@ -28,14 +24,14 @@ h1 {
 .my-ScrollingDisclosurePanel {
     margin: 1em;
     border: thin solid silver;
-    width: 800px;
+    width: 800px; 
 }
 
-.my-ScrollingDisclosurePanel .my-scroll {
+.my-ScrollingDisclosurePanel .my-scroll, .my-ScrollingDisclosurePanel .gwt-DisclosurePanel {
     width: 798px;
 }
 
-.my-ScrollingDisclosurePanel .my-content {
+.my-ScrollingDisclosurePanel .gwt-DisclosurePanel .content {
 	margin: 5px;
 }
 

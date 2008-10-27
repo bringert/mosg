@@ -7,7 +7,9 @@ import com.google.gwt.user.client.ui.DisclosureEvent;
 import com.google.gwt.user.client.ui.DisclosureHandler;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HasWidgets;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -24,8 +26,6 @@ public class ScrollingDisclosurePanel extends Composite implements HasWidgets {
 		final DisclosurePanel disclosurePanel = new DisclosurePanel(header, true);
 		disclosurePanel.getHeader().setTitle("Hide " + header);
 		disclosurePanel.setContent(scrollPanel);
-		initWidget(disclosurePanel);
-		setStyleName("my-ScrollingDisclosurePanel");
 		disclosurePanel.addEventHandler(new DisclosureHandler() {
 			public void onClose(DisclosureEvent e) {
 				disclosurePanel.getHeader().setTitle("Show " + header);
@@ -34,6 +34,10 @@ public class ScrollingDisclosurePanel extends Composite implements HasWidgets {
 				disclosurePanel.getHeader().setTitle("Hide " + header);
 			}
 		});
+		Panel rootPanel = new SimplePanel();
+		rootPanel.add(disclosurePanel);
+		initWidget(rootPanel);
+		setStyleName("my-ScrollingDisclosurePanel");
 	}
 
 	public void add(Widget w) {
