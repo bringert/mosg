@@ -1,5 +1,6 @@
 package se.chalmers.cs.mosg.client;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import se.chalmers.cs.gf.gwt.client.CompletionOracle;
@@ -51,6 +52,11 @@ public class MosgApp implements EntryPoint {
 		String text = suggest.getText();
 		List<String> fromLangs = fromLangBox.getSelectedValues();
 		final InputPanel inputPanel = new InputPanel(text);
+		inputPanel.addReasoningListener(new InputPanel.ReasoningListener() {
+			public void onReasoningDone(List<InterpretationPanel> interpretations) {
+				handleInterpretations(interpretations);
+			}
+		});
 		inputListPanel.add(inputPanel);
 		pgf.parse(text, fromLangs, null, new PGF.ParseCallback() {
 			public void onResult(PGF.ParseResults results) {
@@ -70,10 +76,10 @@ public class MosgApp implements EntryPoint {
 
 		for (PGF.ParseResult r : results.iterable()) {
 			GWT.log("Interpreting " + r.getTree(), null);
-			final InputTreePanel inputTreePanel = inputPanel.addInputTree(r.getTree());
+			final ParseResultPanel parseResultPanel = inputPanel.addInputTree(r);
 			semantics.interpret(r.getTree(), new Semantics.Callback() {
 				public void onResult (Semantics.Interpretations interpretations) {
-					reason(interpretations, inputTreePanel);
+					reason(interpretations, parseResultPanel);
 				}
 				public void onError (Throwable e) {
 					showError("Interpretation failed", e);
@@ -82,10 +88,10 @@ public class MosgApp implements EntryPoint {
 		}
 	}
 
-	private void reason(Semantics.Interpretations interpretations, InputTreePanel inputTreePanel) {
+	private void reason(Semantics.Interpretations interpretations, ParseResultPanel parseResultPanel) {
 
 		for (Semantics.Interpretation i : interpretations.getInterpretations().iterable()) {
-			InterpretationPanel panel = inputTreePanel.addInterpretation(i);
+			InterpretationPanel panel = parseResultPanel.addInterpretation(i);
 			if (i.isStatement()) {
 				checkConsistency(i.getProposition(), panel);
 				checkInformativity(i.getProposition(), panel);
@@ -104,9 +110,10 @@ public class MosgApp implements EntryPoint {
 		GWT.log("Checking consistency " + fact, null);
 		reasoning.isConsistent(getFacts(), fact, new Reasoning.Callback() {
 			public void onResult (Reasoning.Answer answer) {
-				panel.setConsistency(answer.show());
+				panel.setConsistency(answer);
 			}
 			public void onError (Throwable e) {
+				panel.setConsistency(null);
 				showError("Consistency check failed", e);
 			}
 		});
@@ -116,9 +123,10 @@ public class MosgApp implements EntryPoint {
 		GWT.log("Checking informativity " + fact, null);
 		reasoning.isInformative(getFacts(), fact, new Reasoning.Callback() {
 			public void onResult (Reasoning.Answer answer) {
-				panel.setInformativity(answer.show());
+				panel.setInformativity(answer);
 			}
 			public void onError (Throwable e) {
+				panel.setInformativity(null);
 				showError("Informativity check failed", e);
 			}
 		});
@@ -128,18 +136,79 @@ public class MosgApp implements EntryPoint {
 		GWT.log("Checking answer " + conjecture, null);
 		reasoning.isTrue(getFacts(), conjecture, new Reasoning.Callback() {
 			public void onResult (Reasoning.Answer answer) {
-				panel.setAnswer(answer.show());
+				panel.setAnswer(answer);
 			}
 			public void onError (Throwable e) {
+				panel.setAnswer(null);
 				showError("Answer check failed", e);
 			}
 		});
 	}
 	
-	private void addFacts(List<String> facts) {
-		for (String fact : facts) {
-			factsBox.addFact(fact);
+	private void handleInterpretations(List<InterpretationPanel> interpretations) {
+		if (interpretations.isEmpty()) {
+			setStatus("No interpretations.");
+			return;
 		}
+		
+		List<String> okStatements = new ArrayList<String>();
+		List<Reasoning.Answer> yesNoAnswers = new ArrayList<Reasoning.Answer>();
+
+		for (InterpretationPanel i : interpretations) {
+			if (i.getInterpretation().isStatement() && i.isConsistent() && i.isInformative()) {
+				okStatements.add(i.getInterpretation().getProposition());
+			} else if (i.getInterpretation().isYesNoQuestion()) {
+				yesNoAnswers.add(i.getAnswer());
+			}
+		}
+		
+		if (yesNoAnswers.isEmpty()) {
+			if (okStatements.isEmpty()) {
+				setStatus("No consistent and informative interpretations.");
+			} else {
+				String fact = combineFacts(okStatements);
+				addFact(fact);			
+			}
+		} else {
+			if (okStatements.isEmpty()) {
+				boolean someYes = false;
+				boolean someNo = false;
+				for (Reasoning.Answer a : yesNoAnswers) {
+					if (a.isYes()) {
+						someYes = true;
+					} else if (a.isNo()) {
+						someNo = true;
+					}
+				}
+				if (someYes && !someNo) {
+					setStatus("Yes.");
+				} else if (!someYes && someNo) {
+					setStatus("No.");
+				} else if (!someYes && !someNo) {
+					setStatus("Unknown.");
+				} else {
+					setStatus("Inconsistent answers.");
+				}
+			} else {
+				setStatus("Input is ambiguous between statement and question.");
+			}
+		}
+		
+	}
+		
+	private String combineFacts(List<String> facts) {
+		// FIXME: this is pessimistic, implement th others too
+		StringBuilder sb = new StringBuilder();
+		for (String fact : facts) {
+			if (sb.length() > 0)
+				sb.append("&");
+			sb.append(fact);
+		}
+		return sb.toString();
+	}
+	
+	private void addFact(String fact) {
+		factsBox.addFact(fact);
 	}
 	
 	private List<String> getFacts() {
