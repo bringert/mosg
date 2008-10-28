@@ -37,7 +37,7 @@ public class ScrollingDisclosurePanel extends Composite implements HasWidgets {
 		Panel rootPanel = new SimplePanel();
 		rootPanel.add(disclosurePanel);
 		initWidget(rootPanel);
-		setStyleName("my-ScrollingDisclosurePanel");
+		setStylePrimaryName("my-ScrollingDisclosurePanel");
 	}
 
 	public void add(Widget w) {
