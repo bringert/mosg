@@ -10,7 +10,7 @@ h1 {
 .gwt-SuggestBox {
     width: 800px;
     font-size: 150%;
-    margin: 1em 0 0.5em 0;
+    margin: 10px 0;
 }
 
 .my-settingsPanel * {
@@ -31,14 +31,19 @@ h1 {
 .my-ScrollingDisclosurePanel .my-scroll, .my-ScrollingDisclosurePanel .gwt-DisclosurePanel {
     margin: 0;
 	padding: 0;
-    width: 788px;
+    width: 800px;
 }
 
-.my-ScrollingDisclosurePanel .gwt-DisclosurePanel .content {
-	margin: 5px;
+.my-ScrollingDisclosurePanel .content {
+	margin: 0;
 	padding: 0;
 	border: none;
 }
+
+.my-ScrollingDisclosurePanel .my-content {
+	padding: 5px;
+}
+
 
 .my-InputPanel {
 }
