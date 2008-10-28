@@ -26,7 +26,7 @@ reasoning.fcgi:
 	ghc $(GHCFLAGS) -threaded -package folkung -package fastcgi --make -o $@ ReasoningService.hs
 
 pgf.fcgi:
-	cp ../gf/src/server/pgf.fcgi .
+	cp $(HOME)/.cabal/bin/pgf.fcgi .
 
 gwt:
 	gwt/Mosg-compile
