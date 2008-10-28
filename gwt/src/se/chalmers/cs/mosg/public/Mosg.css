@@ -1,10 +1,11 @@
 body {
     margin: 0;
-    padding: 5px;    
+    padding: 0;    
 }
 
 h1 {
     text-align: center;
+    margin: 0.5em 1em 1em 1em;
 }
 
 .my-suggestPanel, .gwt-SuggestBox, .my-statusPanel, .my-ScrollingDisclosurePanel, .my-ScrollingDisclosurePanel .my-scroll, .my-ScrollingDisclosurePanel .gwt-DisclosurePanel {
