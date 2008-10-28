@@ -15,8 +15,8 @@ import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.KeyboardListenerAdapter;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -39,7 +39,6 @@ public class MosgApp implements EntryPoint {
 	private Button submitButton;
 	private ScrollingDisclosurePanel inputListPanel;
 	private FactsBox factsBox;
-	private PopupPanel statusPopup;
 	private Label statusLabel;
 
 
@@ -181,21 +180,25 @@ public class MosgApp implements EntryPoint {
 					}
 				}
 				if (someYes && !someNo) {
-					setStatus("Yes.");
+					showAnswer("Yes.");
 				} else if (!someYes && someNo) {
-					setStatus("No.");
+					showAnswer("No.");
 				} else if (!someYes && !someNo) {
-					setStatus("Unknown.");
+					showAnswer("Unknown.");
 				} else {
-					setStatus("Inconsistent answers.");
+					showError("Inconsistent answers.", null);
 				}
 			} else {
-				setStatus("Input is ambiguous between statement and question.");
+				showError("Input is ambiguous between statement and question.", null);
 				return;
 			}
 		}
 
 		suggest.setText("");
+	}
+	
+	private void showAnswer(String answer) {
+		setStatus(answer);
 	}
 
 	private String combineFacts(List<String> facts) {
@@ -223,7 +226,6 @@ public class MosgApp implements EntryPoint {
 
 	private void setStatus(String msg) {
 		statusLabel.setText(msg);
-		statusPopup.center();
 	}
 
 	private void showError(String msg, Throwable e) {
@@ -232,7 +234,7 @@ public class MosgApp implements EntryPoint {
 	}
 
 	private void clearStatus() {
-		statusPopup.hide();
+		statusLabel.setText("");
 	}
 
 	private void setGrammar(PGF.Grammar grammar) {
@@ -244,12 +246,11 @@ public class MosgApp implements EntryPoint {
 	}
 
 	private void createMosgUI() {
-
-		oracle = new CompletionOracle(pgf, new CompletionOracle.ErrorHandler() {
-			public void onError(Throwable e) {
-				showError("Completion failed", e);
-			}
-		});
+		
+		statusLabel = new Label("Loading...");
+		SimplePanel statusPanel = new SimplePanel();
+		statusPanel.setStylePrimaryName("my-statusPanel");
+		statusPanel.add(statusLabel);
 
 		suggest = new SuggestBox(oracle);
 		suggest.setTitle("Enter a statement or a question");
@@ -260,6 +261,9 @@ public class MosgApp implements EntryPoint {
 				}
 			}
 		});
+		SimplePanel suggestPanel = new SimplePanel();
+		suggestPanel.setStyleName("my-suggestPanel");
+		suggestPanel.add(suggest);
 
 		fromLangBox = new InputLanguageBox();
 		fromLangBox.setEnabled(false);
@@ -292,8 +296,9 @@ public class MosgApp implements EntryPoint {
 		VerticalPanel vPanel = new VerticalPanel();
 		vPanel.setWidth("100%");
 		vPanel.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
-		vPanel.add(suggest);
+		vPanel.add(suggestPanel);
 		vPanel.add(settingsPanel);
+		vPanel.add(statusPanel);
 		vPanel.add(factsBox);
 		vPanel.add(inputListPanel);
 
@@ -301,16 +306,17 @@ public class MosgApp implements EntryPoint {
 
 	}
 
-	public void onModuleLoad() {    
-		statusLabel = new Label("Loading...");
-		statusPopup = new PopupPanel(true, true);
-		statusPopup.add(statusLabel);
-		statusPopup.center();
-
+	public void onModuleLoad() {
 		pgf = new PGF(pgfBaseURL, pgfName);
 		semantics = new Semantics(semanticsBaseURL);
 		reasoning = new Reasoning(reasoningBaseURL);
 
+		oracle = new CompletionOracle(pgf, new CompletionOracle.ErrorHandler() {
+			public void onError(Throwable e) {
+				showError("Completion failed", e);
+			}
+		});
+		
 		createMosgUI();
 
 		pgf.grammar(new PGF.GrammarCallback() {

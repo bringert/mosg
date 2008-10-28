@@ -7,31 +7,47 @@ h1 {
     text-align: center;
 }
 
+.my-suggestPanel, .gwt-SuggestBox, .my-statusPanel, .my-ScrollingDisclosurePanel, .my-ScrollingDisclosurePanel .my-scroll, .my-ScrollingDisclosurePanel .gwt-DisclosurePanel {
+    width: 800px; 
+}
+
+.my-suggestPanel, .my-statusPanel, .my-ScrollingDisclosurePanel {
+    margin: 0 1em;
+}
+
 .gwt-SuggestBox {
-    width: 800px;
     font-size: 150%;
-    margin: 10px 0;
 }
 
 .my-settingsPanel * {
     margin: 0 0.4em;
 }
 
-.my-FactsBox {
-    margin-top: 1em;
+.my-statusPanel {
+  	border-width: 1px;
+  	margin: 1em;
+}
+
+.my-statusPanel .gwt-Label {
+  	border-width: 2px;
+  	padding: 0.5em;
+  	height: 1em;
+}
+
+.my-statusPanel, .my-statusPanel .gwt-Label {
+  	border-color: red;
+  	border-style: solid;
 }
 
 .my-ScrollingDisclosurePanel {
-    margin: 10px;
     border: 1px solid silver;
+    margin: 1em;
     padding: 0;
-    width: 800px; 
 }
 
 .my-ScrollingDisclosurePanel .my-scroll, .my-ScrollingDisclosurePanel .gwt-DisclosurePanel {
     margin: 0;
 	padding: 0;
-    width: 800px;
 }
 
 .my-ScrollingDisclosurePanel .content {
@@ -41,15 +57,13 @@ h1 {
 }
 
 .my-ScrollingDisclosurePanel .my-content {
-	padding: 5px;
+	padding: 0.5em;
 }
-
 
 .my-InputPanel {
 }
 
 .my-InputTreePanel {
-	margin-left: 10px;
 }
 
 .my-InterpretationPanel {
