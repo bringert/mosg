@@ -39,16 +39,18 @@ public class MosgApp implements EntryPoint {
 	private Button submitButton;
 	private ScrollingDisclosurePanel inputListPanel;
 	private FactsBox factsBox;
+	private SimplePanel statusPanel;
 	private Label statusLabel;
 
 
 	private void parse() {
 		String text = suggest.getText();
 		List<String> fromLangs = fromLangBox.getSelectedValues();
+		setStatus("Parsing...");
 		final InputPanel inputPanel = new InputPanel(text);
 		inputPanel.addReasoningListener(new InputPanel.ReasoningListener() {
 			public void onReasoningDone(List<InterpretationPanel> interpretations) {
-				handleInterpretations(interpretations);
+				reasoningDone(interpretations);
 			}
 		});
 		inputListPanel.add(inputPanel);
@@ -69,10 +71,10 @@ public class MosgApp implements EntryPoint {
 		}
 
 		if (results.isEmpty()) {
-			setStatus("No parse results.");
+			showError("No parse results.", null);
 		} else {
 			for (PGF.ParseResult r : results.iterable()) {
-				GWT.log("Interpreting " + r.getTree(), null);
+				setStatus("Interpreting...");
 				final ParseResultPanel parseResultPanel = inputPanel.addInputTree(r);
 				semantics.interpret(r.getTree(), new Semantics.Callback() {
 					public void onResult (Semantics.Interpretations interpretations) {
@@ -89,10 +91,12 @@ public class MosgApp implements EntryPoint {
 	private void reason(Semantics.Interpretations interpretations, ParseResultPanel parseResultPanel) {
 
 		if (interpretations.isEmpty()) {
+			showError("No interpretations.", null);
 			parseResultPanel.interpretationFailed(interpretations.getError());
 			return;		
 		}
 
+		setStatus("Checking interpretations...");
 		for (Semantics.Interpretation i : interpretations.getInterpretations().iterable()) {
 			InterpretationPanel panel = parseResultPanel.addInterpretation(i);
 			if (i.isStatement()) {
@@ -143,12 +147,13 @@ public class MosgApp implements EntryPoint {
 		});
 	}
 
-	private void handleInterpretations(List<InterpretationPanel> interpretations) {
+	private void reasoningDone(List<InterpretationPanel> interpretations) {
 		if (interpretations.isEmpty()) {
 			setStatus("No interpretations.");
 			return;
 		}
 
+		clearStatus();
 		List<String> okStatements = new ArrayList<String>();
 		List<Reasoning.Answer> yesNoAnswers = new ArrayList<Reasoning.Answer>();
 
@@ -225,15 +230,18 @@ public class MosgApp implements EntryPoint {
 	}
 
 	private void setStatus(String msg) {
+		statusPanel.removeStyleDependentName("error");
 		statusLabel.setText(msg);
 	}
 
 	private void showError(String msg, Throwable e) {
 		GWT.log(msg, e);
-		setStatus(msg);
+		statusPanel.addStyleDependentName("error");
+		statusLabel.setText(msg);
 	}
 
 	private void clearStatus() {
+		statusPanel.removeStyleDependentName("error");
 		statusLabel.setText("");
 	}
 
@@ -248,11 +256,12 @@ public class MosgApp implements EntryPoint {
 	private void createMosgUI() {
 		
 		statusLabel = new Label("Loading...");
-		SimplePanel statusPanel = new SimplePanel();
+		statusPanel = new SimplePanel();
 		statusPanel.setStylePrimaryName("my-statusPanel");
 		statusPanel.add(statusLabel);
 
 		suggest = new SuggestBox(oracle);
+		suggest.setLimit(10);
 		suggest.setTitle("Enter a statement or a question");
 		suggest.addKeyboardListener(new KeyboardListenerAdapter() {
 			public void onKeyUp (Widget sender, char keyCode, int modifiers) {
@@ -261,7 +270,11 @@ public class MosgApp implements EntryPoint {
 				}
 			}
 		});
-		SimplePanel suggestPanel = new SimplePanel();
+		SimplePanel suggestPanel = new SimplePanel() {
+			public void onLoad() {
+				suggest.setFocus(true);
+			}
+		};
 		suggestPanel.setStyleName("my-suggestPanel");
 		suggestPanel.add(suggest);
 

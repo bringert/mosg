@@ -11,8 +11,12 @@ h1 {
     width: 800px; 
 }
 
-.my-suggestPanel, .my-statusPanel, .my-ScrollingDisclosurePanel {
+.my-suggestPanel {
     margin: 0 1em;
+}
+
+.my-settingsPanel {
+	margin: 0.5em 1em;
 }
 
 .gwt-SuggestBox {
@@ -35,8 +39,12 @@ h1 {
 }
 
 .my-statusPanel, .my-statusPanel .gwt-Label {
-  	border-color: red;
   	border-style: solid;
+  	border-color: silver;
+}
+
+.my-statusPanel-error, .my-statusPanel-error .gwt-Label {
+  	border-color: red;
 }
 
 .my-ScrollingDisclosurePanel {
