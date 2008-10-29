@@ -1,6 +1,6 @@
 body {
     margin: 0;
-    padding: 0;    
+    padding: 0;
 }
 
 h1 {
@@ -20,12 +20,12 @@ h1 {
 	margin: 0.5em 1em;
 }
 
-.gwt-SuggestBox {
-    font-size: 150%;
+.gwt-SuggestBox, .gwt-SuggestBoxPopup .item, .my-statusPanel {
+    font-size: large;
 }
 
-.my-settingsPanel * {
-    margin: 0 0.4em;
+.my-settingsPanel select {
+    margin: 0 1em;
 }
 
 .my-statusPanel {
