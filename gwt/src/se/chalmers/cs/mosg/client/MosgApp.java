@@ -44,7 +44,7 @@ public class MosgApp implements EntryPoint {
 
 
 	private void parse() {
-		String text = suggest.getText();
+		String text = massageInput(suggest.getText());
 		List<String> fromLangs = fromLangBox.getSelectedValues();
 		setStatus("Parsing...");
 		final InputPanel inputPanel = new InputPanel(text);
@@ -63,6 +63,11 @@ public class MosgApp implements EntryPoint {
 				inputPanel.parseFailed();
 			}
 		});
+	}
+	
+	/** Does some preprocessing of the string before sending it to the server. */
+	private String massageInput(String input) {
+		return input.toLowerCase();
 	}
 
 	private void interpret(PGF.ParseResults results, InputPanel inputPanel) {
