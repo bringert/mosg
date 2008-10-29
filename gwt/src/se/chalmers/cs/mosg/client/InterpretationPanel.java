@@ -1,18 +1,31 @@
 package se.chalmers.cs.mosg.client;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.google.gwt.user.client.ui.TreeItem;
 
 public class InterpretationPanel extends TreeItem {
 
 	private Semantics.Interpretation interpretation;
 
-	private Reasoning.Answer consistency;
-	private Reasoning.Answer informativity;
-	private Reasoning.Answer answer;
-
+	private AnswerPanel consistencyPanel = null;
+	private AnswerPanel informativityPanel = null;
+	private AnswerPanel answerPanel = null;
+	
+	private List<ReasoningListener> listeners = new LinkedList<ReasoningListener>();
+	
 	public InterpretationPanel(Semantics.Interpretation interpretation) {
 		this.interpretation = interpretation;
 		setText(interpretation.show());
+		setStyleName("my-InterpretationPanel");
+		addStyleDependentName("incomplete");
+		if (interpretation.isStatement()) {
+			addItem(this.consistencyPanel = new AnswerPanel("Consistent"));
+			addItem(this.informativityPanel = new AnswerPanel("Informative"));
+		} else if (interpretation.isYesNoQuestion()) {
+			addItem(this.answerPanel = new AnswerPanel("Answer"));
+		}
 	}
 
 	public Semantics.Interpretation getInterpretation() {
@@ -20,56 +33,99 @@ public class InterpretationPanel extends TreeItem {
 	}
 
 	public Reasoning.Answer getConsistency() {
-		return consistency;
+		return consistencyPanel.getAnswer();
 	}
 
 	public Reasoning.Answer getInformativity() {
-		return informativity;
+		return informativityPanel.getAnswer();
 	}
 
 	public Reasoning.Answer getAnswer() {
-		return answer;
+		return answerPanel.getAnswer();
 	}
 
 	public boolean isConsistent() {
-		return checkAnswer(consistency);
+		return checkAnswer(getConsistency());
 	}
 
 	public boolean isInformative() {
-		return checkAnswer(informativity);
+		return checkAnswer(getInformativity());
 	}
 
 	private static boolean checkAnswer(Reasoning.Answer a) {		
 		return a != null && a.isYes();
 	}
 
-	private ParseResultPanel getParent() {
-		return (ParseResultPanel)getParentItem();
+	public void setConsistency(Reasoning.Answer answer) {
+		consistencyPanel.setAnswer(answer);
 	}
 
-	public void setConsistency(Reasoning.Answer consistency) {
-		this.consistency = consistency;		
-		addItem("Consistent: " + showAnswer(consistency));
-		setState(true);
-		getParent().childConsistencyChecked();
-	}
-
-	public void setInformativity(Reasoning.Answer informativity) {
-		this.informativity = informativity;
-		addItem("Informative: " + showAnswer(informativity));
-		setState(true);
-		getParent().childInformativityChecked();
+	public void setInformativity(Reasoning.Answer answer) {
+		informativityPanel.setAnswer(answer);
 	}
 
 	public void setAnswer(Reasoning.Answer answer) {
-		this.answer = answer;
-		addItem("Answer: " + showAnswer(answer));
-		setState(true);
-		getParent().childAnswerChecked();
+		answerPanel.setAnswer(answer);
+	}
+	
+	public void addReasoningListener(ReasoningListener l) {
+		listeners.add(l);
 	}
 
-	private static String showAnswer(Reasoning.Answer a) {
-		return a == null ? "Failed" : a.show();
+	public void fireReasoningDone () {
+		if (isDone(consistencyPanel) && isDone(answerPanel) && isDone(informativityPanel)) {
+			removeStyleDependentName("incomplete");
+			for (ReasoningListener l : listeners) {
+				l.onReasoningDone(this);
+			}
+		}
+	}
+	
+	private static boolean isDone(AnswerPanel answerPanel) {
+		return answerPanel == null || answerPanel.isChecked();
 	}
 
+	public interface ReasoningListener {	
+		public void onReasoningDone(InterpretationPanel interpretationPanel);
+	}
+	
+	private class AnswerPanel extends TreeItem {
+
+		private String text;
+		
+		private Reasoning.Answer answer = null;
+		
+		private boolean checked = false;
+
+		public AnswerPanel(String text) {
+			this.text = text;
+			setStyleName("my-AnswerPanel");
+			addStyleDependentName("incomplete");
+			setText(text + ": ?");
+		}
+		
+		public Reasoning.Answer getAnswer() {
+			return answer;
+		}
+
+		public boolean isChecked() {
+			return checked;
+		}
+
+		public void setAnswer(Reasoning.Answer answer) {
+			this.answer = answer;
+			removeStyleDependentName("incomplete");
+			if (answer == null) {
+				setText(text + ": Failed");
+				addStyleDependentName("failed");
+			} else {
+				setText(text + ": " + answer.show());			
+			}
+			checked = true;
+			InterpretationPanel.this.setState(true);
+			fireReasoningDone();
+		}
+		
+	}
+	
 }

@@ -72,8 +72,17 @@ h1 {
 .my-InputPanel {
 }
 
-.my-InputTreePanel {
+.my-InputPanel .gwt-TreeItem, .my-ParseResultPanel .gwt-TreeItem, .my-InterpretationPanel .gwt-TreeItem, .my-AnswerPanel .gwt-TreeItem {
+  	background-image: none;
+  	padding: 0;
 }
 
-.my-InterpretationPanel {
+.my-InputPanel-incomplete .gwt-TreeItem, .my-ParseResultPanel-incomplete .gwt-TreeItem, .my-InterpretationPanel-incomplete .gwt-TreeItem, .my-AnswerPanel-incomplete .gwt-TreeItem {
+  	background: url("working.gif") no-repeat;
+  	padding-left: 18px;
+}
+
+.my-InputPanel-failed .gwt-TreeItem, .my-ParseResultPanel-failed .gwt-TreeItem {
+  	background: url("failed.png") no-repeat;
+  	padding-left: 18px;
 }

@@ -71,6 +71,7 @@ public class MosgApp implements EntryPoint {
 		}
 
 		if (results.isEmpty()) {
+			inputPanel.parseFailed();
 			showError("No parse results.", null);
 		} else {
 			for (PGF.ParseResult r : results.iterable()) {
@@ -91,12 +92,10 @@ public class MosgApp implements EntryPoint {
 	private void reason(Semantics.Interpretations interpretations, ParseResultPanel parseResultPanel) {
 
 		if (interpretations.isEmpty()) {
-			showError("No interpretations.", null);
 			parseResultPanel.interpretationFailed(interpretations.getError());
 			return;		
 		}
 
-		setStatus("Checking interpretations...");
 		for (Semantics.Interpretation i : interpretations.getInterpretations().iterable()) {
 			InterpretationPanel panel = parseResultPanel.addInterpretation(i);
 			if (i.isStatement()) {

@@ -11,15 +11,8 @@ import com.google.gwt.user.client.ui.TreeItem;
 public class ParseResultPanel extends TreeItem {
 
 	private PGF.ParseResult parseResult;
-
-	/** The number of statement children whose consistency has not been checked. */
-	private int consistencyUnchecked = 0;
-
-	/** The number of statement children whose informativity has not been checked. */
-	private int informativityUnchecked = 0;
-
-	/** The number of yes/no question children whose answer has not been checked. */
-	private int answerUnchecked = 0;
+	
+	private int unchecked = 0;
 	
 	private List<InterpretationPanel> interpretations = new ArrayList<InterpretationPanel>();
 
@@ -28,7 +21,8 @@ public class ParseResultPanel extends TreeItem {
 	public ParseResultPanel(PGF.ParseResult parseResult) {
 		this.parseResult = parseResult;
 		setText(parseResult.getTree());
-		setStyleName("my-InputTreePanel");
+		setStyleName("my-ParseResultPanel");
+		addStyleDependentName("incomplete");
 	}
 
 	public PGF.ParseResult getParseResult() {
@@ -37,40 +31,26 @@ public class ParseResultPanel extends TreeItem {
 
 	public InterpretationPanel addInterpretation(Semantics.Interpretation interpretation) {
 		InterpretationPanel panel = new InterpretationPanel(interpretation);
+		panel.addReasoningListener(childListener);
 		interpretations.add(panel);
 		addItem(panel);
-		if (interpretation.isStatement()) {
-			consistencyUnchecked++;
-			informativityUnchecked++;
-		} else if (interpretation.isYesNoQuestion()) {
-			answerUnchecked++;			
-		}
 		setState(true);
+		unchecked++;
 		return panel;
 	}
+	
+	private InterpretationPanel.ReasoningListener childListener = new InterpretationPanel.ReasoningListener() {
+		public void onReasoningDone(InterpretationPanel interpretationPanel) {
+			unchecked--;
+			fireReasoningDone();
+		}
+	};
 
 	public void interpretationFailed (String error) {
 		addItem("Interpretation failed: " + error);
+		removeStyleDependentName("incomplete");
+		addStyleDependentName("failed");
 		fireReasoningDone();
-	}
-
-	public void childConsistencyChecked() {
-		consistencyUnchecked--;
-		fireReasoningDone();
-	}
-
-	public void childInformativityChecked() {
-		informativityUnchecked--;
-		fireReasoningDone();
-	}
-
-	public void childAnswerChecked() {
-		answerUnchecked--;
-		fireReasoningDone();
-	}
-
-	private boolean areAllChecked() {
-		return consistencyUnchecked == 0 && informativityUnchecked == 0 && answerUnchecked == 0;
 	}
 
 	public void addReasoningListener(ReasoningListener l) {
@@ -78,7 +58,8 @@ public class ParseResultPanel extends TreeItem {
 	}
 
 	private void fireReasoningDone() {
-		if (areAllChecked()) {
+		if (unchecked == 0) {
+			removeStyleDependentName("incomplete");
 			for (ReasoningListener l : listeners) {
 				l.onReasoningDone(interpretations);
 			}

@@ -28,6 +28,7 @@ public class InputPanel extends Composite {
 		tree.addItem(treeItem);
 		initWidget(tree);
 		setStyleName("my-InputPanel");
+		addStyleDependentName("incomplete");
 	}
 
 	public void setExpanded(boolean expanded) {
@@ -37,23 +38,24 @@ public class InputPanel extends Composite {
 	public ParseResultPanel addInputTree(PGF.ParseResult inputTree) {
 		unchecked++;
 		ParseResultPanel panel = new ParseResultPanel(inputTree);
-		panel.addReasoningListener(new ParseResultPanel.ReasoningListener() {
-			public void onReasoningDone(List<InterpretationPanel> childInterpretations) {
-				interpretations.addAll(childInterpretations);
-				unchecked--;
-				fireReasoningDone();
-			}
-		});
+		panel.addReasoningListener(childListener);
 		treeItem.addItem(panel);
 		treeItem.setState(true);
 		return panel;
 	}
-
-	public void childChecked() {
-		unchecked--;
-		if (unchecked == 0) {
-
+	
+	private ParseResultPanel.ReasoningListener childListener = new ParseResultPanel.ReasoningListener() {
+		public void onReasoningDone(List<InterpretationPanel> childInterpretations) {
+			interpretations.addAll(childInterpretations);
+			unchecked--;
+			fireReasoningDone();
 		}
+	};
+	
+	public void parseFailed() {
+		removeStyleDependentName("incomplete");
+		addStyleDependentName("failed");
+		fireReasoningDone();
 	}
 
 	public void addReasoningListener(ReasoningListener l) {
@@ -62,6 +64,7 @@ public class InputPanel extends Composite {
 
 	private void fireReasoningDone() {
 		if (unchecked == 0) {
+			removeStyleDependentName("incomplete");
 			for (ReasoningListener l : listeners) {
 				l.onReasoningDone(interpretations);
 			}
