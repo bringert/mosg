@@ -59,7 +59,8 @@ public class MosgApp implements EntryPoint {
 				interpret(results, inputPanel);
 			}
 			public void onError(Throwable e) {
-				showError("Parsing failed", e);
+				GWT.log("Parsing failed", e);
+				inputPanel.parseFailed();
 			}
 		});
 	}
@@ -71,8 +72,8 @@ public class MosgApp implements EntryPoint {
 		}
 
 		if (results.isEmpty()) {
-			inputPanel.parseFailed();
 			showError("No parse results.", null);
+			inputPanel.parseFailed();
 		} else {
 			for (PGF.ParseResult r : results.iterable()) {
 				setStatus("Interpreting...");
@@ -82,7 +83,8 @@ public class MosgApp implements EntryPoint {
 						reason(interpretations, parseResultPanel);
 					}
 					public void onError (Throwable e) {
-						showError("Interpretation failed", e);
+						GWT.log("Interpretation failed", e);
+						parseResultPanel.interpretationFailed(e.getMessage());
 					}
 				});
 			}
@@ -114,8 +116,8 @@ public class MosgApp implements EntryPoint {
 				panel.setConsistency(answer);
 			}
 			public void onError (Throwable e) {
+				GWT.log("Consistency check failed", e);
 				panel.setConsistency(null);
-				showError("Consistency check failed", e);
 			}
 		});
 	}
@@ -127,8 +129,8 @@ public class MosgApp implements EntryPoint {
 				panel.setInformativity(answer);
 			}
 			public void onError (Throwable e) {
+				GWT.log("Informativity check failed", e);
 				panel.setInformativity(null);
-				showError("Informativity check failed", e);
 			}
 		});
 	}
@@ -140,8 +142,8 @@ public class MosgApp implements EntryPoint {
 				panel.setAnswer(answer);
 			}
 			public void onError (Throwable e) {
+				GWT.log("Answer check failed", e);
 				panel.setAnswer(null);
-				showError("Answer check failed", e);
 			}
 		});
 	}
@@ -325,7 +327,7 @@ public class MosgApp implements EntryPoint {
 
 		oracle = new CompletionOracle(pgf, new CompletionOracle.ErrorHandler() {
 			public void onError(Throwable e) {
-				showError("Completion failed", e);
+				GWT.log("Completion failed", e);
 			}
 		});
 		
