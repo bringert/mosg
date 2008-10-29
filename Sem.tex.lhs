@@ -103,11 +103,11 @@ type of utterance.
 Ignores tense and anteriority for now.
 
 > iQS :: GQS -> I' Input
-> iQS (GUseQCl tense ant pol qcl) = pure (\p c -> mapInput p c) <*> iPol pol <*> iQCl qcl
+> iQS (GUseQCl temp pol qcl) = pure (\p c -> mapInput p c) <*> iPol pol <*> iQCl qcl
 
 Uncontracted negated question clause (English only).
 
-> iQS (GUncNegQCl tense ant qcl) = pure (mapInput neg) <*> iQCl qcl
+> iQS (GUncNegQCl temp qcl) = pure (mapInput neg) <*> iQCl qcl
 
 \subsection{QCl: Question clauses}
 
@@ -170,13 +170,13 @@ Declarative sentences are interpreted as propositions.
 
 Ignores tense and anteriority for now.
 
-> iS (GUseCl tense ant pol cl) = iPol pol <*> iCl cl
+> iS (GUseCl temp pol cl) = iPol pol <*> iCl cl
 
 Uncontracted negated declarative clause (English only),
 e.g. ``John does not run''.
 Ignores tense and anteriority for now.
 
-> iS (GUncNegCl tense ant cl) = fmap neg (iCl cl)
+> iS (GUncNegCl temp cl) = fmap neg (iCl cl)
 
 Adverbial phrase modifying a sentence.
 This uses a special |iAdv| version.
@@ -230,11 +230,11 @@ Relative clases are interpreted as predicates.
 For now we ignore the tense and anteriority.
 
 > iRS :: GRS -> I (Ind -> Prop)
-> iRS (GUseRCl tense ant pol rcl) = pure (.) <*> iPol pol <*> iRCl rcl
+> iRS (GUseRCl temp pol rcl) = pure (.) <*> iPol pol <*> iRCl rcl
 
 Uncontracted negated relative clause (English only), e.g. ``that does not sleep''.
 
-> iRS (GUncNegRCl tense ant rcl) = pure (neg .) <*> iRCl rcl
+> iRS (GUncNegRCl temp rcl) = pure (neg .) <*> iRCl rcl
 
 \subsection{RCl: Relative Clauses}
 
@@ -253,6 +253,11 @@ Forms a relative clause from a relative pronoun and a clause missing
 a noun phrase, e.g. ``which a woman loves''.
 
 > iRCl (GRelSlash rp clslash) = iRP rp <*> iClSlash clslash
+
+Forms a relative clause from a clause missing
+a noun phrase, e.g. ``(woman) he loves''.
+
+> iRCl (GEmptyRelSlash clslash) = iClSlash clslash
 
 Relative clause with realtive pronoun and verb phrase, e.g. ``that
 sleeps''.
@@ -426,16 +431,6 @@ island.
 
 > iNP (GDetCN det cn) = iDet det <*> iCN cn
 
-``the man''
-
-> iNP (GDetArtSg art cn) = iNum GNumSg <*> iArt art <*> iCN cn
-
-``the men''
-FIXME: more than one
-FIXME: plurals: universial vs existential
-
-> iNP (GDetArtPl art cn) = iNum GNumPl <*> iArt art <*> iCN cn
-
 Mass expressions.
 FIXME: universal as subject, existential in object position?
 FIXME: use shift?
@@ -551,22 +546,12 @@ FIXME: doesn't work correctly with plurals
 A determiner, with a quantifier, a cardinal number
 and an ordinal, e.g. ``these five best''.
 
-> iDet (GDetQuantOrd quant num ord) = pure (\ni qi oi u v -> ni (\p -> p) (qi (oi u)) v) <*> iNum num <*> iQuant quant <*> iOrd ord
+> iDet (GDetQuantOrd quant num ord) = pure (\qi ni oi u v -> ni (\p -> p) (qi (oi u)) v) <*> iQuant quant <*> iNum num <*> iOrd ord
 
 A determiner with a quantifier with a cardinal number,
 but no ordinal, e.g. ``these five''.
 
-> iDet (GDetQuant quant num) = pure (\ni qi u v -> ni (\p -> p) (qi u) v) <*> iNum num <*> iQuant quant
-
-%``the five best''
-
-%FIXME: wrong, indef pl should be universal as subject, existential as object
-
-> iDet (GDetArtOrd art num ord) = pure (\ni ai oi u v -> ni ai (oi u) v) <*> iNum num <*> iArt art <*> iOrd ord
-
-% ``the five''
-
-> iDet (GDetArtCard art card) = iCard card <*> iArt art
+> iDet (GDetQuant quant num) = pure (\qi ni u v -> ni (\p -> p) (qi u) v) <*> iQuant quant <*> iNum num
 
 ``every''
 
@@ -613,30 +598,21 @@ the second property.
 > iDet det = unhandled "iDet" det
 %endif
 
-\subsection{Art: Articles}
-
-The article only decides definiteness, not number.
-
-> iArt :: GArt -> I ((Ind -> Prop) -> (Ind -> Prop))
-
-Indefinite article, ``a (man)'', or ``(men)''.
-
-> iArt GIndefArt = pure (\u -> u)
-
-Definite article, ``the (man)'', or ``the (men)''.
-
-> iArt GDefArt = pure (\u x -> u x &&& forAll (\y -> u y ==> y === x))
-
-%if unhandled
-> iArt art = unhandled "iArt" art
-%endif
-
 
 \subsection{Quant: Quantifier}
 
 Quantifiers are treated as adjectives.
 
 > iQuant :: GQuant -> I ((Ind -> Prop) -> (Ind -> Prop))
+
+Indefinite article, ``a (man)'', or ``(men)''.
+%FIXME: wrong, indef pl should be universal as subject, existential as object
+
+> iQuant GIndefArt = pure (\u -> u)
+
+Definite article, ``the (man)'', or ``the (men)''.
+
+> iQuant GDefArt = pure (\u x -> u x &&& forAll (\y -> u y ==> y === x))
 
 Demonstrative, ``that (man)''.
 FIXME: should also make it definite
@@ -757,6 +733,10 @@ Reflexive use of a two-place adjective, e.g. ``equivalent to itself''.
 
 > iAP (GReflA2 a2) = pure (\ia x -> ia (\u -> u x) x) <*> iA2 a2
 
+Existential use of a two-place adjective, e.g. ``mother (of someone)''.
+
+> iAP (GUseA2 a2) = pure (\i x -> thereIs (\y -> i (\v -> v y) x)) <*> iA2 a2
+
 Adverb modifying an adjectival phrase.
 FIXME: we are cheating by ignoring the adverb
 
@@ -853,13 +833,11 @@ Proper names, e.g. ``John''.
 Adjectives, e.g. ``big''.
 
 > iA :: GA -> I (Ind -> Prop)
-> iA (GUseA2 a2) = pure (\i x -> thereIs (\y -> i (\v -> v y) x)) <*> iA2 a2
 > iA (LexA a) = pure (\x -> Pred (symbol a) [x])
 
 Adjectives when used comparatively. FIXME: weird.
 
 > iA_comparative :: GA -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
-> iA_comparative a@(GUseA2 _) = unhandled "iA_comparative" a
 > iA_comparative (LexA a) = pure (\o x -> o (\y -> comparative_Pred (symbol a) x y))
 
 Two-place adjectives, e.g. ``equivalent to ...''

@@ -19,7 +19,7 @@ mosg: Sem.hs
 mosg-fracas: Sem.hs
 	ghc $(GHCFLAGS) -package gf -package folkung -package HaXml-1.13.3 --make -o $@ MainFraCaS.hs
 
-semantics.fcgi:
+semantics.fcgi: Sem.hs
 	ghc $(GHCFLAGS) -threaded -package gf -package fastcgi --make -o $@ SemanticsService.hs
 
 reasoning.fcgi:
