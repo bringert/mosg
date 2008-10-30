@@ -42,6 +42,9 @@ public class MosgApp implements EntryPoint {
 	private SimplePanel statusPanel;
 	private Label statusLabel;
 
+	//
+	// Parsing
+	//
 
 	private void parse() {
 		String text = massageInput(suggest.getText());
@@ -64,11 +67,15 @@ public class MosgApp implements EntryPoint {
 			}
 		});
 	}
-	
+
 	/** Does some preprocessing of the string before sending it to the server. */
 	private String massageInput(String input) {
 		return input.toLowerCase();
 	}
+
+	//
+	// Interpretation
+	//
 
 	private void interpret(PGF.ParseResults results, InputPanel inputPanel) {
 		for (Widget w : inputListPanel) {
@@ -95,6 +102,10 @@ public class MosgApp implements EntryPoint {
 			}
 		}
 	}
+
+	//
+	// Reasoning
+	//
 
 	private void reason(Semantics.Interpretations interpretations, ParseResultPanel parseResultPanel) {
 
@@ -207,10 +218,14 @@ public class MosgApp implements EntryPoint {
 
 		suggest.setText("");
 	}
-	
+
 	private void showAnswer(String answer) {
 		setStatus(answer);
 	}
+
+	//
+	// Facts
+	//
 
 	private String combineFacts(List<String> facts) {
 		// FIXME: this is pessimistic, implement the others too
@@ -231,9 +246,31 @@ public class MosgApp implements EntryPoint {
 		return factsBox.getFacts();
 	}
 
-	private void updateLangs() {
+	//
+	// Languages
+	//
+
+	private void updateAvailableLanguages() {
+		pgf.grammar(pgfName, new PGF.GrammarCallback() {
+			public void onResult(PGF.Grammar grammar) {
+				fromLangBox.setGrammar(grammar);
+				updateSelectedLanguages();
+				clearStatus();
+				submitButton.setEnabled(true);
+			}
+			public void onError (Throwable e) {
+				showError("Error getting language information", e);
+			}
+		});	
+	}
+
+	private void updateSelectedLanguages() {
 		oracle.setInputLangs(fromLangBox.getSelectedValues());
 	}
+
+	//
+	// Status
+	//
 
 	private void setStatus(String msg) {
 		statusPanel.removeStyleDependentName("error");
@@ -251,16 +288,12 @@ public class MosgApp implements EntryPoint {
 		statusLabel.setText("");
 	}
 
-	private void setGrammar(PGF.Grammar grammar) {
-		fromLangBox.setGrammar(grammar);
-
-		updateLangs();
-		clearStatus();
-		submitButton.setEnabled(true);
-	}
+	//
+	// GUI
+	//
 
 	private void createMosgUI() {
-		
+
 		statusLabel = new Label("Loading...");
 		statusPanel = new SimplePanel();
 		statusPanel.setStylePrimaryName("my-statusPanel");
@@ -289,7 +322,7 @@ public class MosgApp implements EntryPoint {
 		fromLangBox.addItem("Any language", "");
 		fromLangBox.addChangeListener(new ChangeListener() {
 			public void onChange(Widget sender) {
-				updateLangs();
+				updateSelectedLanguages();
 			}
 		});
 
@@ -322,8 +355,11 @@ public class MosgApp implements EntryPoint {
 		vPanel.add(inputListPanel);
 
 		RootPanel.get().add(vPanel);
-
 	}
+
+	//
+	// Initialization
+	//
 
 	public void onModuleLoad() {
 		pgf = new PGF(pgfBaseURL);
@@ -336,18 +372,10 @@ public class MosgApp implements EntryPoint {
 			}
 		});
 		oracle.setGrammarName(pgfName);
-		
+
 		createMosgUI();
 
-		pgf.grammar(pgfName, new PGF.GrammarCallback() {
-			public void onResult(PGF.Grammar grammar) {
-				setGrammar(grammar);
-			}
-
-			public void onError (Throwable e) {
-				showError("Error getting language information", e);
-			}
-		});	
+		updateAvailableLanguages();
 	}
 
 }
