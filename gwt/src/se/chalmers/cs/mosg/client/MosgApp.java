@@ -54,7 +54,7 @@ public class MosgApp implements EntryPoint {
 			}
 		});
 		inputListPanel.add(inputPanel);
-		pgf.parse(text, fromLangs, null, new PGF.ParseCallback() {
+		pgf.parse(pgfName, text, fromLangs, null, new PGF.ParseCallback() {
 			public void onResult(PGF.ParseResults results) {
 				interpret(results, inputPanel);
 			}
@@ -326,7 +326,7 @@ public class MosgApp implements EntryPoint {
 	}
 
 	public void onModuleLoad() {
-		pgf = new PGF(pgfBaseURL, pgfName);
+		pgf = new PGF(pgfBaseURL);
 		semantics = new Semantics(semanticsBaseURL);
 		reasoning = new Reasoning(reasoningBaseURL);
 
@@ -335,10 +335,11 @@ public class MosgApp implements EntryPoint {
 				GWT.log("Completion failed", e);
 			}
 		});
+		oracle.setGrammarName(pgfName);
 		
 		createMosgUI();
 
-		pgf.grammar(new PGF.GrammarCallback() {
+		pgf.grammar(pgfName, new PGF.GrammarCallback() {
 			public void onResult(PGF.Grammar grammar) {
 				setGrammar(grammar);
 			}
