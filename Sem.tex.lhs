@@ -437,6 +437,10 @@ A proper name used as a noun phrase, e.g. ``John''.
 
 > iNP (GUsePN pn) = pure (\i u -> u i) <*> iPN pn
 
+``these five''
+
+> iNP (GDetNP det) = iDet det <*> pure (\x -> true)
+
 ``everybody'', ``everything''
 
 > iNP Geverybody_NP   = shift (\c -> forAll (\x -> c (\u -> u x)))
@@ -604,12 +608,12 @@ Definite article, ``the (man)'', or ``the (men)''.
 Demonstrative, ``that (man)''.
 FIXME: should also make it definite
 
-> iQuant Gthat_Quant = pure (\u x -> u x &&& special "this" [x])
+> iQuant Gthat_Quant = pure (\u x -> u x &&& special "that" [x])
 
 Demonstrative,``this (man)''.
 FIXME: should also make it definite
 
-> iQuant Gthis_Quant = pure (\u x -> u x &&& special "that" [x])
+> iQuant Gthis_Quant = pure (\u x -> u x &&& special "this" [x])
 
 ``John's (dog)''.
 FIXME: Should this really allow more than one? Now ``john's dog'' allows john to have several dogs.
