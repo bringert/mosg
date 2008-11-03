@@ -105,9 +105,6 @@ Ignores tense and anteriority for now.
 > iQS :: GQS -> I' Input
 > iQS (GUseQCl temp pol qcl) = pure (\p c -> mapInput p c) <*> iPol pol <*> iQCl qcl
 
-Uncontracted negated question clause (English only).
-
-> iQS (GUncNegQCl temp qcl) = pure (mapInput neg) <*> iQCl qcl
 
 \subsection{QCl: Question clauses}
 
@@ -172,12 +169,6 @@ Ignores tense and anteriority for now.
 
 > iS (GUseCl temp pol cl) = iPol pol <*> iCl cl
 
-Uncontracted negated declarative clause (English only),
-e.g. ``John does not run''.
-Ignores tense and anteriority for now.
-
-> iS (GUncNegCl temp cl) = fmap neg (iCl cl)
-
 Adverbial phrase modifying a sentence.
 This uses a special |iAdv| version.
 
@@ -231,10 +222,6 @@ For now we ignore the tense and anteriority.
 
 > iRS :: GRS -> I (Ind -> Prop)
 > iRS (GUseRCl temp pol rcl) = pure (.) <*> iPol pol <*> iRCl rcl
-
-Uncontracted negated relative clause (English only), e.g. ``that does not sleep''.
-
-> iRS (GUncNegRCl temp rcl) = pure (neg .) <*> iRCl rcl
 
 \subsection{RCl: Relative Clauses}
 
