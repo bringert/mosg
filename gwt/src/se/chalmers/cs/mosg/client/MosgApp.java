@@ -3,21 +3,16 @@ package se.chalmers.cs.mosg.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import se.chalmers.cs.gf.gwt.client.CompletionOracle;
-import se.chalmers.cs.gf.gwt.client.InputLanguageBox;
 import se.chalmers.cs.gf.gwt.client.PGF;
+import se.chalmers.cs.gf.gwt.client.PGFWrapper;
+import se.chalmers.cs.gf.gwt.client.SettingsPanel;
+import se.chalmers.cs.gf.gwt.client.SuggestPanel;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.ChangeListener;
-import com.google.gwt.user.client.ui.ClickListener;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.KeyboardListenerAdapter;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
-import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -29,15 +24,14 @@ public class MosgApp implements EntryPoint {
 	private static final String reasoningBaseURL = "/reasoning";
 	private static final String pgfName = "Syntax.pgf";
 
-	private PGF pgf;
+	private PGFWrapper pgf;
 	private Semantics semantics;
 	private Reasoning reasoning;
 
-	private CompletionOracle oracle;
-	private SuggestBox suggest;
-	private InputLanguageBox fromLangBox;
-	private Button submitButton;
-	private ScrollingDisclosurePanel inputListPanel;
+	private Widget mosgUI;
+	
+	private SuggestPanel suggestPanel;
+	private ScrollingDisclosurePanel logPanel;
 	private FactsBox factsBox;
 	private SimplePanel statusPanel;
 	private Label statusLabel;
@@ -47,8 +41,7 @@ public class MosgApp implements EntryPoint {
 	//
 
 	private void parse() {
-		String text = massageInput(suggest.getText());
-		List<String> fromLangs = fromLangBox.getSelectedValues();
+		String text = massageInput(suggestPanel.getText());
 		setStatus("Parsing...");
 		final InputPanel inputPanel = new InputPanel(text);
 		inputPanel.addReasoningListener(new InputPanel.ReasoningListener() {
@@ -56,8 +49,8 @@ public class MosgApp implements EntryPoint {
 				reasoningDone(interpretations);
 			}
 		});
-		inputListPanel.add(inputPanel);
-		pgf.parse(pgfName, text, fromLangs, null, new PGF.ParseCallback() {
+		logPanel.add(inputPanel);
+		pgf.parse(text, new PGF.ParseCallback() {
 			public void onResult(PGF.ParseResults results) {
 				interpret(results, inputPanel);
 			}
@@ -78,7 +71,7 @@ public class MosgApp implements EntryPoint {
 	//
 
 	private void interpret(PGF.ParseResults results, InputPanel inputPanel) {
-		for (Widget w : inputListPanel) {
+		for (Widget w : logPanel) {
 			InputPanel p = (InputPanel)w;
 			p.setExpanded(false);
 		}
@@ -216,7 +209,7 @@ public class MosgApp implements EntryPoint {
 			}
 		}
 
-		suggest.setText("");
+		suggestPanel.setText("");
 	}
 
 	private void showAnswer(String answer) {
@@ -247,28 +240,6 @@ public class MosgApp implements EntryPoint {
 	}
 
 	//
-	// Languages
-	//
-
-	private void updateAvailableLanguages() {
-		pgf.grammar(pgfName, new PGF.GrammarCallback() {
-			public void onResult(PGF.Grammar grammar) {
-				fromLangBox.setGrammar(grammar);
-				updateSelectedLanguages();
-				clearStatus();
-				submitButton.setEnabled(true);
-			}
-			public void onError (Throwable e) {
-				showError("Error getting language information", e);
-			}
-		});	
-	}
-
-	private void updateSelectedLanguages() {
-		oracle.setInputLangs(fromLangBox.getSelectedValues());
-	}
-
-	//
 	// Status
 	//
 
@@ -287,63 +258,59 @@ public class MosgApp implements EntryPoint {
 		statusPanel.removeStyleDependentName("error");
 		statusLabel.setText("");
 	}
+	
+	//
+	// Settings
+	//
 
+	protected class MySettingsListener extends PGFWrapper.SettingsAdapter {
+		// Will only happen on load
+		public void onAvailableGrammarsChanged() {
+			if (pgf.getPGFName() == null) {
+				List<String> grammars = pgf.getGrammars();
+				if (!grammars.isEmpty()) {
+					pgf.setPGFName(grammars.get(0));
+				}
+			}			
+			RootPanel.get().clear();
+			RootPanel.get().add(mosgUI);
+		}
+		public void onAvailableLanguagesChanged() {
+			if (pgf.getInputLanguage() == null) {
+				GWT.log("Setting input language to user language: " + pgf.getUserLanguage(), null);
+				pgf.setInputLanguage(pgf.getUserLanguage());
+			}
+		}
+		public void onSettingsError(String msg, Throwable e) {
+			showError(msg,e);
+		}
+	}
+	
 	//
 	// GUI
 	//
 
-	private void createMosgUI() {
+	private Widget createMosgUI() {
 
-		statusLabel = new Label("Loading...");
+		statusLabel = new Label();
 		statusPanel = new SimplePanel();
 		statusPanel.setStylePrimaryName("my-statusPanel");
 		statusPanel.add(statusLabel);
 
-		suggest = new SuggestBox(oracle);
-		suggest.setLimit(10);
-		suggest.setTitle("Enter a statement or a question");
-		suggest.addKeyboardListener(new KeyboardListenerAdapter() {
-			public void onKeyUp (Widget sender, char keyCode, int modifiers) {
-				if (keyCode == KEY_ENTER) {
-					parse();
-				}
-			}
-		});
-		SimplePanel suggestPanel = new SimplePanel() {
-			public void onLoad() {
-				suggest.setFocus(true);
-			}
-		};
-		suggestPanel.setStyleName("my-suggestPanel");
-		suggestPanel.add(suggest);
-
-		fromLangBox = new InputLanguageBox();
-		fromLangBox.setEnabled(false);
-		fromLangBox.addItem("Any language", "");
-		fromLangBox.addChangeListener(new ChangeListener() {
-			public void onChange(Widget sender) {
-				updateSelectedLanguages();
-			}
-		});
-
-		submitButton = new Button("Submit");
-		submitButton.setEnabled(false);
-		submitButton.addClickListener(new ClickListener() {
-			public void onClick(Widget sender) {
+		suggestPanel = new SuggestPanel(pgf);
+		suggestPanel.setLimit(10);
+		suggestPanel.setTitle("Enter a statement or a question");
+		suggestPanel.addSubmitListener(new SuggestPanel.SubmitListener() {
+			public void onSubmit(String text) {
 				parse();
 			}
 		});
 
-		HorizontalPanel settingsPanel = new HorizontalPanel();
-		settingsPanel.addStyleName("my-settingsPanel");
-		settingsPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		settingsPanel.add(new Label("Language:"));
-		settingsPanel.add(fromLangBox);
-		settingsPanel.add(submitButton);
+		SettingsPanel settingsPanel = new SettingsPanel(pgf, false, false);
 
 		factsBox = new FactsBox();
 
-		inputListPanel = new ScrollingDisclosurePanel("Log");
+		logPanel = new ScrollingDisclosurePanel("Log");
 
 		VerticalPanel vPanel = new VerticalPanel();
 		vPanel.setWidth("100%");
@@ -352,9 +319,16 @@ public class MosgApp implements EntryPoint {
 		vPanel.add(settingsPanel);
 		vPanel.add(statusPanel);
 		vPanel.add(factsBox);
-		vPanel.add(inputListPanel);
+		vPanel.add(logPanel);
 
-		RootPanel.get().add(vPanel);
+		return vPanel;
+	}
+	
+	protected Widget createLoadingWidget () {
+		VerticalPanel loadingPanel = new VerticalPanel();
+		loadingPanel.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
+		loadingPanel.add(new Label("Loading..."));
+		return loadingPanel;
 	}
 
 	//
@@ -362,20 +336,15 @@ public class MosgApp implements EntryPoint {
 	//
 
 	public void onModuleLoad() {
-		pgf = new PGF(pgfBaseURL);
+		RootPanel.get().add(createLoadingWidget());
+		
+		pgf = new PGFWrapper(new PGF(pgfBaseURL), new MySettingsListener());
 		semantics = new Semantics(semanticsBaseURL);
 		reasoning = new Reasoning(reasoningBaseURL);
 
-		oracle = new CompletionOracle(pgf, new CompletionOracle.ErrorHandler() {
-			public void onError(Throwable e) {
-				GWT.log("Completion failed", e);
-			}
-		});
-		oracle.setGrammarName(pgfName);
-
-		createMosgUI();
-
-		updateAvailableLanguages();
+		mosgUI = createMosgUI();
+		
+		pgf.setPGFName(pgfName);
 	}
 
 }
