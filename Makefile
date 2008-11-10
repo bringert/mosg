@@ -38,7 +38,7 @@ test:
 	ghc $(GHCFLAGS) -i../embedded-gf/src --make -o $@ test.hs
 
 Sem.hs: Sem.tex.lhs
-	lhs2TeX --newcode -sunhandled Sem.tex.lhs > Sem.hs
+	lhs2TeX --newcode --path=report: -sunhandled Sem.tex.lhs > Sem.hs
 
 unhandled:
 	lhs2TeX --newcode Sem.tex.lhs > unhandled.hs

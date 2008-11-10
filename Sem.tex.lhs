@@ -1,24 +1,7 @@
 % -*- Mode: LaTeX; coding:utf-8 -*-
 
-%include polycode.fmt
+%include semantics.fmt
 
-%if style /= newcode
-% Use sans-serif font for constructors 
-%subst conid a     = "\mathsf{" a "}"
-
-%format <*>          = "\varoast"
-%format &&&          = "\land"
-%format |||          = "\lor"
-%format ==>          = "\Rightarrow"
-%format <=>          = "\Leftrightarrow"
-%format ===          = "="
-%format =/=          = "\neq"
-%format thereIs      = "\exists"
-%format forAll       = "\forall"
-%format neg          = "\lnot"
-
-%format I            = "\mathcal{I}"
-%endif
 
 \section{First-order Logic Semantics for the 
 Grammatical Framework Resource Grammar Library}
@@ -68,11 +51,27 @@ type of utterance.
 
 \subsection{Text: Texts}
 
+The top-level category is |Text|, a sequence of phrases with punctuation.
+%
 > iText :: GText -> I' Input
+%
+A single phrase without punctuation is accepted.
+%
 > iText (GTNoPunct phr)        = iPhr phr
+%
+Two phrases with a full stop or an exclamation mark in between are interpreted
+as a conjunction of two statements. If they are not both statements, the 
+interpretation fails.
+%
 > iText (GTExclMark  phr text) = pure twoStatements <*> iPhr phr <*> iText text
 > iText (GTFullStop  phr text) = pure twoStatements <*> iPhr phr <*> iText text
+%
+Any phrase followed by a question mark is interpreted as a yes/no question.
+%
 > iText (GTQuestMark phr GTEmpty) = pure toYNQuest <*> iPhr phr
+%
+An empty text is interpreted as true statement.
+%
 > iText GTEmpty = pure (Statement true)
 
 %if unhandled
@@ -81,6 +80,8 @@ type of utterance.
 
 \subsection{Phr: Phrases}
 
+Phrases |Phr| are interpreted as inputs, that is, either statements or questions.
+%
 > iPhr :: GPhr -> I' Input
 > iPhr (GPhrUtt GNoPConj utt GNoVoc) = iUtt utt 
 
@@ -90,8 +91,18 @@ type of utterance.
 
 \subsection{Utt: Utterances}
 
+In the GF resource grammar, many categories can be used to build utterances |Utt|. We only 
+consider declarative sentences and question sentences here.
+%
 > iUtt :: GUtt -> I' Input
+%
+Declarative sentence utterances are interpreted as statements.
+%
 > iUtt (GUttS s) = pure Statement <*> reset (iS s)
+%
+Question sentence utterances are interpreted as questions.
+The type of question depends on the structure of the question sentence.
+%
 > iUtt (GUttQS qs) = iQS qs
 
 %if unhandled
@@ -100,32 +111,46 @@ type of utterance.
 
 \subsection{QS: Questions}
 
-Ignores tense and anteriority for now.
-
+Question sentences |QS| are interpreted as one of the different types of questions.
+We ignore the temporal features for now.
+The polarity |Pol| argument is used to modify the inner |Prop| in
+the question.
+%
 > iQS :: GQS -> I' Input
 > iQS (GUseQCl temp pol qcl) = pure (\p c -> mapInput p c) <*> iPol pol <*> iQCl qcl
 
 
 \subsection{QCl: Question clauses}
 
+There are a number of question clause |QCl| constructs.
+%
 > iQCl :: GQCl -> I' Input
-
-``does John walk''
-
+%
+A declarative clause transformed into a yes/no question clause, 
+e.g.~ ``does John walk''.
+%
 > iQCl (GQuestCl cl)          = pure YNQuest <*> reset (iCl cl)
-
-``whom does John love''
-
+%
+An interrogative pronoun and a |Cl/NP|,
+e.g.~``whom does John love''.
+The clause is a scope island.
+%
 > iQCl (GQuestSlash ip clslash) = pure ($) <*> iIP ip <*> reset' (iClSlash clslash)
-
+%
 % Fool highlighting: $
-``who walks''
-
+%
+An interrogative pronoun and a verb phrase,
+e.g.~``who walks''. The verb phrase is a scope island.
+%
 > iQCl (GQuestVP ip vp)       = pure ($) <*> iIP ip <*> reset' (iVP vp)
-
-``which houses are there''
-
+%
+% Fool highlighting: $
+An existential question with an interrogative pronoun,
+e.g.~``which houses are there''.
+%
 > iQCl (GExistIP ip)          = pure ($ (\x -> true)) <*> iIP ip
+%
+% Fool highlighting: $
 
 %if unhandled
 > iQCl qcl = unhandled "iQcl" qcl
@@ -135,12 +160,22 @@ Ignores tense and anteriority for now.
 
 \subsection{IP: Interrogative Pronouns}
 
+Interrogative pronouns take a one-place predicate
+to a question of some kind.
+%
 > iIP :: GIP -> I' ((Ind -> Prop) -> Input)
-
-``who''
-
+%
+An interrogative pronoun formed from an interrogative determiner 
+and a common noun, e.g. ``which car''.
+%
 > iIP (GIdetCN idet cn) = iIDet idet <*> reset' (iCN cn)
+%
+Simple inanimate singular interrogative pronoun, e.g. ``what''.
+%
 > iIP GwhatSg_IP = pure (\u -> WhQuest u)
+%
+Simple animate singular interrogative pronoun, e.g. ``who''.
+%
 > iIP GwhoSg_IP  = pure (\u -> WhQuest u)
 
 %if unhandled
@@ -149,29 +184,45 @@ Ignores tense and anteriority for now.
 
 \subsection{IDet: Interrogative Determiners}
 
-``which man''
-
 > iIDet :: GIDet -> I' ((Ind -> Prop) -> (Ind -> Prop) -> Input)
+%
+Interrogative quantifier with a number,
+e.g. ``which five (men)''
+%
+> iIDet (GIdetQuant iquant num) = pure (\i u v -> YNQuest (i u v)) <*> reset'' (iNum num <*> iIQuant iquant)
+%
+Interrogative counting pronoun,
+e.g. ``how many (men)''.
+%
 > iIDet Ghow8many_IDet = pure (\u v -> CountQuest (\x -> u x &&& v x))
 
 %if unhandled
 > iIDet idet = unhandled "iIDet" idet
 %endif
 
+Interrogative quantifier, e.g.~``which (man)''.
+%
+> iIQuant :: GIQuant -> I ((Ind -> Prop) -> (Ind -> Prop))
+> iIQuant Gwhich_IQuant = pure (\u -> u)
+
 \subsection{S: Declarative Sentences}
 
 Declarative sentences are interpreted as propositions.
-
+%
 > iS :: GS -> I Prop
+%
+Sentences combined with a contaunction.
+%
 > iS (GConjS conj ss) = pure foldr1 <*> iConj conj <*> iListS ss
-
+%
+A declarative clause with a polarity.
 Ignores tense and anteriority for now.
-
+%
 > iS (GUseCl temp pol cl) = iPol pol <*> iCl cl
-
+%
 Adverbial phrase modifying a sentence.
 This uses a special |iAdv| version.
-
+%
 > iS (GAdvS adv s) = iAdv_S adv <*> iS s
 
 %if unhandled
@@ -180,26 +231,28 @@ This uses a special |iAdv| version.
 
 A list of sentences is interpreted as a list of propositions.
 Each sentence is a scope island.
-
+%
 > iListS :: GListS -> I [Prop]
 > iListS (GListS ss) = traverse (reset . iS) ss
 
 \subsection{Cl: Declarative Clauses}
 
 Declarative clauses are interpreted as propositions.
-
+%
 > iCl :: GCl -> I Prop
-
+%
 Verb phrase predication, e.g. ``John sleeps''.
-
+%
 > iCl (GPredVP np vp) = iNP np <*> iVP vp
-
+%
 Cleft constructions, e.g. ``it is John who sleeps''.
-
+%
 > iCl (GCleftNP np rs) = iNP np <*> iRS rs
-
-Existential (FIXME: what is this construction called) e.g. ``there is a house''.
-
+%
+Existential,
+%(FIXME: what is this construction called)
+e.g. ``there is a house''.
+%
 > iCl (GExistNP np) = iNP np <*> pure (\x -> true)
 
 %if unhandled
@@ -210,45 +263,46 @@ Existential (FIXME: what is this construction called) e.g. ``there is a house''.
 
 Polarity is straightforwardly interpreted as a function over
 propositions.
-
+%
 > iPol :: Applicative f => GPol -> f (Prop -> Prop)
-> iPol GPPos = pure id
+> iPol GPPos = pure (\p -> p)
 > iPol GPNeg = pure neg
 
 \subsection{RS: Relative Sentences}
 
 Relative clases are interpreted as predicates.
 For now we ignore the tense and anteriority.
-
+%
 > iRS :: GRS -> I (Ind -> Prop)
 > iRS (GUseRCl temp pol rcl) = pure (.) <*> iPol pol <*> iRCl rcl
 
 \subsection{RCl: Relative Clauses}
 
 Relative clauses are interpreted as predicates.
-
+%
 > iRCl :: GRCl -> I (Ind -> Prop)
-
+%
 Such-that construction, using a declarative clause as a relative
 clause, e.g. ``such that a woman sleeps''.
 This is mostly useful when there are anaphoric references
 in the relative clause.
-
+(Not that we handle anaphora yet).
+%
 > iRCl (GRelCl cl) = pure (\i x -> i) <*> iCl cl
-
-Forms a relative clause from a relative pronoun and a clause missing
-a noun phrase, e.g. ``which a woman loves''.
-
+%
+A relative clause formed from a relative pronoun and a clause missing
+a noun phrase (Cl/NP), e.g. ``which a woman loves''.
+%
 > iRCl (GRelSlash rp clslash) = iRP rp <*> iClSlash clslash
-
+%
 Forms a relative clause from a clause missing
 a noun phrase, e.g. ``(woman) he loves''.
-
+%
 > iRCl (GEmptyRelSlash clslash) = iClSlash clslash
-
-Relative clause with realtive pronoun and verb phrase, e.g. ``that
+%
+Relative clause with relative pronoun and verb phrase, e.g. ``that
 sleeps''.
-
+%
 > iRCl (GRelVP rp vp) = iRP rp <*> iVP vp
 
 %if unhandled
@@ -258,33 +312,35 @@ sleeps''.
 \subsection{RP: Relative Pronouns}
 
 Relative pronouns are interpreted as predicate modifiers.
-
+%
 > iRP :: GRP -> I ((Ind -> Prop) -> (Ind -> Prop))
-
+%
 e.g. ``a part of which''
-
+%
 > iRP (GFunRP prep np rp) = pure (\pi ni ri u x -> ni (\y -> (ri u) y &&& pi (\v -> v y) x))
 >                          <*> iPrep prep <*> iNP np <*> iRP rp
-
-Relative pronoun, ``that'', ``which'', ``whose''.
-
+%
+Relative pronoun, e.g.~``that'', ``which'', ``whose''.
+%
 > iRP GIdRP = pure (\u -> u)
 
 
 \subsection{Slash: Clauses Missing NP}
 
-Clause missing NP, S/NP in GPSG.
-
+Clause missing NP, Cl/NP.
+%
 > iClSlash :: GClSlash -> I (Ind -> Prop)
-
-``(which) a woman kills in Paris''
-
-> iClSlash (GAdvSlash clslash adv) = iAdv adv <*> iClSlash clslash
-
-``(which) a woman kills''
-
+%
+A Cl/NP formed from a VP/NP and an NP,
+e.g.~``(which) a woman kills''.
+%
 > iClSlash (GSlashVP np vpslash) = 
 >    pure (\ni vi x -> ni (vi (\u -> u x))) <*> iNP np <*> iVPSlash vpslash
+%
+Adverb modifying a Cl/NP, 
+e.g.~``(which) a woman kills in Paris''
+%
+> iClSlash (GAdvSlash clslash adv) = iAdv adv <*> iClSlash clslash
 
 %if unhandled
 > iClSlash clslash = unhandled "iClSlash" clslash
@@ -294,56 +350,67 @@ Clause missing NP, S/NP in GPSG.
 
 Conjuctions are used in several places in the grammar, for example
 on noun phrases, adjectival phrases and sentences.
-
+They are binary operators on propositions.
+%
 > iConj :: GConj -> I (Prop -> Prop -> Prop)
-
+%
 ``and'', interpreted as logical and.
-
+%
 > iConj Gand_Conj = pure (&&&)
-
+%
 ``or'', interpreted as inclusive or.
-
+%
 > iConj Gor_Conj = pure (|||)
-
-``both ... and ...'', intepreted as and.
-
+%
+``both ... and ...'', intepreted as logical and.
+%
 > iConj Gboth7and_DConj = pure (&&&)
-
+%
 ``either ... or ...'', interpreted as exclusive or.
-
+%
 > iConj Geither7or_DConj = pure (\p q -> (p &&& neg q) ||| (neg p &&& q))
 
 
 \subsection{VP: Verb Phrases}
 
+Verb phrases are interpreted as one-place predicates.
+%
 > iVP :: GVP -> I (Ind -> Prop)
-
-``sleeps with a woman''
-
+%
+An adverbial phrase modifying a verb phrase,
+e.g.~``sleeps in Paris''.
+%
 > iVP (GAdvVP vp adv) = iAdv adv <*> iVP vp
-
+%
+A pre-modifying adverbial phrase modifying a verb phrase,
+e.g.~``always sleeps''.
+%
 > iVP (GAdVVP adv vp) = iAdV adv <*> iVP vp
-
+%
+A VP/NP and an NP object, e.g.~``kill a man''.
+%
 > iVP (GComplSlash vpslash np) = iVPSlash vpslash <*> iNP np
-
-``is killed''
-
-> iVP (GPassV2 v2) = pure (\vi x -> thereIs (vi x)) <*> iV2 v2
-
-``kills itself''
-
+%
+Passive use of transitive verb,
+e.g.~``is killed''.
+%
+> iVP (GPassV2 v2) = pure (\vi x -> thereIs y (vi x y)) <*> iV2 v2
+%
+Reflexive use of transitive verb,
+e.g.~``kills itself''.
+%
 > iVP (GReflVP vpslash) = pure (\i x -> i (\u -> u x) x) <*> iVPSlash vpslash
-
-``is beautiful''
-
+%
+Copula with complement, e.g.~``is beautiful''.
+%
 > iVP (GUseComp comp) = iComp comp
-
-``sleeps''
-
+%
+Intransitive verb, e.g.~``sleeps''.
+%
 > iVP (GUseV v) = iV v
-
-``is sleeping''
-
+%
+Progressive verb phrase, e.g.~``is sleeping''.
+%
 > iVP (GProgrVP vp) = iVP vp
 
 %if unhandled
@@ -352,18 +419,24 @@ on noun phrases, adjectival phrases and sentences.
 
 \subsection{VPSlash: VP/NP}
 
+Verb phrase missing an argument, VP/NP.
+%
 > iVPSlash :: GVPSlash -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
-
-``kills (John)''
-
+%
+Transitive verb, e.g.~``kills (John)''.
+%
 > iVPSlash (GSlashV2a v2) = pure (\vi ni x -> ni (vi x)) <*> iV2 v2
-
+%
+Ditransitive verb with complement in second position.
+%
 ``gives a dog (to Mary)''
-
+%
 > iVPSlash (GSlash2V3 v3 np) = pure (\vi ni1 ni2 x -> ni1 (\y -> ni2 (\z -> vi x y z))) <*> iV3 v3 <*> iNP np
-
+%
+Ditransitive verb with complement in third position.
+%
 ``gives (a dog) to Mary''
-
+%
 > iVPSlash (GSlash3V3 v3 np) = pure (\vi ni1 ni2 x -> ni1 (\y -> ni2 (\z -> vi x z y))) <*> iV3 v3 <*> iNP np
 
 %if unhandled
@@ -372,142 +445,155 @@ on noun phrases, adjectival phrases and sentences.
 
 \subsection{Comp: Complement of Copula}
 
-Complement of copula.
-
+Complement of copula, interpreted as a one-place predicate.
+%
 > iComp :: GComp -> I (Ind -> Prop)
-
+%
 Adjectival phrase complement, e.g. in ``(John is) very warm''.
-
+%
 > iComp (GCompAP ap) = iAP ap
-
-Prepositional phrase complement, e.g. in ``(John is) in Paris''.
-
+%
+Adverbial phrase complement, e.g. in ``(John is) in Paris''.
+%
 > iComp (GCompAdv adv) = iAdv adv <*> pure (\x -> true)
-
-Noun phrase complemented, e.g. in ``(John is) a man''.
+%
+Noun phrase complement, e.g. in ``(John is) a man''.
 The complement is a scope island, to get rid of the
 reading of sentences such as ``every dog is an animal'' 
 where they are all the same individual.
-
+%
 > iComp (GCompNP np) = reset' (pure (\ni x -> ni (\y -> x === y)) <*> iNP np)
 
 
 \subsection{NP: Noun Phrases}
 
+Noun phrases are type-raised individuals.
+%
 > iNP :: GNP -> I ((Ind -> Prop) -> Prop)
-
+%
 Noun phrase modified by an adverbial phrase,
 e.g. ``Paris at midnight''.
-
+%
 > iNP (GAdvNP np adv) = pure (.) <*> iNP np <*> iAdv adv
-
-Noun phrase modified by a relative sentence, e.g. ``Paris, which is a big city''
-
+%
+Noun phrase modified by a relative sentence, 
+e.g. ``Paris, which is a big city''.
+%
 > iNP (GRelNP np rs) = pure (\ni ri v -> ni (\x -> ri x &&& v x)) <*> iNP np <*> iRS rs
-
+%
 Noun phrase conjunction, e.g. ``John and a man''.
-
+%
 > iNP (GConjNP conj nps)   = pure (\ci ni u -> foldr1 ci [f u | f <- ni]) <*> iConj conj   <*> iListNP nps
-
+%
 Noun phrase formation from determiner and common noun,
 e.g. ``every man''.
 Note that there is no storage or anything like that here.
 Instead the determiners use control operators to move
 the quantifiers to the top level of the nearest enclosing scope
 island. 
-
+%
 > iNP (GDetCN det cn) = iDet det <*> iCN cn
-
+%
 Mass expressions.
-FIXME: universal as subject, existential in object position?
-FIXME: use shift?
-
-> iNP (GMassNP cn) = pure (\u v -> forAll (\x -> u x &&& v x)) <*> iCN cn
-
-``only the men''. FIXME: what should we do about predet + plural?
-
+Note: this interpretation is dubious. We always
+interpret mass expressions with universal quantifiers.
+This is for example not correct for sentences such as 
+``I see drink water'', or ``water flows from the tap in my bathroom''.
+%FIXME: universal as subject, existential in object position?
+%FIXME: use shift?
+%
+> iNP (GMassNP cn) = pure (\u v -> forAll x (u x &&& v x)) <*> iCN cn
+%
+Predeterminer use, e.g. ``only the men''. 
+%FIXME: what should we do about predet + plural?
+%
 > iNP (GPredetNP predet np) = iPredet predet <*> iNP np
-
+%
 A noun phrase modified by a passive voice transitive verb, 
 e.g. ``a woman killed''.
-
-> iNP (GPPartNP np v2) = pure (\ni vi u -> ni (\x -> u x &&& thereIs (vi x))) <*> iNP np <*> iV2 v2
-
+%
+> iNP (GPPartNP np v2) = pure (\ni vi u -> ni (\x -> u x &&& thereIs y (vi x y))) <*> iNP np <*> iV2 v2
+%
 A proper name used as a noun phrase, e.g. ``John''.
-
+%
 > iNP (GUsePN pn) = pure (\i u -> u i) <*> iPN pn
-
-``these five''
-
+%
+A stand-alone determiner, e.g. ``these five (are good)''.
+%
 > iNP (GDetNP det) = iDet det <*> pure (\x -> true)
-
+%
 ``everybody'', ``everything''
-
-> iNP Geverybody_NP   = shift (\c -> forAll (\x -> c (\u -> u x)))
-> iNP Geverything_NP  = shift (\c -> forAll (\x -> c (\u -> u x)))
-
+%
+> iNP Geverybody_NP   = shift c (forAll x (c (\u -> u x)))
+> iNP Geverything_NP  = shift c (forAll x (c (\u -> u x)))
+%
 ``anybody'', ``anything''. Interpreted just like ``everybody'', ``everything''.
-
-> iNP Ganybody_NP   = shift (\c -> forAll (\x -> c (\u -> u x)))
-> iNP Ganything_NP  = shift (\c -> forAll (\x -> c (\u -> u x)))
-
+%
+> iNP Ganybody_NP   = shift c (forAll x (c (\u -> u x)))
+> iNP Ganything_NP  = shift c (forAll x (c (\u -> u x)))
+%
 ``somebody'', ``something''
-
-> iNP Gsomebody_NP   = shift (\c -> thereIs (\x -> c (\u -> u x)))
-> iNP Gsomething_NP  = shift (\c -> thereIs (\x -> c (\u -> u x)))
-
+%
+> iNP Gsomebody_NP   = shift c (thereIs x ( c (\u -> u x)))
+> iNP Gsomething_NP  = shift c (thereIs x ( c (\u -> u x)))
+%
 ``nobody'', ``nothing''
-
-> iNP Gnobody_NP = shift (\c -> neg (thereIs (\x -> c (\u -> u x))))
-> iNP Gnothing_NP = shift (\c -> neg (thereIs (\x -> c (\u -> u x))))
+%
+> iNP Gnobody_NP = shift c (neg (thereIs x ( c (\u -> u x))))
+> iNP Gnothing_NP = shift c (neg (thereIs x ( c (\u -> u x))))
 
 %if unhandled
 > iNP np = unhandled "iNP" np
 %endif
 
+A list of noun phrases is interpreted as a list of type-raised 
+propositions.
+%
 > iListNP :: GListNP -> I [(Ind -> Prop) -> Prop]
 > iListNP (GListNP nps) = traverse iNP nps
 
 \subsection{CN: Common Nouns}
 
+Common nouns are one-place predicates.
+%
 > iCN :: GCN -> I (Ind -> Prop)
-
+%
 Common noun modified by an adjectival phrase, e.g. ``beautiful woman''.
-
+%
 > iCN (GAdjCN ap cn) = pure (\ai ci x -> ai x &&& ci x) <*> iAP ap <*> iCN cn
-
+%
 Common noun modified by an adverbial phrase, e.g. ``woman with a dog''.
-
+%
 > iCN (GAdvCN cn adv) = iAdv adv <*> iCN cn
-
+%
 Apposition of a common noun and a noun phrase,
-e.g. ``king John''. This produces some unlikely sounding 
+e.g. ``king John''. This produces some unlikely-sounding 
 constructions.
-
+%
 > iCN (GApposCN cn np) = pure (\ni ci x -> ni (x ===) &&& ci x) <*> iNP np <*> iCN cn
-
+%
 Complementation of a two-place noun, e.g. ``owner of a dog''.
-
+%
 > iCN (GComplN2 n2 np) = pure (\n2i npi x -> npi (\y -> n2i x y)) <*> iN2 n2 <*> iNP np
-
+%
 Common noun modified by a relative clause, e.g. ``man who sleeps''.
 Relative clauses are scope islands.
-
+%
 > iCN (GRelCN cn rs) = pure (\ci ri x -> ci x &&& ri x) <*> iCN cn <*> reset' (iRS rs)
-
+%
 A noun used as a common noun, e.g. ``dog''.
-
+%
 > iCN (GUseN n) = iN n
-
+%
 A two-place noun used without a complement, e.g. ``owner''.
-
-> iCN (GUseN2 n2) = pure (\ni x -> thereIs (\y -> ni x y)) <*> iN2 n2
-
+%
+> iCN (GUseN2 n2) = pure (\ni x -> thereIs y (ni x y)) <*> iN2 n2
+%
 Compound common noun, e.g. ``Labour MP''.
 The interpretation below is rather silly. For example,
 ``Labour MP'' is interpreted as $labour(X) \land mp(X)$, but the person is not the
 party.
-
+%
 > iCN (GCompoundCN cn1 cn2) = pure (\ci1 ci2 x -> ci1 x &&& ci2 x) <*> iCN cn1 <*> iCN cn2
 
 %if unhandled
@@ -516,73 +602,80 @@ party.
 
 \subsection{Predet: Pre-determiners}
 
+Predeterminers currently modify noun phrases, 
+and as such are functions over noun phrase interpretations.
+This is difficult to do anything reasonable with.
+I think that the resource grammar API needs to be changed here.
+%
 > iPredet :: GPredet -> I (((Ind -> Prop) -> Prop) -> ((Ind -> Prop) -> Prop))
-
+%
 ``only (John)''
-FIXME: doesn't work correctly with plurals
-
-> iPredet Gonly_Predet = pure (\np v -> np v &&& neg (thereIs (\x -> v x &&& np (\y -> x =/= y))))
-
+Note that this doesn't work correctly with plurals, as in ``only men drink''.
+%
+> iPredet Gonly_Predet = pure (\np v -> np v &&& neg (thereIs x ( v x &&& np (\y -> x =/= y))))
+%
 ``all (the men)''
-
+This is simple only because we already interpret plurals and universial quantifiers.
+%
 > iPredet Gall_Predet = pure (\np -> np)
 
 > iPredet predet = unhandled "iPredet" predet
 
 \subsection{Det: Determiners}
 
-
+Determiners take two one-place predicates to a propositions.
+%
 > iDet :: GDet -> I ((Ind -> Prop) -> (Ind -> Prop) -> Prop)
-
+%
 A determiner, with a quantifier, a cardinal number
 and an ordinal, e.g. ``these five best''.
-
+%
 > iDet (GDetQuantOrd quant num ord) = pure (\qi ni oi u v -> ni (\p -> p) (qi (oi u)) v) <*> iQuant quant <*> iNum num <*> iOrd ord
-
+%
 A determiner with a quantifier with a cardinal number,
 but no ordinal, e.g. ``these five''.
-
+%
 > iDet (GDetQuant quant num) = pure (\qi ni u v -> ni (\p -> p) (qi u) v) <*> iQuant quant <*> iNum num
-
+%
 ``every''
-
-> iDet Gevery_Det = shift (\c -> forAll (\x -> c (\u v -> u x ==> v x)))
-
+%
+> iDet Gevery_Det = shift c (forAll x (c (\u v -> u x ==> v x)))
+%
 Negated existential quantifier, ``no''.
-
-> iDet Gno_Det = shift (\c -> neg (thereIs (\x -> c (\u v -> u x &&& v x))))
+%
+> iDet Gno_Det = shift c (neg (thereIs x ( c (\u v -> u x &&& v x))))
 
 FIXME: does this mean more than one?
 
 ``some'' + plural
 
-> iDet GsomePl_Det = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet GsomePl_Det = shift c (thereIs x ( c (\u v -> u x &&& v x)))
 
 ``some'' + singular. Same as |IndefArt|.
 
-> iDet GsomeSg_Det = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet GsomeSg_Det = shift c (thereIs x ( c (\u v -> u x &&& v x)))
 
 ``neither''. This is interpreted as meaning that there are exactly
 two individuals with the first property, and they both lack 
 the second property.
 
-> iDet Gneither_Det = shift (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
+> iDet Gneither_Det = shift c (thereIs x ( thereIs y (forAll z (c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 
 ``both''
 
-> iDet Gboth_Det = shift (\c -> thereIs (\x -> thereIs (\y -> forAll (\z -> c (\u v -> u x &&& v x &&& u y &&& v y &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
+> iDet Gboth_Det = shift c (thereIs x ( thereIs y (forAll z (c (\u v -> u x &&& v x &&& u y &&& v y &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 
 ``either'', interpreted as ``there are at least two, and at least one of them does it''
 
-> iDet Geither_Det = shift (\c -> thereIs (\x -> thereIs (\y -> c (\u v -> u x &&& u y &&& x =/= y &&& (v x ||| v y)))))
+> iDet Geither_Det = shift c (thereIs x ( thereIs y (c (\u v -> u x &&& u y &&& x =/= y &&& (v x ||| v y)))))
 
 ``many'', ``several'', ``few'', ``a few'', ``most''. FIXME: cheating, we them as existentials
 
-> iDet Gmany_Det     = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
-> iDet Gseveral_Det  = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
-> iDet Ga8few_Det    = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
-> iDet Gfew_Det      = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
-> iDet Gmost_Det    = shift (\c -> thereIs (\x -> c (\u v -> u x &&& v x)))
+> iDet Gmany_Det     = shift c (thereIs x ( c (\u v -> u x &&& v x)))
+> iDet Gseveral_Det  = shift c (thereIs x ( c (\u v -> u x &&& v x)))
+> iDet Ga8few_Det    = shift c (thereIs x ( c (\u v -> u x &&& v x)))
+> iDet Gfew_Det      = shift c (thereIs x ( c (\u v -> u x &&& v x)))
+> iDet Gmost_Det    = shift c (thereIs x ( c (\u v -> u x &&& v x)))
 
 
 %if unhandled
@@ -603,7 +696,7 @@ Indefinite article, ``a (man)'', or ``(men)''.
 
 Definite article, ``the (man)'', or ``the (men)''.
 
-> iQuant GDefArt = pure (\u x -> u x &&& forAll (\y -> u y ==> y === x))
+> iQuant GDefArt = pure (\u x -> u x &&& forAll y (u y ==> y === x))
 
 Demonstrative, ``that (man)''.
 FIXME: should also make it definite
@@ -633,7 +726,7 @@ Ordinals and superlatives.
 
 Superlative adjective, e.g. ``largest''.
 
-> iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll (\y -> u y ==> comp (\p -> p y) x)) <*> iA_comparative a
+> iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll y (u y ==> comp (\p -> p y) x)) <*> iA_comparative a
 
 %if unhandled
 > iOrd ord = unhandled "iOrd" ord
@@ -679,7 +772,7 @@ or quantifier, the restriction and the sentence predicate.
 
 > iNum :: GNum -> I (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop)
 
-> iNum GNumSg = shift (\c -> thereIs (\x -> c (\ai u v -> ai u x &&& v x)))
+> iNum GNumSg = shift c (thereIs x (c (\ai u v -> ai u x &&& v x)))
 
 Plural, interpreted as meaning ``at least two''.
 FIXME: causes inconsistency with definite article
@@ -688,7 +781,7 @@ FIXME: causes inconsistency with definite article
 % (?[A,B] : A != B & man(A) & man(B)) & (![C] : man(C) => sleep(C))
 % i.e. "at least two men" and "all men sleep"
 
-> iNum GNumPl = shift (\c -> thereIs (\x -> thereIs (\y -> x =/= y &&& c (\ai u v -> ai u x &&& v x &&& ai u y &&& v y))))
+> iNum GNumPl = shift c (thereIs x ( thereIs y (x =/= y &&& c (\ai u v -> ai u x &&& v x &&& ai u y &&& v y))))
 
 A fixed number of distinct objects, given by a cardinal number.
 
@@ -726,7 +819,7 @@ Reflexive use of a two-place adjective, e.g. ``equivalent to itself''.
 
 Existential use of a two-place adjective, e.g. ``mother (of someone)''.
 
-> iAP (GUseA2 a2) = pure (\i x -> thereIs (\y -> i (\v -> v y) x)) <*> iA2 a2
+> iAP (GUseA2 a2) = pure (\i x -> thereIs y (i (\v -> v y) x)) <*> iA2 a2
 
 Adverb modifying an adjectival phrase.
 FIXME: we are cheating by ignoring the adverb
@@ -807,8 +900,8 @@ Two-place nouns, e.g. ``owner of ...''.
 
 > iN2 :: GN2 -> I (Ind -> Ind -> Prop)
 > iN2 (GComplN3 n3 np) = pure (\n3i npi x y -> npi (\z -> n3i x z y)) <*> iN3 n3 <*> iNP np
-> iN2 (GUse2N3 n3) = pure (\n3i x y -> thereIs (\z -> n3i x z y)) <*> iN3 n3
-> iN2 (GUse3N3 n3) = pure (\n3i x y -> thereIs (\z -> n3i x y z)) <*> iN3 n3
+> iN2 (GUse2N3 n3) = pure (\n3i x y -> thereIs z (n3i x z y)) <*> iN3 n3
+> iN2 (GUse3N3 n3) = pure (\n3i x y -> thereIs z (n3i x y z)) <*> iN3 n3
 > iN2 (LexN2 n2) = pure (\x y -> Pred (symbol n2) [x,y])
 
 Three-place nouns, e.g. ``distance from ... to ...''.
@@ -920,7 +1013,7 @@ Integer interpretation. Used above for letter and digit numerals.
 
 > iInt :: Int -> I ((((Ind -> Prop) -> Prop) -> Prop) -> Prop)
 > iInt 0 = pure (\q -> q (\p -> true))
-> iInt n = pure (\ni q -> thereIs (\x -> ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
+> iInt n = pure (\ni q -> thereIs x ( ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
 
 %if style == newcode
 

@@ -9,7 +9,10 @@ import Data.List
 
 testParse :: String -> IO [S]
 testParse s = do pgf <- readPGF "examples/toy/Toy.pgf"
-                 return $ map fg $ parse pgf "ToyEng" "S" s
+                 return $ parseS s
+
+parseS :: PGF -> String -> [S]
+parseS pgf = map fg . parse pgf "ToyEng" "S"
 
 test :: (S -> [Prop]) -> String -> IO ()
 test f s = do ts <- testParse s

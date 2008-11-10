@@ -40,14 +40,21 @@
 %format ++ = "\cup"
 %format <- = "\in"
 
+% single colon for types
+%format :: = ":"
+
+%format * = "^*"
+
 %format pred p xs = p xs
 %format (Const c) = "\mathsf{" c "}"
 
 %format I            = "\mathcal{I}"
+%format I'            = "\mathcal{I'}"
 
 %format tau = "\tau"
 %format tau_1
 %format tau_n
+%format tau_C
 
 %endif
 

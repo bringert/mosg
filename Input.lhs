@@ -13,10 +13,10 @@ import Text.PrettyPrint.HughesPJ hiding (char)
 
 
 \begin{code}
-data Input = Statement Prop
-           | YNQuest Prop
-           | WhQuest (Ind -> Prop)
-           | CountQuest (Ind -> Prop)
+data Input  =  Statement Prop
+            |  YNQuest Prop
+            |  WhQuest (Ind -> Prop)
+            |  CountQuest (Ind -> Prop)
 \end{code}
 
 %if style == newcode

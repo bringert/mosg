@@ -4,6 +4,7 @@
 \usepackage{url}
 \usepackage{multirow}
 \usepackage{natbib}
+\usepackage{verbatim}
 \usepackage[pdftex]{graphicx}
 \usepackage[pdftex,bookmarks,unicode]{hyperref}
 
@@ -32,8 +33,10 @@
 \maketitle
 
 \begin{abstract}
-
-
+This report presents a natural language reasoning
+system based on Grammatical Framework (GF) grammars,
+continuation-based compositional semantics,
+and first-order logic reasoning tools.
 \end{abstract}
 
 \tableofcontents
@@ -41,21 +44,17 @@
 \chapter{Introduction}
 \label{chapter:introduction}
 
-This report presents a number of ideas about practical
-logic-based natural language semantics and reasoning.
-These ideas form the basis for a natural language
-reasoning system which we also describe and evaluate.
-
 The report is organized into a number of chapters:
 
 \begin{description}
 
 \item[Chapter~\ref{chapter:introduction}] 
-gives overview and background.
+gives an overview of our approach and the system.
 
 \item[Chapter~\ref{chapter:semantics}]
-describes NL first-order semantics with non-deterministic continuation functor.
-Includes a section on Haskell implementation.
+uses a stepwise expanded example to describe how
+how a first-order compositional semantics for natural language 
+can be define using a non-deterministic continuation functor.
 
 \item[Chapter~\ref{chapter:resource-grammar-semantics}]
 defines the semantics of a significant fragment of the GF Resource Grammar API,
@@ -80,15 +79,15 @@ discusses the results of running the system on the FraCaS semantic test suite.
 \section{System overview}
 
 While the ideas presented in the first few chapters can be
-independently useful, it maybe helpful to picture them in the larger
+independently useful, we describe them in the larger
 context in which the developed.
 Thus, we will first give a brief overview of 
 the complete question answering system which is
 the final product of this work. A more detailed system description
 can be found in Chapter~\ref{chapter:system-description}.
 The system accepts two kinds of inputs, facts and questions,
-both of which are expressed in natural language,
-and attempts to provide answers to any questions 
+both of which are expressed in natural language.
+It attempts to provide answers to any questions 
 based on the facts that it has been given.
 A high-level overview of the system is shown in 
 Figure~\ref{fig:qa-high-level-overview}.
@@ -103,42 +102,26 @@ Figure~\ref{fig:qa-high-level-overview}.
 
 This work combines a number of existing ideas in a novel way,
 ands adds a few new ones as well.
+The system is heavily inspired by the Curt family of systems
+by \citet{blackburn05:compsem}.
 
-We have written a first-order logic semantics for a substantial fraction of the 
-GF resource grammar API~\cite{ranta08:resource-library}.
-
-This is a compositional semantics based on typed lambda calculus,
-in the Montague \cite{montague73:ptq} tradition.
-
-We use continuations to handle scope 
+We have written a \emph{first-order logic} (FOL) semantics for a substantial fraction of the 
+GF resource grammar API~\cite{ranta08:grammar-libraries}.
+This is a \emph{compositional semantics} based on typed lambda calculus,
+in the Montague \shortcite{montague73:ptq} tradition.
+We use \emph{continuations} to handle scope 
 ambiguities~\cite{barker02:continuations-quantification},
-and delimited continuations for scope islands
+and \emph{delimited continuations} for scope islands
 \cite{shan04:delimited-continuations}.
-
-To simplify the implementation, we use applicative 
-functors~\cite{mcbride07:applicative}. Shan~\shortcite{shan01:monads-natural-language}
+To simplify the implementation, we use \emph{applicative 
+functors}~\cite{mcbride07:applicative}. 
+Shan~\shortcite{shan01:monads-natural-language}
 has used monads for a similiar effect, but this does not allow 
 the non-determinism that we want.
-
-We describe a novel way of handling ambiguous inputs in reasoning.
-
-We use answer predicates for extracting answers to wh-questions
+We describe two different strategies for reasoning 
+about ambiguous facts and questions.
+We use \emph{answer predicates} for extracting answers to \emph{wh}-questions
 from proofs.
-
-\subsection{Example interactions}
-
-Barber paradox, with several formulations.
-
-``the barber is a man who shaves only all men who do not shave themselves''
-
-``the barber shaves all and only those who do not shave themselves''
-
-``the barber shaves everyone, except those who shave themselves''
-
-Consistency checking when adding facts not only helps reduce ambiguity, but 
-also saves us from having an inconsistent knowledge base.
-
-
 
 %{
 %if style /= newcode
@@ -153,7 +136,7 @@ GF supports grammar libraries.
 \subsection{Example Grammar}
 
 In order to introduce GF, and to give us an example syntax to work with 
-in the following section, we present an example gramamr for a fragment
+in the following section, we present an example grammar for a fragment
 of English. The abstract syntax shown in Figure~\ref{fig:Toy-gf}
 defines categories (|cat|) and functions (|fun|).
 The concrete syntax shown in Figure~\ref{fig:ToyEng-gf} defines
@@ -164,6 +147,8 @@ complex morphosyntactic features are needed to implement the English
 concrete syntax. However, GF does allow more sophisticated linearization rules,
 with records, finite functions and algebraic data types, which can be used to 
 implement more complex grammars without changing the abstract syntax.
+GF can be used to create multilingual grammars by associating multiple
+concrete syntaxes with a single abstract syntax.
 
 \begin{figure}
 %include examples/toy/Toy.gf.lhs
@@ -177,8 +162,6 @@ implement more complex grammars without changing the abstract syntax.
 \label{fig:ToyEng-gf}
 \end{figure}
 
-GF can be used to create multilingual grammars by associating multiple
-concrete syntaxes with a single abstract syntax.
 
 \subsection{GF Resource Library}
 
