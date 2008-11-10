@@ -28,8 +28,6 @@ public class MosgApp implements EntryPoint {
 	private Semantics semantics;
 	private Reasoning reasoning;
 
-	private Widget mosgUI;
-	
 	private SuggestPanel suggestPanel;
 	private ScrollingDisclosurePanel logPanel;
 	private FactsBox factsBox;
@@ -258,7 +256,7 @@ public class MosgApp implements EntryPoint {
 		statusPanel.removeStyleDependentName("error");
 		statusLabel.setText("");
 	}
-	
+
 	//
 	// Settings
 	//
@@ -271,13 +269,10 @@ public class MosgApp implements EntryPoint {
 				if (!grammars.isEmpty()) {
 					pgf.setPGFName(grammars.get(0));
 				}
-			}			
-			RootPanel.get().clear();
-			RootPanel.get().add(mosgUI);
+			}
 		}
 		public void onAvailableLanguagesChanged() {
 			if (pgf.getInputLanguage() == null) {
-				GWT.log("Setting input language to user language: " + pgf.getUserLanguage(), null);
 				pgf.setInputLanguage(pgf.getUserLanguage());
 			}
 		}
@@ -285,12 +280,12 @@ public class MosgApp implements EntryPoint {
 			showError(msg,e);
 		}
 	}
-	
+
 	//
 	// GUI
 	//
 
-	private Widget createMosgUI() {
+	protected Widget createUI() {
 
 		statusLabel = new Label();
 		statusPanel = new SimplePanel();
@@ -323,28 +318,20 @@ public class MosgApp implements EntryPoint {
 
 		return vPanel;
 	}
-	
-	protected Widget createLoadingWidget () {
-		VerticalPanel loadingPanel = new VerticalPanel();
-		loadingPanel.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
-		loadingPanel.add(new Label("Loading..."));
-		return loadingPanel;
-	}
+
 
 	//
 	// Initialization
 	//
 
 	public void onModuleLoad() {
-		RootPanel.get().add(createLoadingWidget());
-		
-		pgf = new PGFWrapper(new PGF(pgfBaseURL), new MySettingsListener());
 		semantics = new Semantics(semanticsBaseURL);
-		reasoning = new Reasoning(reasoningBaseURL);
-
-		mosgUI = createMosgUI();
-		
+		reasoning = new Reasoning(reasoningBaseURL);		
+		pgf = new PGFWrapper(new PGF(pgfBaseURL));
+		RootPanel.get().add(createUI());
+		pgf.addSettingsListener(new MySettingsListener());
 		pgf.setPGFName(pgfName);
+		pgf.updateAvailableGrammars();
 	}
 
 }
