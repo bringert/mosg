@@ -4,6 +4,7 @@
 
 \documentclass[a4paper]{article}
 \usepackage{natbib}
+\usepackage{verbatim}
 
 \let\cite=\citep
 \let\shortcite=\citeyearpar
@@ -23,7 +24,9 @@
 \maketitle
 
 \begin{abstract}
-
+We present a continuation-based approach to writing compositional semantics
+for type-theoretic grammars which accounts for quantifier scope ambiguity
+and scope islands. 
 \end{abstract}
 
 %endif
