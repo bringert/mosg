@@ -315,9 +315,10 @@ Relative pronouns are interpreted as predicate modifiers.
 %
 > iRP :: GRP -> I ((Ind -> Prop) -> (Ind -> Prop))
 %
-e.g. ``a part of which''
+A preposition and a noun phrase modifying a relative pronoun,
+e.g. ``a part of which (is red)''.
 %
-> iRP (GFunRP prep np rp) = pure (\pi ni ri u x -> ni (\y -> (ri u) y &&& pi (\v -> v y) x))
+> iRP (GFunRP prep np rp) = pure (\pi ni ri u x -> ni (\y -> (ri u) y &&& pi x y))
 >                          <*> iPrep prep <*> iNP np <*> iRP rp
 %
 Relative pronoun, e.g.~``that'', ``which'', ``whose''.
@@ -336,6 +337,11 @@ e.g.~``(which) a woman kills''.
 %
 > iClSlash (GSlashVP np vpslash) = 
 >    pure (\ni vi x -> ni (vi (\u -> u x))) <*> iNP np <*> iVPSlash vpslash
+%
+|SlashPrep|: Prepositional Cl/NP, e.g. ``with (whom) john walks``.
+This is problematic, since the |Cl| is interpreted as |Prop|,
+but we need access to the subject of the clause, to give
+that as one of the arguments to the preposition.
 %
 Adverb modifying a Cl/NP, 
 e.g.~``(which) a woman kills in Paris''
@@ -524,23 +530,23 @@ A stand-alone determiner, e.g. ``these five (are good)''.
 %
 ``everybody'', ``everything''
 %
-> iNP Geverybody_NP   = shift c (forAll x (c (\u -> u x)))
-> iNP Geverything_NP  = shift c (forAll x (c (\u -> u x)))
+> iNP Geverybody_NP   = shift k (forAll x (k (\u -> u x)))
+> iNP Geverything_NP  = shift k (forAll x (k (\u -> u x)))
 %
 ``anybody'', ``anything''. Interpreted just like ``everybody'', ``everything''.
 %
-> iNP Ganybody_NP   = shift c (forAll x (c (\u -> u x)))
-> iNP Ganything_NP  = shift c (forAll x (c (\u -> u x)))
+> iNP Ganybody_NP   = shift k (forAll x (k (\u -> u x)))
+> iNP Ganything_NP  = shift k (forAll x (k (\u -> u x)))
 %
 ``somebody'', ``something''
 %
-> iNP Gsomebody_NP   = shift c (thereIs x ( c (\u -> u x)))
-> iNP Gsomething_NP  = shift c (thereIs x ( c (\u -> u x)))
+> iNP Gsomebody_NP   = shift k (thereIs x (k (\u -> u x)))
+> iNP Gsomething_NP  = shift k (thereIs x (k (\u -> u x)))
 %
 ``nobody'', ``nothing''
 %
-> iNP Gnobody_NP = shift c (neg (thereIs x ( c (\u -> u x))))
-> iNP Gnothing_NP = shift c (neg (thereIs x ( c (\u -> u x))))
+> iNP Gnobody_NP = shift k (neg (thereIs x (k (\u -> u x))))
+> iNP Gnothing_NP = shift k (neg (thereIs x (k (\u -> u x))))
 
 %if unhandled
 > iNP np = unhandled "iNP" np
@@ -639,43 +645,45 @@ but no ordinal, e.g. ``these five''.
 %
 ``every''
 %
-> iDet Gevery_Det = shift c (forAll x (c (\u v -> u x ==> v x)))
+> iDet Gevery_Det = shift k (forAll x (k (\u v -> u x ==> v x)))
 %
 Negated existential quantifier, ``no''.
 %
-> iDet Gno_Det = shift c (neg (thereIs x ( c (\u v -> u x &&& v x))))
-
-FIXME: does this mean more than one?
-
-``some'' + plural
-
-> iDet GsomePl_Det = shift c (thereIs x ( c (\u v -> u x &&& v x)))
-
+> iDet Gno_Det = shift k (neg (thereIs x (k (\u v -> u x &&& v x))))
+%
+``some'' + plural.
+FIXME: Perhaps this should require there to be at least two.
+%
+> iDet GsomePl_Det = shift k (thereIs x (k (\u v -> u x &&& v x)))
+%
 ``some'' + singular. Same as |IndefArt|.
-
-> iDet GsomeSg_Det = shift c (thereIs x ( c (\u v -> u x &&& v x)))
-
+%
+> iDet GsomeSg_Det = shift k (thereIs x (k (\u v -> u x &&& v x)))
+%
 ``neither''. This is interpreted as meaning that there are exactly
 two individuals with the first property, and they both lack 
 the second property.
-
-> iDet Gneither_Det = shift c (thereIs x ( thereIs y (forAll z (c (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
-
-``both''
-
-> iDet Gboth_Det = shift c (thereIs x ( thereIs y (forAll z (c (\u v -> u x &&& v x &&& u y &&& v y &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
-
-``either'', interpreted as ``there are at least two, and at least one of them does it''
-
-> iDet Geither_Det = shift c (thereIs x ( thereIs y (c (\u v -> u x &&& u y &&& x =/= y &&& (v x ||| v y)))))
-
-``many'', ``several'', ``few'', ``a few'', ``most''. FIXME: cheating, we them as existentials
-
-> iDet Gmany_Det     = shift c (thereIs x ( c (\u v -> u x &&& v x)))
-> iDet Gseveral_Det  = shift c (thereIs x ( c (\u v -> u x &&& v x)))
-> iDet Ga8few_Det    = shift c (thereIs x ( c (\u v -> u x &&& v x)))
-> iDet Gfew_Det      = shift c (thereIs x ( c (\u v -> u x &&& v x)))
-> iDet Gmost_Det    = shift c (thereIs x ( c (\u v -> u x &&& v x)))
+%
+> iDet Gneither_Det = shift k (thereIs x ( thereIs y (forAll z (k (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
+%
+``both''. This is interpreted as meaning that there are exactly
+two individuals with the first property, and they both have 
+the second property.
+%
+> iDet Gboth_Det = shift k (thereIs x ( thereIs y (forAll z (k (\u v -> u x &&& v x &&& u y &&& v y &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
+%
+``either'', interpreted as ``there are at least two, and at least one of them does it''.
+%
+> iDet Geither_Det = shift k (thereIs x ( thereIs y (k (\u v -> u x &&& u y &&& x =/= y &&& (v x ||| v y)))))
+%
+``many'', ``several'', ``few'', ``a few'', ``most''. 
+FIXME: These are hard in FOL. We cheat by treating them as existentials.
+%
+> iDet Gmany_Det     = shift k (thereIs x (k (\u v -> u x &&& v x)))
+> iDet Gseveral_Det  = shift k (thereIs x (k (\u v -> u x &&& v x)))
+> iDet Ga8few_Det    = shift k (thereIs x (k (\u v -> u x &&& v x)))
+> iDet Gfew_Det      = shift k (thereIs x (k (\u v -> u x &&& v x)))
+> iDet Gmost_Det     = shift k (thereIs x (k (\u v -> u x &&& v x)))
 
 
 %if unhandled
@@ -685,32 +693,34 @@ the second property.
 
 \subsection{Quant: Quantifier}
 
-Quantifiers are treated as adjectives.
-
+Quantifiers modify a one-place predicate.
+%
 > iQuant :: GQuant -> I ((Ind -> Prop) -> (Ind -> Prop))
-
+%
 Indefinite article, ``a (man)'', or ``(men)''.
-%FIXME: wrong, indef pl should be universal as subject, existential as object
-
+FIXME: this is not always correct in the plural.
+For example, ``dogs are friendly'' should give a universial quantifier.
+%
 > iQuant GIndefArt = pure (\u -> u)
-
+%
 Definite article, ``the (man)'', or ``the (men)''.
-
+We use Russell's interpretation of definiteness.
+%
 > iQuant GDefArt = pure (\u x -> u x &&& forAll y (u y ==> y === x))
-
+%
 Demonstrative, ``that (man)''.
-FIXME: should also make it definite
-
+FIXME: Should we also treat this as definite?
+%
 > iQuant Gthat_Quant = pure (\u x -> u x &&& special "that" [x])
-
+%
 Demonstrative,``this (man)''.
-FIXME: should also make it definite
-
+FIXME: Should we also treat this as definite?
+%
 > iQuant Gthis_Quant = pure (\u x -> u x &&& special "this" [x])
-
-``John's (dog)''.
+%
+Genitive form of a noun phrase, e.g. ``john's (dog)''.
 FIXME: Should this really allow more than one? Now ``john's dog'' allows john to have several dogs.
-
+%
 > iQuant (GGenNP np) = pure (\ni u x -> u x &&& ni (\y -> of_Pred y x)) <*> iNP np
 
 %if unhandled
@@ -721,12 +731,16 @@ FIXME: Should this really allow more than one? Now ``john's dog'' allows john to
 \subsection{Ord: Ordinal Number}
 
 Ordinals and superlatives.
-
+These are interpreted as modifying a one-place predicate.
+%
 > iOrd :: GOrd -> I ((Ind -> Prop) -> (Ind -> Prop))
-
+%
 Superlative adjective, e.g. ``largest''.
-
-> iOrd (GOrdSuperl a) = pure (\comp u x -> u x &&& forAll y (u y ==> comp (\p -> p y) x)) <*> iA_comparative a
+Interpreted in terms of the comparative. ``Largest'' is taken
+to mean that there the individual is larger than all other individuals
+identified by the restruction.
+%
+> iOrd (GOrdSuperl a) = pure (\ai u x -> u x &&& forAll y (u y ==> ai x y)) <*> iA_comparative a
 
 %if unhandled
 > iOrd ord = unhandled "iOrd" ord
@@ -772,7 +786,7 @@ or quantifier, the restriction and the sentence predicate.
 
 > iNum :: GNum -> I (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop)
 
-> iNum GNumSg = shift c (thereIs x (c (\ai u v -> ai u x &&& v x)))
+> iNum GNumSg = shift k (thereIs x (k (\ai u v -> ai u x &&& v x)))
 
 Plural, interpreted as meaning ``at least two''.
 FIXME: causes inconsistency with definite article
@@ -781,7 +795,7 @@ FIXME: causes inconsistency with definite article
 % (?[A,B] : A != B & man(A) & man(B)) & (![C] : man(C) => sleep(C))
 % i.e. "at least two men" and "all men sleep"
 
-> iNum GNumPl = shift c (thereIs x ( thereIs y (x =/= y &&& c (\ai u v -> ai u x &&& v x &&& ai u y &&& v y))))
+> iNum GNumPl = shift k (thereIs x (thereIs y (x =/= y &&& k (\ai u v -> ai u x &&& v x &&& ai u y &&& v y))))
 
 A fixed number of distinct objects, given by a cardinal number.
 
@@ -794,42 +808,47 @@ A fixed number of distinct objects, given by a cardinal number.
 \subsection{AP: Adjectival Phrases}
 
 Adjectival phrases are interpreted as one-place predicates.
-
+%
 > iAP :: GAP -> I (Ind -> Prop)
-
+%
 Complementation of a two-place adjective, e.g. ``equivalent to a dog''.
-
-> iAP (GComplA2 a2 np) = iA2 a2 <*> iNP np
-
-Adjectival phrase conjunction.
-
-> iAP (GConjAP conj aps)   = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iConj conj   <*> iListAP aps
-
+%
+> iAP (GComplA2 a2 np) = pure (\ai ni x -> ni (\y -> ai x y)) <*> iA2 a2 <*> iNP np
+%
+Adjectival phrase conjunction, e.g. ``big and red''.
+%
+> iAP (GConjAP conj aps)   = pure (\ci ai x -> foldr1 ci [f x | f <- ai]) <*> iConj conj <*> iListAP aps
+%
 Positive form of an adjective, e.g. ``big''.
-
+%
 > iAP (GPositA a) = iA a
-
+%
 Comparative form of an adjective, e.g. ``bigger''.
-
-> iAP (GComparA a np) = iA_comparative a <*> iNP np
-
+We introduce a new \textsf{more\_X} predicate for every adjective \textsf{X}.
+%
+> iAP (GComparA a np) = pure (\ai ni x -> ni (\y -> ai x y)) <*> iA_comparative a <*> iNP np
+%
 Reflexive use of a two-place adjective, e.g. ``equivalent to itself''.
-
-> iAP (GReflA2 a2) = pure (\ia x -> ia (\u -> u x) x) <*> iA2 a2
-
-Existential use of a two-place adjective, e.g. ``mother (of someone)''.
-
-> iAP (GUseA2 a2) = pure (\i x -> thereIs y (i (\v -> v y) x)) <*> iA2 a2
-
-Adverb modifying an adjectival phrase.
+%
+> iAP (GReflA2 a2) = pure (\ia x -> ia x x) <*> iA2 a2
+%
+Existential use of a two-place adjective, e.g. ``(this dog is) equivalent''.
+This is interpreted as have an implied ``(to something)''.
+%
+> iAP (GUseA2 a2) = pure (\ai x -> thereIs y (ai x y)) <*> iA2 a2
+%
+Adverb modifying an adjectival phrase, e.g. ``really big''.
 FIXME: we are cheating by ignoring the adverb
-
+%
 > iAP (GAdAP ada ap) = iAP ap
 
 %if unhandled
 > iAP ap = unhandled "iAP" ap
 %endif 
 
+A list of adjectival phrases for use in adjectival phrase conjunction.
+This is interpreted as a list of one-place predicates.
+%
 > iListAP :: GListAP -> I [Ind -> Prop]
 > iListAP (GListAP aps) = traverse iAP aps
 
@@ -837,31 +856,37 @@ FIXME: we are cheating by ignoring the adverb
 \subsection{Adv: Adverbial Phrases}
 
 Adverbial phrases that can modify NP, CN, VP.
-
+%
 > iAdv :: GAdv -> I ((Ind -> Prop) -> (Ind -> Prop))
-
+%
 Adverbial phrase conjunction.
-
+%
 > iAdv (GConjAdv conj advs)   = pure (\ci ai u x -> foldr1 ci [f u x | f <- ai]) <*> iConj conj   <*> iListAdv advs
-
+%
 Prepositional phrase.
-
-> iAdv (GPrepNP prep np) = pure (\pp u x -> u x &&& pp x) <*> (iPrep prep <*> iNP np)
-
+%
+> iAdv (GPrepNP prep np) = pure (\pi ni u x -> u x &&& ni (\y -> pi x y)) <*> iPrep prep <*> iNP np
+%
 Subjunctive phrase.
-
+%
 > iAdv (GSubjS subj s) = pure (\sui si u x -> sui si (u x)) <*> iSubj subj <*> iS s
 
 %if unhandled
 > iAdv adv = unhandled "iAdv" adv
 %endif
 
+A list of adverbs for use in adverb conjunction.
+This is interpreted as a list of one-place predicate modifiers.
+%
 > iListAdv :: GListAdv -> I [(Ind -> Prop) -> (Ind -> Prop)]
 > iListAdv (GListAdv advs) = traverse iAdv advs
 
 Interpretation of sentence-modifying adverbial phrases.
-
+%
 > iAdv_S :: GAdv -> I (Prop -> Prop)
+%
+Subjunctions with an sentence use as an adverb, e.g. ``(John walks) if (Mary runs)''.
+%
 > iAdv_S (GSubjS subj s) = iSubj subj <*> iS s
 
 %if unhandled
@@ -870,6 +895,8 @@ Interpretation of sentence-modifying adverbial phrases.
 
 \subsection{AdV: Adverb directly attached to verb}
 
+Interpreted as one-place predicate (verb phrase interpretation) modifier.
+%
 > iAdV :: GAdV -> I ((Ind -> Prop) -> (Ind -> Prop))
 
 %if unhandled
@@ -878,10 +905,30 @@ Interpretation of sentence-modifying adverbial phrases.
 
 \subsection{Subj: Subjunctions}
 
+Subjunctions combine two sentence interpretations (i.e~propositions).
+%
 > iSubj :: GSubj -> I (Prop -> Prop -> Prop)
+%
+``Although'' is interpreted as logical conjunction.
+We ignore the implicature that the second proposition
+is \emph{unexpectedly} true.
+%
 > iSubj Galthough_Subj = pure (&&&)
-> iSubj Gbecause_Subj = pure (==>)
+%
+``Because'' is also interpreted as conjunction.
+An alternative interpretation is implication, but that gives odd results.
+For example, ``John runs because Mary runs'', would then mean that
+it could be the case that Mary doesn't run.
+%
+> iSubj Gbecause_Subj = pure (&&&)
+%
+``If'' is plain implication.
+%
 > iSubj Gif_Subj = pure (==>)
+%
+``When'' is also interpreted as implication.
+We ignore the reading where the events have to take place at the same time.
+%
 > iSubj Gwhen_Subj = pure (==>)
 
 %if unhandled
@@ -891,65 +938,70 @@ Interpretation of sentence-modifying adverbial phrases.
 
 \subsection{Lexical Categories}
 
-Nouns, e.g. ``dog''.
-
+Simple nouns, e.g. ``dog'' are interpreted as one-place predicates.
+%
 > iN :: GN -> I (Ind -> Prop)
 > iN (LexN n) = pure (\x -> Pred (symbol n) [x])
 
-Two-place nouns, e.g. ``owner of ...''.
-
+Two-place nouns, e.g.~``owner of (a bar)'', are interpreted
+as two-place predicates.
+%
 > iN2 :: GN2 -> I (Ind -> Ind -> Prop)
 > iN2 (GComplN3 n3 np) = pure (\n3i npi x y -> npi (\z -> n3i x z y)) <*> iN3 n3 <*> iNP np
 > iN2 (GUse2N3 n3) = pure (\n3i x y -> thereIs z (n3i x z y)) <*> iN3 n3
 > iN2 (GUse3N3 n3) = pure (\n3i x y -> thereIs z (n3i x y z)) <*> iN3 n3
 > iN2 (LexN2 n2) = pure (\x y -> Pred (symbol n2) [x,y])
 
-Three-place nouns, e.g. ``distance from ... to ...''.
-
+Three-place nouns, e.g. ``distance from (the hourse) to (the street)'',
+are interpreted as three-place predicates.
+%
 > iN3 :: GN3 -> I (Ind -> Ind -> Ind -> Prop)
 > iN3 (LexN3 n3) = pure (\x y z -> Pred (symbol n3) [x,y,z])
 
-Proper names, e.g. ``John''.
-
+Proper names, e.g. ``John'', are interpreted as individuals.
+%
 > iPN :: GPN -> I Ind
 > iPN (LexPN pn) = pure (Const (symbol pn))
 
-Adjectives, e.g. ``big''.
-
+Adjectives, e.g. ``big'', are one-place predicates.
+%
 > iA :: GA -> I (Ind -> Prop)
 > iA (LexA a) = pure (\x -> Pred (symbol a) [x])
 
-Adjectives when used comparatively. FIXME: weird.
+Comparative forms of adjectives are two-place predicates:
+%
+> iA_comparative :: GA -> I (Ind -> Ind -> Prop)
+> iA_comparative (LexA a) = pure (\x y -> comparative_Pred (symbol a) x y)
 
-> iA_comparative :: GA -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
-> iA_comparative (LexA a) = pure (\o x -> o (\y -> comparative_Pred (symbol a) x y))
+Two-place adjectives, e.g. ``equivalent to (a dog)'', are interpreted as 
+two-place predicates.
+%
+> iA2 :: GA2 -> I (Ind -> Ind -> Prop)
+> iA2 (LexA2 a2) = pure (\x y -> Pred (symbol a2) [x,y])
 
-Two-place adjectives, e.g. ``equivalent to ...''
-
-> iA2 :: GA2 -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
-> iA2 (LexA2 a2) = pure (\o x -> o (\y -> Pred (symbol a2) [x,y]))
-
-Intransitive verbs, e.g. ``sleep''.
-
+Intransitive verbs, e.g. ``sleep'', are one-place predicates.
+%
 > iV :: GV -> I (Ind -> Prop)
 > iV (LexV v) = pure (\x -> Pred (symbol v) [x])
 
-Transitive verbs, e.g. ``kill''.
-
+Transitive verbs, e.g. ``kill'', are two-place predicates.
+%
 > iV2 :: GV2 -> I (Ind -> Ind -> Prop)
 > iV2 (LexV2 v2) = pure (\x y -> Pred (symbol v2) [x,y])
 
-Ditransitive verbs, e.g. ``give''.
-
+Ditransitive verbs, e.g. ``give'', are three-place predicates.
+%
 > iV3 :: GV3 -> I (Ind -> Ind -> Ind -> Prop)
 > iV3 (LexV3 v3) = pure (\x y z -> Pred (symbol v3) [x,y,z])
 
-Prepositions, e.g. ``in''.
-
-> iPrep :: GPrep -> I (((Ind -> Prop) -> Prop) -> (Ind -> Prop))
-> iPrep (LexPrep prep) = pure (\u x -> u (\y -> Pred (symbol prep) [x,y]))
+Prepositions, e.g. ``in'', are two-place predicates.
+%
+> iPrep :: GPrep -> I (Ind -> Ind -> Prop)
+> iPrep (LexPrep prep) = pure (\x y -> Pred (symbol prep) [x,y])
 
 \subsection{Digits: Cardinals and Ordinals in Digits}
+
+Digits are interpreted as integers, and then handled by |iInt|.
 
 > iDigits :: GDigits -> Int
 > iDigits = f 0
