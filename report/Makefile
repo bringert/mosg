@@ -29,6 +29,15 @@ $(NAME).pdf: $(NAME).tex
 
 semantics.pdf: semantics.tex
 	pdflatex semantics
+	bibtex semantics
+	pdflatex semantics
+	pdflatex semantics
+
+answers.pdf: answers.tex
+	pdflatex answers
+	bibtex answers
+	pdflatex answers
+	pdflatex answers
 
 showsem: semantics.pdf
 	acroread $^
