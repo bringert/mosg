@@ -7,6 +7,7 @@
 \usepackage{url}
 \usepackage{multirow}
 \usepackage{natbib}
+\usepackage{verbatim}
 
 \let\cite=\citep
 \let\shortcite=\citeyearpar
@@ -192,8 +193,10 @@ theory is inconsistent.
 
 \subsection{Examples}
 
-These are example problems for each of the 9 cells in Figure~\ref{tbl:answers}:
+Figure \ref{fig:answer-examples} shows 
+example problems for each of the 9 cells in Figure~\ref{fig:answers}.
 
+\begin{figure}
 \begin{tabular}{||r||l||l||l||l||}
 & Facts & Question & T & H \\
 1 & ``John loves Mary.'' & ``Does Mary love John?'' & $love(john,mary)$ & $love(mary,john)$ \\
@@ -206,6 +209,9 @@ These are example problems for each of the 9 cells in Figure~\ref{tbl:answers}:
 8 & FIXME \\
 9 & ``John loves Mary. John doesn't love Mary.'' & ``Does John love Mary?'' & $love(john,mary) \land \lnot love(john,mary)$ & $love(john,mary)$ \\  \\
 \end{tabular}
+\caption{Example problems for the 9 cells in Figure~\ref{fig:answers}.}
+\label{fig:answer-examples}
+\end{figure}
 
 \section{Ambiguous Problems}
 
