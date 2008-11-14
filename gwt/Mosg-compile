@@ -10,6 +10,7 @@ if [ -z "$GWT_CLASSPATH" ]; then
   exit 1
 fi
 
-PGF_CLASSPATH="$GF_LIB_PATH/../lib/java/gf-gwt.jar"
+# HACK: the dnd thing
+PGF_CLASSPATH="$GF_LIB_PATH/../lib/java/gf-gwt.jar:$GF_LIB_PATH/../src/server/gwt/lib/gwt-dnd-2.5.6.jar"
 
 java -XstartOnFirstThread -Xmx256M -cp "$APPDIR/src:$APPDIR/bin:$PGF_CLASSPATH:$GWT_CLASSPATH" com.google.gwt.dev.GWTCompiler -out "$APPDIR/www" "$@" se.chalmers.cs.mosg.MosgApp;
