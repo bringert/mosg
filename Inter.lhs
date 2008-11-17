@@ -33,7 +33,7 @@ We have a special case for |Pure f <*> Pure x| that keeps the result
 pure, so that further uses of |<*>| knows that it
 doesn't need both evaluation orders.
 
-If both of the sub-computations pure, the result is too.
+If both of the sub-computations are pure, the result is too.
 
 >   Pure fs <*> Pure xs = Pure [f x | f <- fs, x <- xs]
 
