@@ -12,4 +12,4 @@ fi
 
 PGF_CLASSPATH="$GF_LIB_PATH/java/gf-gwt.jar"
 
-java -XstartOnFirstThread -Xmx256M -cp "$APPDIR/src:$APPDIR/bin:$PGF_CLASSPATH:$GWT_CLASSPATH" com.google.gwt.dev.GWTShell -out "$APPDIR/www" -noserver "$@" http://localhost:1970/gwt/www/se.chalmers.cs.mosg.MosgApp/Mosg.html;
+java -XstartOnFirstThread -Xmx256M -cp "$APPDIR/src:$APPDIR/bin:$PGF_CLASSPATH:$GWT_CLASSPATH" com.google.gwt.dev.GWTShell -out "$APPDIR/www" -noserver "$@" http://localhost:1970/;

@@ -15,7 +15,7 @@
 </listAttribute>
 <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="false"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.google.gwt.dev.GWTShell"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-out www  -noserver http://localhost:1970/gwt/www/se.chalmers.cs.mosg.MosgApp/Mosg.html"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-out www  -noserver http://localhost:1970/"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="Mosg"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-XstartOnFirstThread -Xmx256M"/>
 </launchConfiguration>
