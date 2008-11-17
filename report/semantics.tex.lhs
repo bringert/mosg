@@ -5,9 +5,11 @@
 \documentclass[a4paper]{article}
 \usepackage{natbib}
 \usepackage{verbatim}
+\usepackage{xspace}
 
 \let\cite=\citep
 \let\shortcite=\citeyearpar
+\newcommand{\lcalc}{$\lambda$-calculus\xspace}
 
 %include polycode.fmt
 
@@ -31,73 +33,125 @@ and scope islands.
 
 %endif
 
-%{
-%include semantics.fmt
-
 \section{Introduction}
 
 Montague~\shortcite{montague73:ptq} uses compositional rules that
-map English expressions to lambda calculus terms over a higher-order
-logic. 
+map English expressions to an intentional logic which combines
+higher-order logic with \lcalc.
 There is a large body of work that extends this treatment to cover 
 additional phenomena, such as scope ambiguities.
 These efforts, such as Cooper storage~\cite{cooper83:quantification},
 are often expressed as extensions to the
-core lambda calculus.
-We wish to stay within a (polymorphically) typed
-lambda calculus.
+core \lcalc.
+We wish to stay within a (polymorphically) typed \lcalc.
 Continuations have been proposed as an approach to deal
 with a range of semantic 
 phenomena~\cite{barker02:continuations-quantification}.
 We show that it is possible to handle scope ambiguity and scope islands
-in a polymorphically typed lambda calculus. The language that we use has
-some syntactic extensions to lambda calculus, but these have straightforward
+in a polymorphically typed \lcalc. The language that we use has
+some syntactic extensions to \lcalc, but these have straightforward
 translations to the core calculus.
 
 We use first-order logic as our target language, rather than the higher-order 
 logic used by Montague~\shortcite{montague73:ptq}. 
-This lets us use our semantics for practical applications with exisiting 
+This lets us use our semantics for practical applications with existing 
 automated first-order reasoning tools.
 
-It is a common approach to try to push as much as possible
-of the semantics into the lexicon, while keeping the combination rules
-as simple as possible. We have taken the opposite approach, where we try
-to make the semantics of lexical items as simple as possible, 
-since there are many more lexicon entries than syntactic constructs.
-We also feel that  moving more to the semantics of syntactic 
-constructs makes the semantics easier to understand.
+%if not report
+In Section \ref{sec:syntax} we present a fragment of English described using a 
+Grammatical Framework (GF)~\cite{ranta04:gf} grammar.
+%endif
+Section \ref{sec:semantics} constitutes the bulk of this paper.
+It presents a sequence of progressively refined
+semantics for fragments of English.
+We start by introducing the most basic machinery in
+Section \ref{sec:frag-basics}, which handles 
+a small language fragment with only proper names and
+transitive and intransitive verbs.
+In this fragment, all constructs have straightforward 
+interpretations.
+In Section \ref{sec:frag-det}, we add determiners,
+along with simple nouns, relational nouns and relative clauses.
+The problem of handling quantifiers in noun phrases is dealt with
+using Montague's type raising trick.
+In Section \ref{sec:frag-amb}, we tackle quantifier scope
+ambiguity, by lifting our entire interpretation to
+a dynamic logic, in this case an applicative functor
+for continuation computations.
+By using a non-deterministic evaluation order,
+we can generate all possible quantifier scopings.
+In Section \ref{sec:frag-island} we add a construct
+for delimited continuations, and use it to handle scope 
+islands.
+Section \ref{sec:implementation} describes how this approach
+can be implemented efficiently in the Haskell programming language.
+Section \ref{sec:related-work} gives a brief overview of some related work.
 
-For example, in a lexicalized approach, the interpretation of adjectives may be of 
-type |(Ind -> Prop) -> (Ind -> Prop)|, where |Ind -> Prop| is the interpretation type
-of common nouns. This lets us use plain function application to implement 
-adjectival modification of common nouns (e.g.~``tall man''). 
-However, each adjective (e.g. |tall|) must 
-then be interpreted as a function such as |\p -> \x -> tall(x) &&& p(x)|.
-This makes it difficult to handle predicative use of adjectives 
-(e.g.~``John is tall''). If the noun phrase ``John'' is interpreted as
-|\p -> p(John)| (using \emph{Montague's trick}, also known as \emph{type raising}),
-we need a way to turn |\p -> \x -> tall(x) &&& p(x)| into |\x -> tall(x)|.
-This can be done by applying the adjective interpretation to |\x -> true|, before
-applying the noun phrase interpretation to it. But now we have complicated 
-the predication interpretation just because we wanted a simple modification interpretation.
+%if not report && style /= newcode
 
-Instead, we give each lexical category a straightforward interpretation type.
-For example, adjectives are one-place predicates, |Ind -> Prop|, e.g.~|\x -> tall(x)|.
-Now, the modification rule needs to use conjunction, but the predication rules becomes
-simpler. In general, giving lexical items simple types seems to allow us to extend 
-the semantics more easily, since we avoid pushing the interpretation of 
-arbitrary syntactic constructs into the lexicon.
+%{
+%include gf.fmt
 
-In this paper, we present the semantics for a progression of increasingly 
-large fragments of the example GF abstract syntax shown in Figure~\ref{fig:Toy-gf}.
+\section{Syntax}
+\label{sec:syntax}
+
+Grammatical Framework (GF)~\cite{ranta04:gf} is a type-theoretical 
+grammar formalism. 
+In order to introduce GF, and to give us an example syntax to work with 
+in the following section, we present an example grammar for a fragment
+of English. The abstract syntax shown in Figure~\ref{fig:Toy-gf}
+defines categories (|cat|) and functions (|fun|).
+An example of an abstract syntax tree in this grammar is
+%
+\begin{spec}
+|PredVP (DetCN Every (UseN Woman)) (UseV Walk)|.
+\end{spec}
+%
+The concrete syntax shown in Figure~\ref{fig:ToyEng-gf} defines
+the linearization type (|lincat|) of each abstract syntax category,
+and the linearization (|lin|) of each abstract syntax function.
+In this concrete syntax, the abstract syntax tree above is linearized
+to:
+%
+\begin{spec}
+{ s = ``every woman walks'' }
+\end{spec}
+
+In this simple example, no inflection, agreement or other
+complex morphosyntactic features are needed to implement the English
+concrete syntax. However, GF does allow more sophisticated linearization rules,
+with records, finite functions and algebraic data types, which can be used to 
+implement more complex grammars without changing the abstract syntax.
+GF can be used to create multilingual grammars by associating multiple
+concrete syntaxes with a single abstract syntax.
+
+\begin{figure}
+%include examples/toy/Toy.gf.lhs
+\caption{\texttt{Toy.gf}: Abstract syntax for a small language fragment.}
+\label{fig:Toy-gf}
+\end{figure}
+
+\begin{figure}
+%include examples/toy/ToyEng.gf.lhs
+\caption{\texttt{ToyEng.gf}: Concrete syntax for a small fragment of English.}
+\label{fig:ToyEng-gf}
+\end{figure}
+
+%}
+
+%endif
+
+%{
+%include semantics.fmt
+
+\section{Semantics}
+\label{sec:semantics}
+
 Since we define the syntax with a GF grammar, we can write our interpretation
 functions over GF abstract syntax trees, which abstract away from details
 such as word order and agreement. 
-
-\section{Semantics}
-
-We interpret each abstract syntax term as a term in
-$\lambda$-calculus over first-order logic with equality.
+We interpret each abstract syntax term as a term in a combination of 
+\lcalc and first-order logic with equality.
 We use the customary connectives and quantifiers,
 $n$-ary predicates, equality, inequality.
 %
@@ -124,7 +178,7 @@ $x ::=$
 $u$,
 $\text{C}$
 
-A term in our $\lambda$-calculus is a function application,
+A term in our \lcalc is a function application,
 an abstraction (function value), a variable or a first-order logic formula.
 FIXME: not true, they can be intermingled.
 
@@ -149,10 +203,10 @@ When we show formulas which are the result of semantic interpretation,
 the will sometimes be simplified according to the rules of first-order logic.
 
 \subsection{Fragment 1: Basics}
+\label{sec:frag-basics}
 
 Our first language fragment only contains sentences made up of 
-proper names, and transitive and intransitive verbs, 
-along with the neccessary predication and complementation rules.
+proper names, and transitive or intransitive verbs.
 This lets use handle sentences such as ``John walks'' and ``John loves Mary'',
 which are assigned the first-order logic formulas
 $walk(John)$ and $love(John,Mary)$, respectively.
@@ -168,11 +222,10 @@ $walk(John)$ and $love(John,Mary)$, respectively.
 
 %endif
 
-For each category |C| in the abstract syntax, the semantics 
-contains a function
+For each category |C| in the abstract syntax, there is a function
 |iC :: C -> C*|, where |C*| is the interpretation type of |C|.
 
-We first provide straightforward semantics for the lexical items.
+We first provide a straightforward semantics for the lexical items.
 Proper names are plain constants:
 %
 > iPN :: PN -> Ind
@@ -185,7 +238,12 @@ Intransitive verbs are one-place predicates:
 > iV :: V -> (Ind -> Prop)
 > iV Walk = \x -> pred "walk" (x)
 %
-Transitive verbs are two-place predicates:
+Transitive verbs are two-place predicates. We take the subject
+as the first function argument, and the object as the second,
+which is the opposite to what Montague does. 
+In addition to being more intuitive (in the opinion of the author), 
+this order lets us use function composition in the complementation
+rules below.
 %
 > iV2 :: V2 -> (Ind -> Ind -> Prop)
 > iV2 Eat   = \x y -> pred "eat" (x,y)
@@ -212,7 +270,9 @@ For verb phrases formed from just an intransitive verb, nothing needs to be done
 %
 In the case of transitive verb complementation, 
 the interpretation of the object is given as the second 
-argument to the two-place predicate which is the interpretation of the transitive verb:
+argument to the two-place predicate which is the interpretation of the 
+transitive verb (note that in our notation, function application
+binds harder than $\lambda$-abstraction):
 %
 > iVP (ComplV2 v2 np)  = \y -> (iV2 v2) y (iNP np)
 %
@@ -227,6 +287,7 @@ the application of the one-place verb phrase predicate to the noun phrase indivi
 
 
 \subsection{Fragment 2: Adding determiners}
+\label{sec:frag-det}
 
 %if sem_toy_2_code || style /= newcode
 
@@ -234,7 +295,7 @@ When we add determiners to our language fragment, we will need some way to handl
 quantifiers, as we would for example like the sentence ``everyone walks'' to
 have the interpretation |forAll x (pred "walk" (x))|.
 Our previous type of NP interpretations, |Ind|, is insufficient
-since we need to be able to introduce the universial quantifier
+since we need to be able to introduce the universal quantifier
 on the top-level of the formula.
 Montague~\shortcite{montague73:ptq} solved this problem by changing the type 
 of NP interpretations to |(Ind -> Prop) -> Prop|, and we will do the same.
@@ -301,12 +362,14 @@ way because of the Montague trick).
 %
 > iCN (ComplN2 n2 np)  = \x -> (iNP np) ((iN2 n2) x)
 %
-or, equivalently, using the function composition operator |.|:
+or, equivalently, using the function composition operator |.|
+(function application binds harder than composition):
 %
-> iVP (ComplN2 n2 np) = iNP np . iN2 n2
+> iCN (ComplN2 n2 np) = iNP np . iN2 n2
 %
-A relative sentences that modifies a common noun are just interpreted as the
-conjunction of the interpretations of the noun and the relative sentance.
+A relative sentence that modifies a common noun is interpreted as
+the conjunction of the propositions resulting from the 
+two constituents.
 %
 > iCN (RelCN cn rs)    = \x -> (iCN cn) x &&& (iRS rs) x
 %
@@ -335,6 +398,7 @@ This could also be written using |.|, as with |ComplN2| above.
 %endif
 
 \subsection{Fragment 3: Quantifier scope ambiguity}
+\label{sec:frag-amb}
 
 Consider a sentence such as ``every man loves a woman''.
 The rules in the previous section would interpret this as
@@ -359,7 +423,7 @@ A number of approaches have been proposed to handle
 Cooper storage~\cite{cooper83:quantification}, and its improved version,
 Keller storage~\cite{keller88:nester-cooper-storage}.
 While it is possible to implement Keller storage in a typed
-lambda calculus, the result is not very elegant. Cooper storage
+\lcalc, the result is not very elegant. Cooper storage
 seems difficult to implement in a typed way, because of the 
 unsoundness that Keller pointed out.
 
@@ -411,7 +475,7 @@ quantifier scope ambiguities.
 
 In the interest of readability, we will use set notation (e.g.~|[x,y,z]|) below.
 This can be straightforwardly replaced by the Church encoding of lists
-to obtain a pure $\lambda$-calculus implementation.
+to obtain a pure \lcalc implementation.
 
 A non-deterministic continuized computation is a set of functions that return a value given
 its continuation (context). We will use |Cont o a| to mean
@@ -420,10 +484,10 @@ and that gives access to a continuation that accepts an argument of type |a|''.
 
 > type Cont o a = [(a -> o) -> o]
 
-The |pure| function lifts a pure value into the functor.
+The |raise| function lifts a pure value into the functor.
 %
-> pure :: a -> Cont o a
-> pure a = [\c -> c a]
+> raise :: a -> Cont o a
+> raise a = [\c -> c a]
 %
 The |<*>| operator performs lifted function application
 with both evaluation orders.
@@ -435,7 +499,7 @@ of this implementation, we refer to section~\ref{sec:efficiency}.
 >            ++  [\c -> y (\a -> x (\f -> c (f a))) | x <- xs, y <- ys]
 
 
-The |pure| and |<*>| functions make this an 
+The |raise| (also called |pure|) and |<*>| functions make this an 
 \emph{applicative functor}~\cite{mcbride07:applicative}.
 Applicative functors generalize
 \emph{monads}~\cite{wadler92:monads,moggi89:monads}.
@@ -482,7 +546,7 @@ so we use |I a| as a shorthand for |Cont Prop a|.
 We first lift the parts of our semantics that do not introduce any quantifiers
 to use our new continuation functor.
 Function application is replaced with lifted function application (|<*>|),
-and |pure| is used to lift the combination functions where necessary.
+and |raise| is used to lift the combination functions where necessary.
 %
 > iS :: S -> I Prop 
 > iS (PredVP np vp) = iNP np <*> iVP vp
@@ -494,22 +558,23 @@ As we noted above, the interpretations of transitive verb and relation noun comp
 can be written using function composition (|.|).
 We now need to use lifted application of this operator.
 Note that application of a pure (non-lifted) function |f| to 
-a lifted argument |x| is written as |pure f <*> x|, and in the case
-of a two-argument function, |pure f <*> x <*> y|.
+a lifted argument |x| is written as |raise f <*> x|, and in the case
+of a two-argument function, |raise f <*> x <*> y|.
+As in Haskell, we use |(.)| as a shorthand for |(\f -> \g -> f . g)|.
 %
-> iVP (ComplV2 v2 np)  = pure (.) <*> iNP np <*> iV2 v2
+> iVP (ComplV2 v2 np)  = raise (.) <*> iNP np <*> iV2 v2
 %
-Common noun interpretation is also the stright-forward lifting of 
+Common noun interpretation is also the straightforward lifting of 
 the interpretation in the previous section:
 %
 > iCN :: CN -> I (Ind -> Prop)
 > iCN (UseN n)         = iN n
-> iCN (ComplN2 n2 np)  = pure (.) <*> iNP np <*> iN2 n2
+> iCN (ComplN2 n2 np)  = raise (.) <*> iNP np <*> iN2 n2
 %
 The interpretation of relational sentence modification looks a little hairy,
 but it is really just the lifted version of |\x -> (iCN cn) x &&& (iRS rs) x|.
 %
-> iCN (RelCN cn rs)    = pure (\cn' rs' x -> cn' x &&& rs' x) <*> iCN cn <*> iRS rs
+> iCN (RelCN cn rs)    = raise (\cn' rs' x -> cn' x &&& rs' x) <*> iCN cn <*> iRS rs
 %
 %if sem_toy_3_code || style /= newcode
 %
@@ -530,7 +595,7 @@ to obtain the current continuation and wrap the quantifier around it.
 > iNP :: NP -> I ((Ind -> Prop) -> Prop)
 > iNP Everyone        = shift k (forAll x (k (\v -> v x)))
 > iNP Someone         = shift k (thereIs x (k (\v -> v x)))
-> iNP (UsePN pn)      = pure (\x v -> v x) <*> iPN pn
+> iNP (UsePN pn)      = raise (\x v -> v x) <*> iPN pn
 > iNP (DetCN det cn)  = iDet det <*> iCN cn
 %
 %
@@ -543,42 +608,43 @@ to obtain the current continuation and wrap the quantifier around it.
 %if sem_toy_3_code || sem_toy_4_code || style /= newcode
 
 Finally, we need to lift the lexicon to use the interpretation functor.
-This is very straightforward: we just use |pure| to lift 
+This is very straightforward: we just use |raise| to lift 
 each interpretation.
 %
 Simple nouns:
 %
 > iN :: N -> I (Ind -> Prop)
-> iN Man     = pure (\x -> pred "man" (x))
-> iN Woman   = pure (\x -> pred "woman" (x))
-> iN Burger  = pure (\x -> pred "burger" (x))
+> iN Man     = raise (\x -> pred "man" (x))
+> iN Woman   = raise (\x -> pred "woman" (x))
+> iN Burger  = raise (\x -> pred "burger" (x))
 %
 Relational nouns:
 %
 > iN2 :: N2 -> I (Ind -> Ind -> Prop)
-> iN2 Owner = pure (\x y -> pred "owner" (x,y))
+> iN2 Owner = raise (\x y -> pred "owner" (x,y))
 %
 Proper names:
 %
 > iPN :: PN -> I Ind
-> iPN John  = pure (Const "John")
-> iPN Mary  = pure (Const "Mary")
-> iPN Bill  = pure (Const "Bill")
+> iPN John  = raise (Const "John")
+> iPN Mary  = raise (Const "Mary")
+> iPN Bill  = raise (Const "Bill")
 %
 Intransitive verbs:
 %
 > iV :: V -> I (Ind -> Prop)
-> iV Walk = pure (\x -> pred "walk" (x))
+> iV Walk = raise (\x -> pred "walk" (x))
 %
 Transitive verbs:
 %
 > iV2 :: V2 -> I (Ind -> Ind -> Prop)
-> iV2 Eat   = pure (\x y -> pred "eat" (x,y))
-> iV2 Love  = pure (\x y -> pred "love" (x,y))
+> iV2 Eat   = raise (\x y -> pred "eat" (x,y))
+> iV2 Love  = raise (\x y -> pred "love" (x,y))
 
 %endif
 
 \subsection{Fragment 4: Scope islands}
+\label{sec:frag-island}
 
 A sentence such as ``a man who loves every woman eats a burger'' may at first
 appear to have 6 readings since the 3 quantifiers can be ordered in $3! = 6$ ways.
@@ -607,7 +673,7 @@ But 3 and 5 are returned by our interpretation in Fragment 3.
 It appears that we need a way to implement scope islands.
 
 Shan~\shortcite{shan04:delimited-continuations} notes that 
-\emph{delimited continuations} are useful for modelling several
+\emph{delimited continuations} are useful for modeling several
 natural language phenomena, and notes that 
 Barker's~\shortcite{barker02:continuations-quantification}
 treatment of scope islands implicitly uses $reset$ (|reset|).
@@ -627,7 +693,7 @@ The |reset| function for creates a delimited continuation computation:
 %
 We overload |reset| to also work on single argument functions.
 We use overloading here to simplify the notation. To stay within
-polymorphically typed $\lambda$-calculus, we could simply use 
+polymorphically typed \lcalc, we could simply use 
 two different names instead.
 %
 > reset' :: Cont o (a -> o) -> Cont p (a -> o)
@@ -649,9 +715,10 @@ relative sentence a scope island.
 With this addition, only readings 1 and 6 above are returned.
 
 \section{Haskell implementation}
+\label{sec:implementation}
 
 The semantics is implemented as a Haskell~\cite{haskell98} program.
-In fact, the rules that we have shown above are thinly camoflagued
+In fact, the rules that we have shown above are thinly camouflaged
 Haskell code. A Haskell program can be automatically extracted 
 from the source code for this paper. 
 
@@ -681,18 +748,19 @@ in the order of adjacent universal quantifiers.
 %endif
 
 \section{Related Work}
+\label{sec:related-work}
 
 \citet{ranta04:semantics-type-theory}
 has a compositional semantics in dependent type theory .
 We share the idea of writing interpretation rules on the abstract 
 syntax of a type theoretic grammar (GF in both cases).
-However, Ranta uses a dependently typed lambda calculus where we
-use a more pedestrian polymorpic lambda calculus.
+However, Ranta uses a dependently typed \lcalc where we
+use a more pedestrian polymorphic \lcalc.
 Also, Ranta handles quantifier scope ambiguity by making the 
 grammar ambiguous while keeping the interpretation rules
 straightforward.
 
-Compared to \citet{barker02:continuations-quantification}, we have a more elgant way of writing
+Compared to \citet{barker02:continuations-quantification}, we have a more elegant way of writing
 interpretation rules, since the applicative functor formulation
 and control operators take care of the continuation plumbing.
 Also, we implement non-deterministic evaluation order in a single place,

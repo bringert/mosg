@@ -49,7 +49,7 @@
 %format (Const c) = "\mathsf{" c "}"
 
 %format I            = "\mathcal{I}"
-%format I'            = "\mathcal{I'}"
+%format I'            = "\mathcal{I}^\prime"
 
 %format tau = "\tau"
 %format tau_1
