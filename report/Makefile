@@ -39,6 +39,12 @@ answers.pdf: answers.tex
 	pdflatex answers
 	pdflatex answers
 
+system.pdf: system.tex
+	pdflatex system
+	bibtex system
+	pdflatex system
+	pdflatex system
+
 showsem: semantics.pdf
 	acroread $^
 
