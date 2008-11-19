@@ -1,0 +1,96 @@
+# http://en.wikipedia.org/w/index.php?title=Syllogism&oldid=251257984#Types_of_syllogism
+
+'''Barbara'''
+:All men are animals.
+:All animals are mortal.
+:All men are mortal.
+
+'''Celarent'''
+:No reptiles have fur.
+:All snakes are reptiles.
+:No snakes have fur.
+
+'''Darii'''
+:All kittens are playful.
+:Some pets are kittens.
+:Some pets are playful.
+
+'''Ferio'''
+:No homework is fun.
+:Some reading is homework.
+:Some reading is not fun.
+
+'''Cesare'''
+:No healthy food is fattening.
+:All cakes are fattening.
+:No cakes are healthy.
+
+'''Camestres'''
+:All horses have hooves.
+:No humans have hooves.
+:No humans are horses.
+
+'''Festino'''
+:No lazy people pass exams.
+:Some students pass exams.
+:Some students are not lazy.
+
+'''Baroco'''
+:All informative things are useful.
+:Some websites are not useful.
+:Some websites are not informative.
+
+'' '''Darapti''' ''
+:All fruit is nutritious.
+:All fruit is tasty.
+:Some tasty things are nutritious.''
+
+'''Disamis'''
+:Some mugs are beautiful.
+:All mugs are useful.
+:Some useful things are beautiful.
+
+'''Datisi'''
+:All the industrious boys in this school have red hair.
+:Some of the industrious boys in this school are boarders.
+:Some boarders in this school have red hair.
+
+'' '''Felapton''' ''
+:No jug in this cupboard is new.
+:All jugs in this cupboard are cracked.
+:Some of the cracked items in this cupboard are not new. ''
+
+'''Bocardo'''
+:Some cats have no tails.
+:All cats are mammals.
+:Some mammals have no tails.
+
+'''Ferison'''
+:No tree is edible.
+:Some trees are green.
+:Some green things are not edible.
+
+'' '''Bramantip''' ''
+:All apples in my garden are wholesome.
+:All wholesome fruit is ripe.
+:Some ripe fruit are apples in my garden.''  
+
+'''Camenes'''
+:All coloured flowers are scented.
+:No scented flowers are grown indoors.
+:No flowers grown indoors are coloured.
+
+'''Dimaris'''
+:Some small birds live on honey.
+:All birds that live on honey are colourful.
+:Some colourful birds are small.
+
+'' '''Fesapo''' ''
+:No humans are perfect.
+:All perfect creatures are mythical.
+:Some mythical creatures are not human.''
+
+'''Fresison'''
+:No competent people are people who always make mistakes.
+:Some people who always make mistakes are people who work here.
+:Some people who work here are not competent people.
