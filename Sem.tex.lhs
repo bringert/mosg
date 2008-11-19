@@ -796,7 +796,7 @@ Singular.
 
 Plural, interpreted as meaning ``at least two''.
 
-> iNum GNumPl = shift k (thereIs y (k (\u x -> y =/= x &&& u x)))
+> iNum GNumPl = pure (\u x -> u x &&& thereIs y (u y &&& y =/= x))
 
 A fixed number of distinct objects, given by a cardinal number.
 
