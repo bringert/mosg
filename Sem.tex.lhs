@@ -189,7 +189,7 @@ Simple animate singular interrogative pronoun, e.g. ``who''.
 Interrogative quantifier with a number,
 e.g. ``which five (men)''
 %
-> iIDet (GIdetQuant iquant num) = pure (\i u v -> YNQuest (i u v)) <*> reset'' (iNum num <*> iIQuant iquant)
+> iIDet (GIdetQuant iquant num) = pure (\i u v -> YNQuest (i u v)) <*> reset'' (iIQuant iquant <*> iNum num)
 %
 Interrogative counting pronoun,
 e.g. ``how many (men)''.
@@ -202,8 +202,8 @@ e.g. ``how many (men)''.
 
 Interrogative quantifier, e.g.~``which (man)''.
 %
-> iIQuant :: GIQuant -> I ((Ind -> Prop) -> (Ind -> Prop))
-> iIQuant Gwhich_IQuant = pure (\u -> u)
+> iIQuant :: GIQuant -> I (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop)
+> iIQuant Gwhich_IQuant = shift k (thereIs x (k (\num u v -> num (\y -> u y &&& v y) x)))
 
 \subsection{S: Declarative Sentences}
 
@@ -375,7 +375,8 @@ They are binary operators on propositions.
 ``either ... or ...'', interpreted as exclusive or.
 %
 > iConj Geither7or_DConj = pure (\p q -> (p &&& neg q) ||| (neg p &&& q))
-
+%
+> iConj Gif_then_Conj = pure (==>)
 
 \subsection{VP: Verb Phrases}
 
@@ -618,10 +619,10 @@ I think that the resource grammar API needs to be changed here.
 ``only (John)''
 Note that this doesn't work correctly with plurals, as in ``only men drink''.
 %
-> iPredet Gonly_Predet = pure (\np v -> np v &&& neg (thereIs x ( v x &&& np (\y -> x =/= y))))
+> iPredet Gonly_Predet = pure (\np v -> np v &&& neg (thereIs x (v x &&& np (\y -> x =/= y))))
 %
 ``all (the men)''
-This is simple only because we already interpret plurals and universial quantifiers.
+This is simple only because we already interpret plurals as universial quantifiers.
 %
 > iPredet Gall_Predet = pure (\np -> np)
 
@@ -636,27 +637,23 @@ Determiners take two one-place predicates to a propositions.
 A determiner, with a quantifier, a cardinal number
 and an ordinal, e.g. ``these five best''.
 %
-> iDet (GDetQuantOrd quant num ord) = pure (\qi ni oi u v -> ni (\p -> p) (qi (oi u)) v) <*> iQuant quant <*> iNum num <*> iOrd ord
+> iDet (GDetQuantOrd quant num ord) = pure (\qi ni oi u v -> qi ni (oi u) v) <*> iQuant quant <*> iNum num <*> iOrd ord
 %
 A determiner with a quantifier with a cardinal number,
 but no ordinal, e.g. ``these five''.
 %
-> iDet (GDetQuant quant num) = pure (\qi ni u v -> ni (\p -> p) (qi u) v) <*> iQuant quant <*> iNum num
+> iDet (GDetQuant quant num) = iQuant quant <*> iNum num
 %
 ``every''
 %
 > iDet Gevery_Det = shift k (forAll x (k (\u v -> u x ==> v x)))
-%
-Negated existential quantifier, ``no''.
-%
-> iDet Gno_Det = shift k (neg (thereIs x (k (\u v -> u x &&& v x))))
 %
 ``some'' + plural.
 FIXME: Perhaps this should require there to be at least two.
 %
 > iDet GsomePl_Det = shift k (thereIs x (k (\u v -> u x &&& v x)))
 %
-``some'' + singular. Same as |IndefArt|.
+``some'' + singular. Same as |GDetQuant IndefArt NumSg|, ``a''.
 %
 > iDet GsomeSg_Det = shift k (thereIs x (k (\u v -> u x &&& v x)))
 %
@@ -693,35 +690,37 @@ FIXME: These are hard in FOL. We cheat by treating them as existentials.
 
 \subsection{Quant: Quantifier}
 
-Quantifiers modify a one-place predicate.
 %
-> iQuant :: GQuant -> I ((Ind -> Prop) -> (Ind -> Prop))
+> iQuant :: GQuant -> I (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop)
 %
 Indefinite article, ``a (man)'', or ``(men)''.
 FIXME: this is not always correct in the plural.
 For example, ``dogs are friendly'' should give a universial quantifier.
 %
-> iQuant GIndefArt = pure (\u -> u)
+> iQuant GIndefArt = shift k (thereIs x (k (\num u v -> num (\y -> u y &&& v y) x)))
 %
 Definite article, ``the (man)'', or ``the (men)''.
-We use Russell's interpretation of definiteness.
 %
-> iQuant GDefArt = pure (\u x -> u x &&& forAll y (u y ==> y === x))
+> iQuant GDefArt = shift k (thereIs x (k (\num u v -> num (\y -> u y &&& v y) x &&& forAll z (u z ==> v z))))
+%
+Negated existential quantifier, ``no''.
+%
+> iQuant Gno_Quant = shift k (neg (thereIs x (k (\num u v -> num (\y -> u y &&& v y) x))))
 %
 Demonstrative, ``that (man)''.
 FIXME: Should we also treat this as definite?
 %
-> iQuant Gthat_Quant = pure (\u x -> u x &&& special "that" [x])
+> iQuant Gthat_Quant = shift k (thereIs x (k (\num u v -> num (\y -> u y &&& v y) x &&& special "that" [x])))
 %
 Demonstrative,``this (man)''.
 FIXME: Should we also treat this as definite?
 %
-> iQuant Gthis_Quant = pure (\u x -> u x &&& special "this" [x])
+> iQuant Gthis_Quant = shift k (thereIs x (k (\num u v -> num (\y -> u y &&& v y) x &&& special "this" [x])))
 %
 Genitive form of a noun phrase, e.g. ``john's (dog)''.
 FIXME: Should this really allow more than one? Now ``john's dog'' allows john to have several dogs.
 %
-> iQuant (GGenNP np) = pure (\ni u x -> u x &&& ni (\y -> of_Pred y x)) <*> iNP np
+> iQuant (GGenNP np) = shift k (thereIs x (k (\n num u v -> num (\y -> u y &&& v y) x &&& n (\z -> special "genitive" [z,x])))) <*> iNP np
 
 %if unhandled
 > iQuant quant = unhandled "iQuant" quant
@@ -751,15 +750,15 @@ identified by the restruction.
 Cardinal numbers. Takes three arguments, the interpretation of an article 
 or quantifier, the restriction and the sentence predicate.
 
-> iCard :: GCard -> I (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop)
+> iCard :: GCard -> I ((Ind -> Prop) -> (Ind -> Prop))
 
-Cardinal number with digits.
+Cardinal number with digits, e.g.~``5''.
 
-%> iCard (GNumDigits ds) = pure (\di q u v -> di q) <*> iInt (iDigits ds)
+> iCard (GNumDigits ds) = iInt (iDigits ds)
 
-Cardinal number with words.
+Cardinal number with words, e.g.~``five''.
 
-%> iCard (GNumNumeral num) = pure (\di q u v -> di q) <*> iInt (iNumeral num)
+> iCard (GNumNumeral num) = iInt (iNumeral num)
 
 Cardinal modified by a numeral-modifying adjective, e.g. ``almost five''.
 
@@ -774,28 +773,25 @@ or quantifier, the restriction and the sentence predicate.
 
 \subsection{AdN: Numeral-modifying adverb}
 
-> iAdN :: GAdN -> I ((((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop) -> (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop))
+> iAdN :: GAdN -> I (((Ind -> Prop) -> (Ind -> Prop)) -> ((Ind -> Prop) -> (Ind -> Prop)))
 
-``at least (five men)''.
-
-> iAdN Gat8least_AdN = pure (\n -> n)
+% ``at least (five men)''.
+%
+%> iAdN Gat_least_AdN = pure (\n -> n)
 
 > iAdN adn = unhandled "iAdN" adn
 
 \subsection{Num: Number determining element}
 
-> iNum :: GNum -> I (((Ind -> Prop) -> (Ind -> Prop)) -> (Ind -> Prop) -> (Ind -> Prop) -> Prop)
+> iNum :: GNum -> I ((Ind -> Prop) -> (Ind -> Prop))
 
-> iNum GNumSg = shift k (thereIs x (k (\ai u v -> ai u x &&& v x)))
+Singular.
+
+> iNum GNumSg = pure (\u x -> u x)
 
 Plural, interpreted as meaning ``at least two''.
-FIXME: causes inconsistency with definite article
 
-% men sleep / the men sleep
-% (?[A,B] : A != B & man(A) & man(B)) & (![C] : man(C) => sleep(C))
-% i.e. "at least two men" and "all men sleep"
-
-> iNum GNumPl = shift k (thereIs x (thereIs y (x =/= y &&& k (\ai u v -> ai u x &&& v x &&& ai u y &&& v y))))
+> iNum GNumPl = shift k (thereIs y (k (\u x -> y =/= x &&& u x)))
 
 A fixed number of distinct objects, given by a cardinal number.
 
@@ -1059,13 +1055,20 @@ Numerals are interpreted as integers, and then handled by |iInt|.
 > iDigit Gn8 = 8
 > iDigit Gn9 = 9
 
-\subsection{Int: Internal Integers}
+\subsection{Int: Integers}
 
 Integer interpretation. Used above for letter and digit numerals.
 
-> iInt :: Int -> I ((((Ind -> Prop) -> Prop) -> Prop) -> Prop)
-> iInt 0 = pure (\q -> q (\p -> true))
-> iInt n = pure (\ni q -> thereIs x ( ni (\r -> r (\y -> x =/= y) &&& q (\p -> p x &&& r p)))) <*> iInt (n-1)
+> iInt :: Int -> I ((Ind -> Prop) -> (Ind -> Prop))
+> iInt 0 = pure (\u x -> neg (u x))
+> iInt n = pure (\ni u x -> u x &&& ni u [x]) <*> iInt' (n-1)
+
+> iInt' :: Int -> I ((Ind -> Prop) -> ([Ind] -> Prop))
+> iInt' 0 = pure (\u xs -> forAll x (u x ==> oneOf x xs))
+> iInt' n = pure (\ni u xs -> thereIs x (u x &&& neg (oneOf x xs) &&& ni u (x:xs))) <*> iInt' (n-1)
+
+> oneOf :: Ind -> [Ind] -> Prop
+> oneOf x xs = ors (map (x ===) xs)
 
 %if style == newcode
 
