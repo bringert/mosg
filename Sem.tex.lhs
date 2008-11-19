@@ -621,10 +621,9 @@ Note that this doesn't work correctly with plurals, as in ``only men drink''.
 %
 > iPredet Gonly_Predet = pure (\np v -> np v &&& neg (thereIs x (v x &&& np (\y -> x =/= y))))
 %
-``all (the men)''
-This is simple only because we already interpret plurals as universial quantifiers.
+%``all (the men)''
 %
-> iPredet Gall_Predet = pure (\np -> np)
+%> iPredet Gall_Predet = pure (\np -> np)
 
 > iPredet predet = unhandled "iPredet" predet
 
@@ -644,32 +643,38 @@ but no ordinal, e.g. ``these five''.
 %
 > iDet (GDetQuant quant num) = iQuant quant <*> iNum num
 %
-``every''
+``every (man)''
 %
 > iDet Gevery_Det = shift k (forAll x (k (\u v -> u x ==> v x)))
+``all (men)''.
+The GF Resource Grammar API has ``all'' as a |Predet|, which also 
+allows ``all the men''. However, this is overgenerating, and difficult to
+interpret compositionally.
 %
-``some'' + plural.
+> iDet Gall_Det = shift k (forAll x (k (\u v -> u x ==> v x)))
+%
+``some (men)'
 FIXME: Perhaps this should require there to be at least two.
 %
 > iDet GsomePl_Det = shift k (thereIs x (k (\u v -> u x &&& v x)))
 %
-``some'' + singular. Same as |GDetQuant IndefArt NumSg|, ``a''.
+``some (man)''. Same as |GDetQuant IndefArt NumSg|, ``a''.
 %
 > iDet GsomeSg_Det = shift k (thereIs x (k (\u v -> u x &&& v x)))
 %
-``neither''. This is interpreted as meaning that there are exactly
+``neither (man)''. This is interpreted as meaning that there are exactly
 two individuals with the first property, and they both lack 
 the second property.
 %
 > iDet Gneither_Det = shift k (thereIs x ( thereIs y (forAll z (k (\u v -> u x &&& neg (v x) &&& u y &&& neg (v y) &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 %
-``both''. This is interpreted as meaning that there are exactly
+``both (men)''. This is interpreted as meaning that there are exactly
 two individuals with the first property, and they both have 
 the second property.
 %
 > iDet Gboth_Det = shift k (thereIs x ( thereIs y (forAll z (k (\u v -> u x &&& v x &&& u y &&& v y &&& x =/= y &&& (u z ==> (z === x ||| z === y)))))))
 %
-``either'', interpreted as ``there are at least two, and at least one of them does it''.
+``either (man)'', interpreted as ``there are at least two, and at least one of them does it''.
 %
 > iDet Geither_Det = shift k (thereIs x ( thereIs y (k (\u v -> u x &&& u y &&& x =/= y &&& (v x ||| v y)))))
 %

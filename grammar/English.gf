@@ -6,7 +6,7 @@ concrete English of Abstract =
     UttImpSg, UttImpPl, UttImpPol,
     UttIP, UttIAdv, UttNP, UttAdv, UttVP,
 -- Structural
-    part_Prep, possess_Prep,
+    part_Prep, possess_Prep, all_Predet,
 -- Verb
     UseVS,
 -- Extra
@@ -15,8 +15,10 @@ concrete English of Abstract =
 
   FraCaSLexiconEng
 
-** {
+** open ParadigmsEng, MorphoEng in {
 
 lin TNoPunct phr = { s = phr.s } ;
+
+lin all_Det = mkDeterminer plural "all" ;
 
 }

@@ -6,7 +6,7 @@ abstract Abstract =
     UttImpSg, UttImpPl, UttImpPol,
     UttIP, UttIAdv, UttNP, UttAdv, UttVP,
 -- Structural
-    part_Prep, possess_Prep,
+    part_Prep, possess_Prep, all_Predet,
 -- Verb
     UseVS,
 -- Extra
@@ -24,5 +24,8 @@ flags startcat = Text;
 --
 
 fun TNoPunct : Phr -> Text ;
+
+-- It's much easier to interpret all_Det than all_Predet
+fun all_Det : Det ;
 
 }
