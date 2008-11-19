@@ -27,9 +27,8 @@ propToHtml n (And xs)    = liftM (prec 1 n . intercalateWithSpace andHtml) $ map
 propToHtml n (Or xs)     = liftM (prec 1 n . intercalateWithSpace orHtml)  $ mapM (propToHtml 1) xs
 propToHtml n (Imp x y)   = binConn impHtml n x y
 propToHtml n (Equiv x y) = binConn equivHtml n x y
-propToHtml n (Equal x y) = do x' <- expToHtml x
-                              y' <- expToHtml y
-                              return $ prec 3 n (x' <+> "=" <+> y')
+propToHtml n (Equal x y) = infixPred (toHtml "=") n x y
+propToHtml n (NotEqual x y) = infixPred (toHtml "!=") n x y
 propToHtml n (Not x)     = do x' <- propToHtml 2 x
                               return $ notHtml <+> x'
 propToHtml n (All f)     = quant forallHtml n f
@@ -51,6 +50,12 @@ binConn op n x y =
     do x' <- propToHtml 1 x
        y' <- propToHtml 1 y
        return $ prec 1 n (x' <+> op <+> y')
+
+infixPred :: Html -> Int -> Ind -> Ind -> Vars Html
+infixPred p n x y = 
+    do x' <- expToHtml x
+       y' <- expToHtml y
+       return $ prec 3 n (x' <+> p <+> y')
 
 quant :: Html -> Int -> (Ind -> Prop) -> Vars Html
 quant q n f = 

@@ -34,6 +34,7 @@ data Prop =
   | Equiv Prop Prop
   | Not Prop
   | Equal Ind Ind
+  | NotEqual Ind Ind
   | All (Ind -> Prop)
   | Exists (Ind -> Prop)
   | TrueProp
@@ -79,7 +80,7 @@ neg p = simplify $ Not p
 (===) = Equal
 
 (=/=) :: Ind -> Ind -> Prop
-x =/= y = neg (x === y)
+(=/=) = NotEqual
 
 forAll :: (Ind -> Prop) -> Prop
 forAll f = simplify $ All f
@@ -119,7 +120,13 @@ simplify (Or []) = FalseProp
 simplify (Or ps) = Or [simplify p | p <- flattenOr ps, not (isFalseProp p)]
 simplify (Imp p q) = Imp (simplify p) (simplify q)
 simplify (Equiv p q) = Equiv (simplify p) (simplify q)
-simplify (Not p) = Not (simplify p)
+simplify (Not p) = case simplify p of
+                     TrueProp     -> FalseProp
+                     FalseProp    -> TrueProp
+                     Equal x y    -> NotEqual x y
+                     NotEqual x y -> Equal x y
+                     Not q        -> q
+                     q            -> Not q
 simplify (All f) = All (\x -> simplify (f x))
 simplify (Exists f) = Exists (\x -> simplify (f x))
 simplify p = p
@@ -196,6 +203,9 @@ pprProp n (Equiv x y) = binConn "<=>" n x y
 pprProp n (Equal x y) =  do x' <- pprInd x
                             y' <- pprInd y
                             return $ prec 3 n (x' <+> text "=" <+> y')
+pprProp n (NotEqual x y) = do x' <- pprInd x
+                              y' <- pprInd y
+                              return $ prec 3 n (x' <+> text "!=" <+> y')
 pprProp n (Not x)     = do x' <- pprProp 2 x
                            return $ text "~" <+> x'
 pprProp n (All f)     = quant "!" n f
@@ -232,7 +242,7 @@ instance Read Prop where
 readProp :: Int -> ReadP Prop
 readProp = skipSpaceAround . readProp'
   where readProp' 0 = readBin <++ readProp' 1
-        readProp' 1 = choice [readPred, readNot, readEqual, readAll, readExists, readParen, readTrue, readFalse]
+        readProp' 1 = choice [readPred, readNot, readInfixPred, readAll, readExists, readParen, readTrue, readFalse]
         readPred = do p <- readConst
                       string "("
                       args <- sepBy readInd (string ",")
@@ -247,10 +257,11 @@ readProp = skipSpaceAround . readProp'
                             string "=>" >> return (==>),
                             string "<=>" >> return (<=>)]
         readNot = string "~" >> liftM neg (readProp 1)
-        readEqual = do e1 <- readInd
-                       string "="
-                       e2 <- readInd
-                       return $ e1 === e2
+        readInfixPred = do e1 <- readInd
+                           p <- choice [string "=" >> return (===), 
+                                        string "!=" >> return (=/=)]
+                           e2 <- readInd
+                           return $ p e1 e2
         readAll = readQuant "!" forAll
         readExists = readQuant "?" thereIs
         readQuant s q = do string s
@@ -301,6 +312,7 @@ substProp v x t =
       Equiv p q -> Equiv (substProp v x p) (substProp v x q)
       Not p     -> Not (substProp v x p)
       Equal e f -> Equal (substInd v x e) (substInd v x f)
+      NotEqual e f -> NotEqual (substInd v x e) (substInd v x f)
       All b     -> All (\y -> substProp v x (b y))
       Exists b  -> Exists (\y -> substProp v x (b y))
       TrueProp  -> TrueProp

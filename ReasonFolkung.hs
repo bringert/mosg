@@ -61,6 +61,7 @@ propToForm = runVars . f
             Equiv p q -> liftM2 F.Equiv (f p) (f q)
             Not p     -> liftM F.nt (f p)
             Equal x y -> return $ F.Atom (expToTerm x F.:=: expToTerm y)
+            NotEqual x y -> return $ F.nt $ F.Atom (expToTerm x F.:=: expToTerm y)
             All b     -> quant F.forAll b
             Exists b  -> quant F.exists b
             TrueProp  -> return $ F.true

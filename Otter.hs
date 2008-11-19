@@ -69,9 +69,8 @@ pprPropOtter n (And xs)    = liftM (prec 1 n . hsep . intersperse (text "&")) $ 
 pprPropOtter n (Or xs)     = liftM (prec 1 n . hsep . intersperse (text "|")) $ mapM (pprPropOtter 1) xs
 pprPropOtter n (Imp x y)   = binConn "->" n x y
 pprPropOtter n (Equiv x y) = binConn "<->" n x y
-pprPropOtter n (Equal x y) = do x' <- pprInd x
-                                y' <- pprInd y
-                                return $ prec 3 n (x' <+> text "=" <+> y')
+pprPropOtter n (Equal x y) = infixPred "=" n x y
+pprPropOtter n (NotEqual x y) = infixPred "!=" n x y
 pprPropOtter n (Not x)     = do x' <- pprPropOtter 2 x
                                 return $ text "-" <+> x'
 pprPropOtter n (All f)     = quant "all" n f
@@ -88,6 +87,12 @@ binConn op n x y =
     do x' <- pprPropOtter 1 x
        y' <- pprPropOtter 1 y
        return $ prec 1 n (x' <+> text op <+> y')
+
+infixPred :: String -> Int -> Ind -> Ind -> Vars Doc
+infixPred p n x y = 
+    do x' <- pprInd x
+       y' <- pprInd y
+       return $ prec 3 n (x' <+> text p <+> y')
 
 quant :: String -> Int -> (Ind -> Prop) -> Vars Doc
 quant q n f = 
