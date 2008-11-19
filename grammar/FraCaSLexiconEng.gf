@@ -59,6 +59,8 @@ lin
   peter_PN = mkPN "peter" ;
   smith_PN = mkPN "smith" ;
 
+  socrates_PN = mkPN "socrates" ;
+
   berlin_PN = mkPN "berlin" ;
   birmingham_PN = mkPN "birmingham" ;
   florence_PN = mkPN "florence" ;

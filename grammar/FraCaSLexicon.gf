@@ -63,6 +63,8 @@ fun
   peter_PN : PN ;
   smith_PN : PN ;
 
+  socrates_PN : PN ;
+
   -- toponyms
   berlin_PN : PN ;
   birmingham_PN : PN ;
