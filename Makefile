@@ -29,9 +29,11 @@ pgf.fcgi:
 	cp $(HOME)/.cabal/bin/pgf.fcgi .
 
 gwt:
+	chmod a+x gwt/Mosg-compile
 	gwt/Mosg-compile
 
 hosted:
+	chmod a+x gwt/Mosg-shell-external
 	gwt/Mosg-shell-external
 
 test:
