@@ -63,8 +63,6 @@ fun
   peter_PN : PN ;
   smith_PN : PN ;
 
-  socrates_PN : PN ;
-
   -- toponyms
   berlin_PN : PN ;
   birmingham_PN : PN ;
@@ -115,10 +113,19 @@ fun
 
   see_VS : VS ;
 
+  -- as in "come cheap"
+  come_VA : VA ;
+
   -- adverbs
 
   really_AdA : AdA ;
 
   late_Adv : Adv ;
+
+  -- extra stuff for common formal semantics sentences
+
+  socrates_PN : PN ;
+
+  unicorn_N : N ;
 
 }

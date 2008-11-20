@@ -59,8 +59,6 @@ lin
   peter_PN = mkPN "peter" ;
   smith_PN = mkPN "smith" ;
 
-  socrates_PN = mkPN "socrates" ;
-
   berlin_PN = mkPN "berlin" ;
   birmingham_PN = mkPN "birmingham" ;
   florence_PN = mkPN "florence" ;
@@ -104,8 +102,14 @@ lin
 
   see_VS = mkVS see_V ;
 
+  come_VA = mkVA come_V ;
+
   really_AdA = ss "really" ;
 
   late_Adv = ss "late" ;
+
+
+  socrates_PN = mkPN "socrates" ;
+  unicorn_N = mkN "unicorn" ;
 
 }
