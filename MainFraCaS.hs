@@ -53,17 +53,17 @@ testProblems opts gr ps =
        mapM_ (putStrLn . statLine) (statistics rs)
        return rs
 
-readProblems :: Options -> IO [Problem]
-readProblems opts = 
+readProblems :: Options -> FilePath -> IO [Problem]
+readProblems opts file = 
     do let keepProblem p | null (optProblems opts) = True
                          | otherwise = dropWhile (=='0') (problemId p) `elem` optProblems opts
-       liftM (filter keepProblem) $ readFraCaS "fracas/fracas.xml"
+       liftM (filter keepProblem) $ readFraCaS file
 
 main :: IO ()
 main = do args <- getArgs
           opts <- parseOptions args
           gr <- loadGrammar
-          problems <- readProblems opts
+          problems <- readProblems opts "syllogisms.xml" --"fracas/fracas.xml"
           rs <- testProblems opts gr problems
           writeOutput (optMode opts) rs
 
