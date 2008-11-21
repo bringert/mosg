@@ -464,13 +464,19 @@ Adverbial phrase complement, e.g. in ``(John is) in Paris''.
 %
 > iComp (GCompAdv adv) = iAdv adv <*> pure (\x -> true)
 %
-Noun phrase complement, e.g. in ``(John is) a man''.
+Noun phrase complement, e.g. in ``(John is) the owner of a car''.
 The complement is a scope island, to get rid of the
 reading of sentences such as ``every dog is an animal'' 
 where they are all the same individual.
 %
 > iComp (GCompNP np) = reset' (pure (\ni x -> ni (\y -> x === y)) <*> iNP np)
-
+%
+Common noun complement, e.g. in ``(John is) a man''.
+This is a special case of |CompNP|, which is much easier to
+handle, especially in the case of plurals, 
+e.g.~``all snakes are reptiles''.
+%
+> iComp (GCompCN cn) = iCN cn
 
 \subsection{NP: Noun Phrases}
 
@@ -503,13 +509,13 @@ island.
 %
 Mass expressions.
 Note: this interpretation is dubious. We always
-interpret mass expressions with universal quantifiers.
+interpret mass expressions with existential quantifiers.
 This is for example not correct for sentences such as 
-``I see drink water'', or ``water flows from the tap in my bathroom''.
+``water is wet''.
 %FIXME: universal as subject, existential in object position?
 %FIXME: use shift?
 %
-> iNP (GMassNP cn) = pure (\u v -> forAll x (u x &&& v x)) <*> iCN cn
+> iNP (GMassNP cn) = pure (\u v -> thereIs x (u x &&& v x)) <*> iCN cn
 %
 Predeterminer use, e.g. ``only the men''. 
 %FIXME: what should we do about predet + plural?
@@ -789,17 +795,22 @@ or quantifier, the restriction and the sentence predicate.
 \subsection{Num: Number determining element}
 
 > iNum :: GNum -> I ((Ind -> Prop) -> (Ind -> Prop))
-
-Singular.
-
+%
+Singular, e.g. ``dog''.
+%
 > iNum GNumSg = pure (\u x -> u x)
-
-Plural, interpreted as meaning ``at least two''.
-
+%
+Plural, e.g.~``dogs''. 
+This is currently interpreted as meaning ``at least two''.
+This works for ``firemen are available'', ``criminals are ruining me''.
+Other interpretations are needed for:
+``no reptiles have fur'', ``dogs are friendly'',
+``I like dogs''.
+%
 > iNum GNumPl = pure (\u x -> u x &&& thereIs y (u y &&& y =/= x))
-
+%
 A fixed number of distinct objects, given by a cardinal number.
-
+%
 > iNum (GNumCard card) = iCard card
 
 %if unhandled
@@ -871,6 +882,14 @@ Prepositional phrase.
 Subjunctive phrase.
 %
 > iAdv (GSubjS subj s) = pure (\sui si u x -> sui si (u x)) <*> iSubj subj <*> iS s
+%
+``here''
+%
+> iAdv Ghere_Adv = pure (\u x -> u x &&& Pred "here" [x])
+%
+``there''
+%
+> iAdv Gthere_Adv = pure (\u x -> u x &&& Pred "there" [x])
 
 %if unhandled
 > iAdv adv = unhandled "iAdv" adv

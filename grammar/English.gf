@@ -5,8 +5,10 @@ concrete English of Abstract =
 -- Phrase
     UttImpSg, UttImpPl, UttImpPol,
     UttIP, UttIAdv, UttNP, UttAdv, UttVP,
+-- Sentence
+    EmbedQS,
 -- Structural
-    part_Prep, possess_Prep, all_Predet,
+    part_Prep, possess_Prep, all_Predet, not_Predet,
 -- Verb
     UseVS,
 -- Extra
