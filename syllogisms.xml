@@ -1,0 +1,140 @@
+<?xml version='1.0'?>
+<fracas-problems>
+  <problem id="1" fracas_answer="yes">
+    <p idx="1">All men are animals.</p>
+    <p idx="2">All animals are mortal.</p>
+    <q>Are all men mortal?</q>
+    <h></h>
+    <note>Barbara</note>
+  </problem>
+  <problem id="2" fracas_answer="yes">
+    <p idx="1">No reptiles have fur.</p>
+    <p idx="2">All snakes are reptiles.</p>
+    <q>Do no snakes have fur?</q>
+    <h></h>
+    <note>Celarent</note>
+  </problem>
+  <problem id="3" fracas_answer="yes">
+    <p idx="1">All kittens are playful.</p>
+    <p idx="2">Some pets are kittens.</p>
+    <q>Are some pets playful?</q>
+    <h></h>
+    <note>Darii</note>
+  </problem>
+  <problem id="4" fracas_answer="yes">
+    <p idx="1">No homework is fun.</p>
+    <p idx="2">Some reading is homework.</p>
+    <q>Is some reading not fun.</q>
+    <h></h>
+    <note>Ferio</note>
+  </problem>
+  <problem id="5" fracas_answer="yes">
+    <p idx="1">No healthy food is fattening.</p>
+    <p idx="2">All cakes are fattening.</p>
+    <q>Are no cakes healthy?</q>
+    <h></h>
+    <note>Cesare</note>
+  </problem>
+  <problem id="6" fracas_answer="yes">
+    <p idx="1">All horses have hooves.</p>
+    <p idx="2">No humans have hooves.</p>
+    <q>Are no humans horses?</q>
+    <h></h>
+    <note>Camestres</note>
+  </problem>
+  <problem id="7" fracas_answer="yes">
+    <p idx="1">No lazy people pass exams.</p>
+    <p idx="2">Some students pass exams.</p>
+    <q>Are some students not lazy?</q>
+    <h></h>
+    <note>Festino</note>
+  </problem>
+  <problem id="8" fracas_answer="yes">
+    <p idx="1">All informative things are useful.</p>
+    <p idx="2">Some websites are not useful.</p>
+    <q>Are some websites not informative?</q>
+    <h></h>
+    <note>Baroco</note>
+  </problem>
+  <problem id="9" fracas_answer="unknown">
+    <p idx="1">All fruit is nutritious.</p>
+    <p idx="2">All fruit is tasty.</p>
+    <q>Are some tasty things nutritious?</q>
+    <h></h>
+    <note>Darapti</note>
+  </problem>
+  <problem id="10" fracas_answer="yes">
+    <p idx="1">Some mugs are beautiful.</p>
+    <p idx="2">All mugs are useful.</p>
+    <q>Are some useful things beautiful?</q>
+    <h></h>
+    <note>Disamis</note>
+  </problem>
+  <problem id="11" fracas_answer="yes">
+    <p idx="1">All the industrious boys in this school have red
+    hair.</p>
+    <p idx="2">Some of the industrious boys in this school are
+    boarders.</p>
+    <q>Do some boarders in this school have red hair?</q>
+    <h></h>
+    <note>Datisi</note>
+  </problem>
+  <problem id="12" fracas_answer="unknown">
+    <p idx="1">No jug in this cupboard is new.</p>
+    <p idx="2">All jugs in this cupboard are cracked.</p>
+    <q>Are some of the cracked items in this cupboard not new?</q>
+    <h></h>
+    <note>Felapton</note>
+  </problem>
+  <problem id="13" fracas_answer="yes">
+    <p idx="1">Some cats have no tails.</p>
+    <p idx="2">All cats are mammals.</p>
+    <q>Do some mammals have no tails?</q>
+    <h></h>
+    <note>Bocardo</note>
+  </problem>
+  <problem id="14" fracas_answer="yes">
+    <p idx="1">No tree is edible.</p>
+    <p idx="2">Some trees are green.</p>
+    <q>Are some green things not edible?</q>
+    <h></h>
+    <note>Ferison</note>
+  </problem>
+  <problem id="15" fracas_answer="unknown">
+    <p idx="1">All apples in my garden are wholesome.</p>
+    <p idx="2">All wholesome fruit is ripe.</p>
+    <q>Are some ripe fruit apples in my garden?</q>
+    <h></h>
+    <note>Bramantip</note>
+  </problem>
+  <problem id="16" fracas_answer="yes">
+    <p idx="1">All coloured flowers are scented.</p>
+    <p idx="2">No scented flowers are grown indoors.</p>
+    <q>Are no flowers grown indoors coloured?</q>
+    <h></h>
+    <note>Camenes</note>
+  </problem>
+  <problem id="17" fracas_answer="yes">
+    <p idx="1">Some small birds live on honey.</p>
+    <p idx="2">All birds that live on honey are colourful.</p>
+    <q>Are some colourful birds small?</q>
+    <h></h>
+    <note>Dimaris</note>
+  </problem>
+  <problem id="18" fracas_answer="unknown">
+    <p idx="1">No humans are perfect.</p>
+    <p idx="2">All perfect creatures are mythical.</p>
+    <q>Are some mythical creatures not human?</q>
+    <h></h>
+    <note>Fesapo</note>
+  </problem>
+  <problem id="19" fracas_answer="yes">
+    <p idx="1">No competent people are people who always make
+    mistakes.</p>
+    <p idx="2">Some people who always make mistakes are people who
+    work here.</p>
+    <q>Are some people who work here not competent people?</q>
+    <h></h>
+    <note>Fresison</note>
+  </problem>
+</fracas-problems>
